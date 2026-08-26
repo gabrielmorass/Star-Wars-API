@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Codex Estelar — Enciclopédia da Saga</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="stars-bg" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <button class="brand" data-nav="hub" type="button">Codex Estelar</button>
+    <nav class="topnav" aria-label="Navegação principal">
+      <button data-nav="planets" type="button">Sistema planetário</button>
+      <button data-nav="people" type="button">Personagens</button>
+    </nav>
+  </header>
+
+  <main id="app" aria-live="polite"></main>
+
+  <footer class="foot">
+    Dados via <a href="https://swapi.info" target="_blank" rel="noopener">SWAPI</a> — cobre os Episódios I–VI.
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
