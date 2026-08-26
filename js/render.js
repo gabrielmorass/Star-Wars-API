@@ -1,4 +1,14 @@
-import { getPlanetSpecies, getPlanetFilms, getPersonSpecies, getPlanetName } from "./api.js";
+import { getPlanetSpecies, getPlanetFilms, getPersonSpecies, getPlanetName, getPortraits } from "./api.js";
+
+function initials(name) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
 
 export function renderHub(container, navigate) {
   container.innerHTML = `
@@ -8,14 +18,26 @@ export function renderHub(container, navigate) {
     </section>
     <div class="hub-cards">
       <button class="hub-card" data-nav="planets" type="button">
-        <span class="dot"></span>
+        <span class="hub-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <ellipse cx="12" cy="12" rx="10" ry="3.2" transform="rotate(-20 12 12)"></ellipse>
+          </svg>
+        </span>
         <h2>Sistema planetário</h2>
         <p>Navegue pelos planetas e veja espécies presentes e filmes em que aparecem.</p>
+        <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
       <button class="hub-card" data-nav="people" type="button">
-        <span class="dot"></span>
+        <span class="hub-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="3.2"></circle>
+            <path d="M5 20c0-4 3.2-6.5 7-6.5s7 2.5 7 6.5"></path>
+          </svg>
+        </span>
         <h2>Personagens</h2>
         <p>Busque e explore os personagens da saga, com detalhes de cada um.</p>
+        <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
     </div>
   `;
@@ -128,26 +150,17 @@ export function renderPlanetsView(container, planets) {
 
 /* ---------------- Personagens ---------------- */
 
-export function renderPeopleView(container, people, onOpenPerson) {
+export async function renderPeopleView(container, people, onOpenPerson) {
   container.innerHTML = `
     <div class="people-toolbar">
       <input type="search" id="people-search" placeholder="Buscar personagem por nome…" aria-label="Buscar personagem" />
     </div>
-    <div class="people-grid" id="people-grid"></div>
+    <div class="people-grid" id="people-grid"><p class="state-msg">Carregando fotos…</p></div>
   `;
 
   const grid = container.querySelector("#people-grid");
   const searchInput = container.querySelector("#people-search");
-
-  function initials(name) {
-    return name
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase();
-  }
+  const portraits = await getPortraits();
 
   function paint(list) {
     if (list.length === 0) {
@@ -155,15 +168,29 @@ export function renderPeopleView(container, people, onOpenPerson) {
       return;
     }
     grid.innerHTML = list
-      .map(
-        (p, i) => `
+      .map((p, i) => {
+        const photo = portraits.get(p.name.trim().toLowerCase());
+        return `
         <button class="person-card" data-index="${i}" type="button">
-          <div class="person-avatar">${initials(p.name)}</div>
+          <div class="person-photo-wrap">
+            <span class="person-avatar-fallback">${initials(p.name)}</span>
+            ${photo ? `<img class="person-photo" src="${photo}" alt="" loading="lazy" />` : ""}
+          </div>
           <p class="name">${p.name}</p>
           <p class="meta">${p.birth_year === "unknown" ? "Nasc. desconhecido" : p.birth_year}</p>
-        </button>`
-      )
+        </button>`;
+      })
       .join("");
+    grid.querySelectorAll(".person-photo").forEach((img) => {
+      img.addEventListener(
+        "load",
+        () => {
+          img.previousElementSibling?.classList.add("is-hidden");
+        },
+        { once: true }
+      );
+      img.addEventListener("error", () => img.remove(), { once: true });
+    });
     grid.querySelectorAll(".person-card").forEach((el) => {
       el.addEventListener("click", () => onOpenPerson(list[Number(el.dataset.index)]));
     });
@@ -181,8 +208,11 @@ export async function renderPersonModal(person) {
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = `
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Detalhes de ${person.name}">
+    <div class="modal modal-person" role="dialog" aria-modal="true" aria-label="Detalhes de ${person.name}">
       <button class="modal-close" type="button" aria-label="Fechar">×</button>
+      <div class="modal-photo-wrap">
+        <span class="person-avatar-fallback">${initials(person.name)}</span>
+      </div>
       <h3>${person.name}</h3>
       <div class="detail-row"><div class="label">Altura / Massa</div><div class="value">${person.height} cm · ${person.mass} kg</div></div>
       <div class="detail-row"><div class="label">Nascimento</div><div class="value">${person.birth_year}</div></div>
@@ -196,10 +226,29 @@ export async function renderPersonModal(person) {
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
   backdrop.querySelector(".modal-close").addEventListener("click", close);
 
-  const [species, homeworld] = await Promise.all([
+  const [species, homeworld, portraits] = await Promise.all([
     getPersonSpecies(person),
     getPlanetName(person.homeworld),
+    getPortraits(),
   ]);
   backdrop.querySelector("#modal-species").textContent = species;
   backdrop.querySelector("#modal-homeworld").textContent = homeworld;
+
+  const photoUrl = portraits.get(person.name.trim().toLowerCase());
+  if (photoUrl) {
+    const img = document.createElement("img");
+    img.className = "person-photo";
+    img.alt = "";
+    img.loading = "lazy";
+    img.addEventListener(
+      "load",
+      () => {
+        img.previousElementSibling?.classList.add("is-hidden");
+      },
+      { once: true }
+    );
+    img.addEventListener("error", () => img.remove(), { once: true });
+    img.src = photoUrl;
+    backdrop.querySelector(".modal-photo-wrap").appendChild(img);
+  }
 }
