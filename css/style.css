@@ -118,6 +118,8 @@ body {
 
 .topnav { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
+.tab-toggle { margin-bottom: 1rem; }
+
 .topnav button {
   font-family: var(--font-body);
   font-size: 0.85rem;
@@ -449,7 +451,7 @@ body {
 .person-card .name { font-size: 0.95rem; font-weight: 500; margin: 0 0 0.2rem; }
 .person-card .meta { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
 
-/* ---------- Cards genéricos (Espécies / Naves e Veículos / Filmes) ---------- */
+/* ---------- Cards genéricos (Naves e Veículos / Espécies / Filmes) ---------- */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
