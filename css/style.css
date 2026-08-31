@@ -311,6 +311,18 @@ body {
   margin-top: 0.75rem;
 }
 
+/* ---------- Layout de duas colunas (Naves e Veículos / Espécies) ---------- */
+.planets-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .planets-layout { grid-template-columns: 1fr; }
+}
+
 .detail-panel {
   background: var(--bg-card);
   border: 1px solid var(--border);
