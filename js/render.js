@@ -231,6 +231,9 @@ export function renderVehiclesView(container, { starships, vehicles }) {
           <button type="button" class="active" data-tab="starships" role="tab" aria-selected="true">Naves</button>
           <button type="button" data-tab="vehicles" role="tab" aria-selected="false">Veículos</button>
         </div>
+        <div class="people-toolbar">
+          <input type="search" id="vehicles-search" placeholder="Buscar por nome…" aria-label="Buscar naves e veículos" />
+        </div>
         <div class="card-grid" id="vehicles-grid"></div>
       </div>
       <div class="detail-panel" id="vehicle-detail">
@@ -242,9 +245,11 @@ export function renderVehiclesView(container, { starships, vehicles }) {
   const grid = container.querySelector("#vehicles-grid");
   const detail = container.querySelector("#vehicle-detail");
   const tabButtons = container.querySelectorAll("[data-tab]");
+  const searchInput = container.querySelector("#vehicles-search");
+  let searchTerm = "";
 
   function paintGrid() {
-    const list = datasets[current];
+    const list = datasets[current].filter((item) => item.name.toLowerCase().includes(searchTerm));
     grid.innerHTML = list.length
       ? list
           .map(
@@ -255,15 +260,14 @@ export function renderVehiclesView(container, { starships, vehicles }) {
         </button>`
           )
           .join("")
-      : `<p class="state-msg">Nenhum ${emptyLabel[current]} catalogado.</p>`;
+      : `<p class="state-msg">Nenhum ${emptyLabel[current]} encontrado.</p>`;
 
     grid.querySelectorAll(".info-card").forEach((el) => {
-      el.addEventListener("click", () => selectItem(Number(el.dataset.index)));
+      el.addEventListener("click", () => selectItem(list[Number(el.dataset.index)]));
     });
   }
 
-  function selectItem(index) {
-    const item = datasets[current][index];
+  function selectItem(item) {
     const isShip = current === "starships";
     detail.innerHTML = `
       <h3>${item.name}</h3>
@@ -286,6 +290,11 @@ export function renderVehiclesView(container, { starships, vehicles }) {
       detail.innerHTML = `<p class="state-msg">Selecione um item na lista para ver detalhes.</p>`;
       paintGrid();
     });
+  });
+
+  searchInput.addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    paintGrid();
   });
 
   paintGrid();
