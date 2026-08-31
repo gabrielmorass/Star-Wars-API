@@ -21,6 +21,10 @@ export function getPeople() {
   return fetchJSON(`${BASE_URL}/people`);
 }
 
+export function getSpecies() {
+  return fetchJSON(`${BASE_URL}/species`);
+}
+
 export function getResource(url) {
   return fetchJSON(url);
 }
