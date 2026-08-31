@@ -1,4 +1,4 @@
-import { getPlanets, getPeople, getStarships, getVehicles } from "./api.js";
+import { getPlanets, getPeople, getStarships, getVehicles, getSpecies } from "./api.js";
 import {
   renderHub,
   renderLoading,
@@ -7,12 +7,13 @@ import {
   renderPeopleView,
   renderPersonModal,
   renderVehiclesView,
+  renderSpeciesView,
 } from "./render.js";
 
 const app = document.getElementById("app");
 const navButtons = document.querySelectorAll(".topnav [data-nav]");
 
-const cache = { planets: null, people: null, vehiclesData: null };
+const cache = { planets: null, people: null, vehiclesData: null, species: null };
 
 async function navigate(view) {
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.nav === view));
@@ -54,6 +55,17 @@ async function navigate(view) {
       renderVehiclesView(app, cache.vehiclesData);
     } catch (err) {
       renderError(app, `Não foi possível carregar naves e veículos. (${err.message})`);
+    }
+    return;
+  }
+
+  if (view === "species") {
+    renderLoading(app, "Buscando espécies na SWAPI…");
+    try {
+      if (!cache.species) cache.species = await getSpecies();
+      renderSpeciesView(app, cache.species);
+    } catch (err) {
+      renderError(app, `Não foi possível carregar as espécies. (${err.message})`);
     }
   }
 }

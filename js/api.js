@@ -29,6 +29,10 @@ export function getVehicles() {
   return fetchJSON(`${BASE_URL}/vehicles`);
 }
 
+export function getSpecies() {
+  return fetchJSON(`${BASE_URL}/species`);
+}
+
 export function getResource(url) {
   return fetchJSON(url);
 }

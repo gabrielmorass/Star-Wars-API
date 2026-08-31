@@ -52,6 +52,18 @@ export function renderHub(container, navigate) {
         <p>Compare specs de naves estelares e veículos usados na saga.</p>
         <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
+      <button class="hub-card" data-nav="species" type="button">
+        <span class="hub-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3c2 2.5 3 5 3 7.5S13.5 17 12 21c-1.5-4-3-7-3-10.5S10 5.5 12 3Z"></path>
+            <path d="M4.5 9c1.8 1 3 2.6 3 4.5S6.3 17 4.5 18"></path>
+            <path d="M19.5 9c-1.8 1-3 2.6-3 4.5s1.2 3.5 3 4.5"></path>
+          </svg>
+        </span>
+        <h2>Espécies</h2>
+        <p>Conheça as espécies da galáxia, seu idioma e planeta natal.</p>
+        <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
+      </button>
     </div>
   `;
   container.querySelectorAll("[data-nav]").forEach((el) => {
@@ -70,62 +82,38 @@ export function renderError(container, message) {
 /* ---------------- Sistema planetário ---------------- */
 
 export function renderPlanetsView(container, planets) {
-  const width = 640;
-  const height = 640;
-  const cx = width / 2;
-  const cy = height / 2;
-  const goldenAngle = 137.508 * (Math.PI / 180);
-  const scale = 34;
-  const nodeRadius = planets.length > 40 ? 8 : 10;
-
-  const nodes = planets
-    .map((planet, i) => {
-      const angle = i * goldenAngle;
-      const r = scale * Math.sqrt(i + 1);
-      const x = cx + r * Math.cos(angle);
-      const y = cy + r * Math.sin(angle);
-      return { planet, x, y };
-    })
-    .filter((n) => n.x > -20 && n.x < width + 20 && n.y > -20 && n.y < height + 20);
-
-  const svgNodes = nodes
-    .map(
-      (n, i) => `
-      <g class="planet-node" data-index="${i}" tabindex="0" role="button" aria-label="${n.planet.name}">
-        <circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${nodeRadius}" />
-        <text x="${n.x.toFixed(1)}" y="${(n.y + nodeRadius + 8).toFixed(1)}">${n.planet.name}</text>
-      </g>`
-    )
-    .join("");
+  let index = 0;
 
   container.innerHTML = `
-    <div class="planets-layout">
-      <div class="orbit-wrap">
-        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Mapa dos planetas do universo Star Wars, dispostos em espiral">
-          ${svgNodes}
-        </svg>
-      </div>
-      <div class="detail-panel" id="planet-detail">
-        <p class="state-msg">Selecione um planeta no mapa para ver detalhes.</p>
-      </div>
+    <div class="people-toolbar">
+      <input type="search" id="planet-search" placeholder="Ir para um planeta pelo nome…" aria-label="Buscar planeta" />
     </div>
+    <div class="carousel">
+      <button class="carousel-arrow" id="prev-planet" type="button" aria-label="Planeta anterior">‹</button>
+      <div class="detail-panel carousel-card" id="planet-card" tabindex="0"></div>
+      <button class="carousel-arrow" id="next-planet" type="button" aria-label="Próximo planeta">›</button>
+    </div>
+    <p class="carousel-position" id="planet-position"></p>
   `;
 
-  const detailPanel = container.querySelector("#planet-detail");
-  const nodeEls = container.querySelectorAll(".planet-node");
+  const card = container.querySelector("#planet-card");
+  const position = container.querySelector("#planet-position");
+  const prevBtn = container.querySelector("#prev-planet");
+  const nextBtn = container.querySelector("#next-planet");
+  const searchInput = container.querySelector("#planet-search");
 
-  async function selectNode(index) {
-    nodeEls.forEach((el) => el.classList.remove("selected"));
-    nodeEls[index].classList.add("selected");
-    const { planet } = nodes[index];
-    detailPanel.innerHTML = `<p class="state-msg">Carregando ${planet.name}…</p>`;
+  async function show(newIndex) {
+    index = (newIndex + planets.length) % planets.length;
+    const planet = planets[index];
+    position.textContent = `${index + 1} / ${planets.length}`;
+    card.innerHTML = `<p class="state-msg">Carregando ${planet.name}…</p>`;
 
     const [species, films] = await Promise.all([
       getPlanetSpecies(planet),
       getPlanetFilms(planet),
     ]);
 
-    detailPanel.innerHTML = `
+    card.innerHTML = `
       <h3>${planet.name}</h3>
       <div class="detail-row">
         <div class="label">Clima / Terreno</div>
@@ -150,15 +138,22 @@ export function renderPlanetsView(container, planets) {
     `;
   }
 
-  nodeEls.forEach((el, i) => {
-    el.addEventListener("click", () => selectNode(i));
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        selectNode(i);
-      }
-    });
+  prevBtn.addEventListener("click", () => show(index - 1));
+  nextBtn.addEventListener("click", () => show(index + 1));
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") { e.preventDefault(); show(index - 1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); show(index + 1); }
   });
+
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    if (!term) return;
+    const found = planets.findIndex((p) => p.name.toLowerCase().includes(term));
+    if (found !== -1) show(found);
+  });
+
+  show(0);
+  card.focus();
 }
 
 /* ---------------- Personagens ---------------- */
@@ -299,6 +294,65 @@ export function renderVehiclesView(container, { starships, vehicles }) {
   });
 
   paintGrid();
+}
+
+/* ---------------- Espécies ---------------- */
+
+export function renderSpeciesView(container, species) {
+  container.innerHTML = `
+    <div class="planets-layout">
+      <div>
+        <div class="people-toolbar">
+          <input type="search" id="species-search" placeholder="Buscar espécie por nome…" aria-label="Buscar espécie" />
+        </div>
+        <div class="card-grid" id="species-grid"></div>
+      </div>
+      <div class="detail-panel" id="species-detail">
+        <p class="state-msg">Selecione uma espécie para ver detalhes.</p>
+      </div>
+    </div>
+  `;
+
+  const grid = container.querySelector("#species-grid");
+  const detail = container.querySelector("#species-detail");
+  const searchInput = container.querySelector("#species-search");
+
+  async function selectSpecies(sp) {
+    detail.innerHTML = `<p class="state-msg">Carregando ${sp.name}…</p>`;
+    const homeworld = await getPlanetName(sp.homeworld);
+    detail.innerHTML = `
+      <h3>${sp.name}</h3>
+      <div class="detail-row"><div class="label">Classificação</div><div class="value">${sp.classification} (${sp.designation})</div></div>
+      <div class="detail-row"><div class="label">Idioma</div><div class="value">${sp.language}</div></div>
+      <div class="detail-row"><div class="label">Expectativa de vida</div><div class="value">${sp.average_lifespan === "unknown" ? "Desconhecida" : `${sp.average_lifespan} anos`}</div></div>
+      <div class="detail-row"><div class="label">Planeta natal</div><div class="value">${homeworld}</div></div>
+    `;
+  }
+
+  function paint(list) {
+    grid.innerHTML = list.length
+      ? list
+          .map(
+            (s, i) => `
+          <button class="info-card" data-index="${i}" type="button">
+            <h3>${s.name}</h3>
+            <p class="meta">${s.classification} · ${s.language}</p>
+          </button>`
+          )
+          .join("")
+      : `<p class="state-msg">Nenhuma espécie encontrada.</p>`;
+
+    grid.querySelectorAll(".info-card").forEach((el) => {
+      el.addEventListener("click", () => selectSpecies(list[Number(el.dataset.index)]));
+    });
+  }
+
+  paint(species);
+
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    paint(species.filter((s) => s.name.toLowerCase().includes(term)));
+  });
 }
 
 export async function renderPersonModal(person) {
