@@ -57,62 +57,38 @@ export function renderError(container, message) {
 /* ---------------- Sistema planetário ---------------- */
 
 export function renderPlanetsView(container, planets) {
-  const width = 640;
-  const height = 640;
-  const cx = width / 2;
-  const cy = height / 2;
-  const goldenAngle = 137.508 * (Math.PI / 180);
-  const scale = 34;
-  const nodeRadius = planets.length > 40 ? 8 : 10;
-
-  const nodes = planets
-    .map((planet, i) => {
-      const angle = i * goldenAngle;
-      const r = scale * Math.sqrt(i + 1);
-      const x = cx + r * Math.cos(angle);
-      const y = cy + r * Math.sin(angle);
-      return { planet, x, y };
-    })
-    .filter((n) => n.x > -20 && n.x < width + 20 && n.y > -20 && n.y < height + 20);
-
-  const svgNodes = nodes
-    .map(
-      (n, i) => `
-      <g class="planet-node" data-index="${i}" tabindex="0" role="button" aria-label="${n.planet.name}">
-        <circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${nodeRadius}" />
-        <text x="${n.x.toFixed(1)}" y="${(n.y + nodeRadius + 8).toFixed(1)}">${n.planet.name}</text>
-      </g>`
-    )
-    .join("");
+  let index = 0;
 
   container.innerHTML = `
-    <div class="planets-layout">
-      <div class="orbit-wrap">
-        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Mapa dos planetas do universo Star Wars, dispostos em espiral">
-          ${svgNodes}
-        </svg>
-      </div>
-      <div class="detail-panel" id="planet-detail">
-        <p class="state-msg">Selecione um planeta no mapa para ver detalhes.</p>
-      </div>
+    <div class="people-toolbar">
+      <input type="search" id="planet-search" placeholder="Ir para um planeta pelo nome…" aria-label="Buscar planeta" />
     </div>
+    <div class="carousel">
+      <button class="carousel-arrow" id="prev-planet" type="button" aria-label="Planeta anterior">‹</button>
+      <div class="detail-panel carousel-card" id="planet-card" tabindex="0"></div>
+      <button class="carousel-arrow" id="next-planet" type="button" aria-label="Próximo planeta">›</button>
+    </div>
+    <p class="carousel-position" id="planet-position"></p>
   `;
 
-  const detailPanel = container.querySelector("#planet-detail");
-  const nodeEls = container.querySelectorAll(".planet-node");
+  const card = container.querySelector("#planet-card");
+  const position = container.querySelector("#planet-position");
+  const prevBtn = container.querySelector("#prev-planet");
+  const nextBtn = container.querySelector("#next-planet");
+  const searchInput = container.querySelector("#planet-search");
 
-  async function selectNode(index) {
-    nodeEls.forEach((el) => el.classList.remove("selected"));
-    nodeEls[index].classList.add("selected");
-    const { planet } = nodes[index];
-    detailPanel.innerHTML = `<p class="state-msg">Carregando ${planet.name}…</p>`;
+  async function show(newIndex) {
+    index = (newIndex + planets.length) % planets.length;
+    const planet = planets[index];
+    position.textContent = `${index + 1} / ${planets.length}`;
+    card.innerHTML = `<p class="state-msg">Carregando ${planet.name}…</p>`;
 
     const [species, films] = await Promise.all([
       getPlanetSpecies(planet),
       getPlanetFilms(planet),
     ]);
 
-    detailPanel.innerHTML = `
+    card.innerHTML = `
       <h3>${planet.name}</h3>
       <div class="detail-row">
         <div class="label">Clima / Terreno</div>
@@ -137,15 +113,22 @@ export function renderPlanetsView(container, planets) {
     `;
   }
 
-  nodeEls.forEach((el, i) => {
-    el.addEventListener("click", () => selectNode(i));
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        selectNode(i);
-      }
-    });
+  prevBtn.addEventListener("click", () => show(index - 1));
+  nextBtn.addEventListener("click", () => show(index + 1));
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") { e.preventDefault(); show(index - 1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); show(index + 1); }
   });
+
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    if (!term) return;
+    const found = planets.findIndex((p) => p.name.toLowerCase().includes(term));
+    if (found !== -1) show(found);
+  });
+
+  show(0);
+  card.focus();
 }
 
 /* ---------------- Personagens ---------------- */
