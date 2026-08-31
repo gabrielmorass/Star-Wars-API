@@ -437,6 +437,40 @@ body {
 .person-card .name { font-size: 0.95rem; font-weight: 500; margin: 0 0 0.2rem; }
 .person-card .meta { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
 
+/* ---------- Cards genéricos (Espécies / Naves e Veículos / Filmes) ---------- */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.25rem;
+}
+
+.info-card {
+  background: linear-gradient(160deg, var(--bg-card), var(--bg-elevated) 140%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.info-card:hover, .info-card:focus-visible {
+  border-color: var(--sw-yellow);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35), 0 0 18px rgba(255, 232, 31, 0.1);
+}
+
+.info-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin: 0 0 0.35rem;
+  color: var(--text-primary);
+}
+
+.info-card .meta { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
+
 /* ---------- Modal de personagem ---------- */
 .modal-backdrop {
   position: fixed; inset: 0;

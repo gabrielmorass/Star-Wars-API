@@ -39,6 +39,18 @@ export function renderHub(container, navigate) {
         <p>Busque e explore os personagens da saga, com detalhes de cada um.</p>
         <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
+      <button class="hub-card" data-nav="species" type="button">
+        <span class="hub-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3c2 2.5 3 5 3 7.5S13.5 17 12 21c-1.5-4-3-7-3-10.5S10 5.5 12 3Z"></path>
+            <path d="M4.5 9c1.8 1 3 2.6 3 4.5S6.3 17 4.5 18"></path>
+            <path d="M19.5 9c-1.8 1-3 2.6-3 4.5s1.2 3.5 3 4.5"></path>
+          </svg>
+        </span>
+        <h2>Espécies</h2>
+        <p>Conheça as espécies da galáxia, seu idioma e planeta natal.</p>
+        <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
+      </button>
     </div>
   `;
   container.querySelectorAll("[data-nav]").forEach((el) => {
@@ -186,6 +198,65 @@ export async function renderPeopleView(container, people, onOpenPerson) {
 
   applyFilter();
   searchInput.addEventListener("input", applyFilter);
+}
+
+/* ---------------- Espécies ---------------- */
+
+export function renderSpeciesView(container, species) {
+  container.innerHTML = `
+    <div class="planets-layout">
+      <div>
+        <div class="people-toolbar">
+          <input type="search" id="species-search" placeholder="Buscar espécie por nome…" aria-label="Buscar espécie" />
+        </div>
+        <div class="card-grid" id="species-grid"></div>
+      </div>
+      <div class="detail-panel" id="species-detail">
+        <p class="state-msg">Selecione uma espécie para ver detalhes.</p>
+      </div>
+    </div>
+  `;
+
+  const grid = container.querySelector("#species-grid");
+  const detail = container.querySelector("#species-detail");
+  const searchInput = container.querySelector("#species-search");
+
+  async function selectSpecies(sp) {
+    detail.innerHTML = `<p class="state-msg">Carregando ${sp.name}…</p>`;
+    const homeworld = await getPlanetName(sp.homeworld);
+    detail.innerHTML = `
+      <h3>${sp.name}</h3>
+      <div class="detail-row"><div class="label">Classificação</div><div class="value">${sp.classification} (${sp.designation})</div></div>
+      <div class="detail-row"><div class="label">Idioma</div><div class="value">${sp.language}</div></div>
+      <div class="detail-row"><div class="label">Expectativa de vida</div><div class="value">${sp.average_lifespan === "unknown" ? "Desconhecida" : `${sp.average_lifespan} anos`}</div></div>
+      <div class="detail-row"><div class="label">Planeta natal</div><div class="value">${homeworld}</div></div>
+    `;
+  }
+
+  function paint(list) {
+    grid.innerHTML = list.length
+      ? list
+          .map(
+            (s, i) => `
+          <button class="info-card" data-index="${i}" type="button">
+            <h3>${s.name}</h3>
+            <p class="meta">${s.classification} · ${s.language}</p>
+          </button>`
+          )
+          .join("")
+      : `<p class="state-msg">Nenhuma espécie encontrada.</p>`;
+
+    grid.querySelectorAll(".info-card").forEach((el) => {
+      el.addEventListener("click", () => selectSpecies(list[Number(el.dataset.index)]));
+    });
+  }
+
+  paint(species);
+
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    paint(species.filter((s) => s.name.toLowerCase().includes(term)));
+  });
 }
 
 export async function renderPersonModal(person) {
