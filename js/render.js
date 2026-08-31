@@ -221,16 +221,11 @@ export async function renderPeopleView(container, people, onOpenPerson) {
 export function renderSpeciesView(container, species) {
   container.innerHTML = `
     <div class="planets-layout">
-      <div class="card-grid" id="species-grid">
-        ${species
-          .map(
-            (s, i) => `
-          <button class="info-card" data-index="${i}" type="button">
-            <h3>${s.name}</h3>
-            <p class="meta">${s.classification} · ${s.language}</p>
-          </button>`
-          )
-          .join("")}
+      <div>
+        <div class="people-toolbar">
+          <input type="search" id="species-search" placeholder="Buscar espécie por nome…" aria-label="Buscar espécie" />
+        </div>
+        <div class="card-grid" id="species-grid"></div>
       </div>
       <div class="detail-panel" id="species-detail">
         <p class="state-msg">Selecione uma espécie para ver detalhes.</p>
@@ -238,10 +233,11 @@ export function renderSpeciesView(container, species) {
     </div>
   `;
 
+  const grid = container.querySelector("#species-grid");
   const detail = container.querySelector("#species-detail");
+  const searchInput = container.querySelector("#species-search");
 
-  async function selectSpecies(index) {
-    const sp = species[index];
+  async function selectSpecies(sp) {
     detail.innerHTML = `<p class="state-msg">Carregando ${sp.name}…</p>`;
     const homeworld = await getPlanetName(sp.homeworld);
     detail.innerHTML = `
@@ -253,8 +249,29 @@ export function renderSpeciesView(container, species) {
     `;
   }
 
-  container.querySelectorAll("#species-grid .info-card").forEach((el, i) => {
-    el.addEventListener("click", () => selectSpecies(i));
+  function paint(list) {
+    grid.innerHTML = list.length
+      ? list
+          .map(
+            (s, i) => `
+          <button class="info-card" data-index="${i}" type="button">
+            <h3>${s.name}</h3>
+            <p class="meta">${s.classification} · ${s.language}</p>
+          </button>`
+          )
+          .join("")
+      : `<p class="state-msg">Nenhuma espécie encontrada.</p>`;
+
+    grid.querySelectorAll(".info-card").forEach((el) => {
+      el.addEventListener("click", () => selectSpecies(list[Number(el.dataset.index)]));
+    });
+  }
+
+  paint(species);
+
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    paint(species.filter((s) => s.name.toLowerCase().includes(term)));
   });
 }
 
