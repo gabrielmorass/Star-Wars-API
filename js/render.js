@@ -60,6 +60,9 @@ export function renderPlanetsView(container, planets) {
   let index = 0;
 
   container.innerHTML = `
+    <div class="people-toolbar">
+      <input type="search" id="planet-search" placeholder="Ir para um planeta pelo nome…" aria-label="Buscar planeta" />
+    </div>
     <div class="carousel">
       <button class="carousel-arrow" id="prev-planet" type="button" aria-label="Planeta anterior">‹</button>
       <div class="detail-panel carousel-card" id="planet-card" tabindex="0"></div>
@@ -72,6 +75,7 @@ export function renderPlanetsView(container, planets) {
   const position = container.querySelector("#planet-position");
   const prevBtn = container.querySelector("#prev-planet");
   const nextBtn = container.querySelector("#next-planet");
+  const searchInput = container.querySelector("#planet-search");
 
   async function show(newIndex) {
     index = (newIndex + planets.length) % planets.length;
@@ -114,6 +118,13 @@ export function renderPlanetsView(container, planets) {
   card.addEventListener("keydown", (e) => {
     if (e.key === "ArrowLeft") { e.preventDefault(); show(index - 1); }
     if (e.key === "ArrowRight") { e.preventDefault(); show(index + 1); }
+  });
+
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    if (!term) return;
+    const found = planets.findIndex((p) => p.name.toLowerCase().includes(term));
+    if (found !== -1) show(found);
   });
 
   show(0);
