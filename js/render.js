@@ -221,21 +221,38 @@ export function renderFilmsView(container, films) {
   const sorted = [...films].sort((a, b) => a.episode_id - b.episode_id);
 
   container.innerHTML = `
-    <div class="card-grid">
-      ${sorted
-        .map(
-          (f, i) => `
+    <div class="people-toolbar">
+      <input type="search" id="films-search" placeholder="Buscar filme por título…" aria-label="Buscar filme" />
+    </div>
+    <div class="card-grid" id="films-grid"></div>
+  `;
+
+  const grid = container.querySelector("#films-grid");
+  const searchInput = container.querySelector("#films-search");
+
+  function paint(list) {
+    grid.innerHTML = list.length
+      ? list
+          .map(
+            (f, i) => `
         <button class="info-card" data-index="${i}" type="button">
           <h3>Ep. ${f.episode_id} — ${f.title}</h3>
           <p class="meta">${new Date(f.release_date).toLocaleDateString("pt-BR", { timeZone: "UTC" })} · Dir. ${f.director}</p>
         </button>`
-        )
-        .join("")}
-    </div>
-  `;
+          )
+          .join("")
+      : `<p class="state-msg">Nenhum filme encontrado.</p>`;
 
-  container.querySelectorAll(".info-card").forEach((el) => {
-    el.addEventListener("click", () => renderFilmModal(sorted[Number(el.dataset.index)]));
+    grid.querySelectorAll(".info-card").forEach((el) => {
+      el.addEventListener("click", () => renderFilmModal(list[Number(el.dataset.index)]));
+    });
+  }
+
+  paint(sorted);
+
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    paint(sorted.filter((f) => f.title.toLowerCase().includes(term)));
   });
 }
 
