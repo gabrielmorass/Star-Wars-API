@@ -179,12 +179,13 @@ export async function renderPeopleView(container, people, onOpenPerson) {
     });
   }
 
-  paint(people);
+  function applyFilter() {
+    const term = searchInput.value.trim().toLowerCase();
+    paint(term ? people.filter((p) => p.name.toLowerCase().includes(term)) : people);
+  }
 
-  searchInput.addEventListener("input", (e) => {
-    const term = e.target.value.trim().toLowerCase();
-    paint(people.filter((p) => p.name.toLowerCase().includes(term)));
-  });
+  applyFilter();
+  searchInput.addEventListener("input", applyFilter);
 }
 
 export async function renderPersonModal(person) {
