@@ -273,7 +273,45 @@ body {
 
 .state-msg.error { color: #e39257; }
 
-/* ---------- Sistema planetário (mapa espiral) ---------- */
+/* ---------- Sistema planetário (carrossel) ---------- */
+.carousel {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.carousel-arrow {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  color: var(--sw-yellow);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.carousel-arrow:hover, .carousel-arrow:focus-visible {
+  border-color: var(--sw-yellow);
+  box-shadow: 0 0 14px rgba(255, 232, 31, 0.25);
+}
+
+.carousel-arrow:active { transform: scale(0.92); }
+
+.carousel-card { flex: 1; outline: none; }
+
+.carousel-position {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+}
+
+/* ---------- Layout de duas colunas (Naves e Veículos / Espécies) ---------- */
 .planets-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr);
@@ -284,34 +322,6 @@ body {
 @media (max-width: 760px) {
   .planets-layout { grid-template-columns: 1fr; }
 }
-
-.orbit-wrap {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.planet-node circle {
-  fill: var(--bg-card);
-  stroke: var(--border-strong);
-  stroke-width: 1;
-  transition: fill 0.15s, stroke 0.15s;
-}
-
-.planet-node text {
-  fill: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: 6px;
-  text-anchor: middle;
-  pointer-events: none;
-}
-
-.planet-node:hover circle,
-.planet-node:focus circle { stroke: var(--accent); }
-
-.planet-node.selected circle { fill: var(--accent); stroke: var(--accent); }
-.planet-node.selected text { fill: #1a1408; }
 
 .detail-panel {
   background: var(--bg-card);

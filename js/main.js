@@ -1,4 +1,4 @@
-import { getPlanets, getPeople, getFilms } from "./api.js";
+import { getPlanets, getPeople, getFilms, getSpecies } from "./api.js";
 import {
   renderHub,
   renderLoading,
@@ -7,12 +7,13 @@ import {
   renderPeopleView,
   renderPersonModal,
   renderFilmsView,
+  renderSpeciesView,
 } from "./render.js";
 
 const app = document.getElementById("app");
 const navButtons = document.querySelectorAll(".topnav [data-nav]");
 
-const cache = { planets: null, people: null, films: null };
+const cache = { planets: null, people: null, films: null, species: null };
 
 async function navigate(view) {
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.nav === view));
@@ -51,6 +52,17 @@ async function navigate(view) {
       renderFilmsView(app, cache.films);
     } catch (err) {
       renderError(app, `Não foi possível carregar os filmes. (${err.message})`);
+    }
+    return;
+  }
+
+  if (view === "species") {
+    renderLoading(app, "Buscando espécies na SWAPI…");
+    try {
+      if (!cache.species) cache.species = await getSpecies();
+      renderSpeciesView(app, cache.species);
+    } catch (err) {
+      renderError(app, `Não foi possível carregar as espécies. (${err.message})`);
     }
   }
 }
