@@ -118,6 +118,8 @@ body {
 
 .topnav { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
+.tab-toggle { margin-bottom: 1rem; }
+
 .topnav button {
   font-family: var(--font-body);
   font-size: 0.85rem;

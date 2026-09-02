@@ -25,6 +25,14 @@ export function getFilms() {
   return fetchJSON(`${BASE_URL}/films`);
 }
 
+export function getStarships() {
+  return fetchJSON(`${BASE_URL}/starships`);
+}
+
+export function getVehicles() {
+  return fetchJSON(`${BASE_URL}/vehicles`);
+}
+
 export function getSpecies() {
   return fetchJSON(`${BASE_URL}/species`);
 }
