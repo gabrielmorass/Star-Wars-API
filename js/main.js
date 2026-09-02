@@ -1,4 +1,4 @@
-import { getPlanets, getPeople, getStarships, getVehicles, getSpecies } from "./api.js";
+import { getPlanets, getPeople, getFilms, getStarships, getVehicles, getSpecies } from "./api.js";
 import {
   renderHub,
   renderLoading,
@@ -6,6 +6,7 @@ import {
   renderPlanetsView,
   renderPeopleView,
   renderPersonModal,
+  renderFilmsView,
   renderVehiclesView,
   renderSpeciesView,
 } from "./render.js";
@@ -13,7 +14,7 @@ import {
 const app = document.getElementById("app");
 const navButtons = document.querySelectorAll(".topnav [data-nav]");
 
-const cache = { planets: null, people: null, vehiclesData: null, species: null };
+const cache = { planets: null, people: null, films: null, vehiclesData: null, species: null };
 
 async function navigate(view) {
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.nav === view));
@@ -41,6 +42,17 @@ async function navigate(view) {
       renderPeopleView(app, cache.people, renderPersonModal);
     } catch (err) {
       renderError(app, `Não foi possível carregar os personagens. (${err.message})`);
+    }
+    return;
+  }
+
+  if (view === "films") {
+    renderLoading(app, "Buscando filmes na SWAPI…");
+    try {
+      if (!cache.films) cache.films = await getFilms();
+      renderFilmsView(app, cache.films);
+    } catch (err) {
+      renderError(app, `Não foi possível carregar os filmes. (${err.message})`);
     }
     return;
   }

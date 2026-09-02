@@ -21,6 +21,10 @@ export function getPeople() {
   return fetchJSON(`${BASE_URL}/people`);
 }
 
+export function getFilms() {
+  return fetchJSON(`${BASE_URL}/films`);
+}
+
 export function getStarships() {
   return fetchJSON(`${BASE_URL}/starships`);
 }
