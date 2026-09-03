@@ -4,6 +4,8 @@ import { getPlanetSpecies, getPlanetFilms } from "./api.js";
 
 export function renderPlanetsView(container, planets) {
   let index = 0;
+  let requestId = 0;
+  const detailCache = new Map();
 
   container.innerHTML = `
     <div class="people-toolbar">
@@ -27,13 +29,27 @@ export function renderPlanetsView(container, planets) {
     index = (newIndex + planets.length) % planets.length;
     const planet = planets[index];
     position.textContent = `${index + 1} / ${planets.length}`;
-    card.innerHTML = `<p class="state-msg">Carregando ${planet.name}…</p>`;
+    const myRequest = ++requestId;
 
-    const [species, films] = await Promise.all([
-      getPlanetSpecies(planet),
-      getPlanetFilms(planet),
-    ]);
+    let detail = detailCache.get(planet.url);
+    if (!detail) {
+      card.innerHTML = `<p class="state-msg">Carregando ${planet.name}…</p>`;
 
+      const [species, films] = await Promise.all([
+        getPlanetSpecies(planet),
+        getPlanetFilms(planet),
+      ]);
+
+      // Uma navegação mais recente já começou enquanto isto carregava —
+      // descarta este resultado para não sobrescrever o planeta certo com
+      // dados de um planeta que o usuário já deixou para trás.
+      if (myRequest !== requestId) return;
+
+      detail = { species, films };
+      detailCache.set(planet.url, detail);
+    }
+
+    const { species, films } = detail;
     card.innerHTML = `
       <h3>${planet.name}</h3>
       <div class="detail-row">
@@ -66,11 +82,18 @@ export function renderPlanetsView(container, planets) {
     if (e.key === "ArrowRight") { e.preventDefault(); show(index + 1); }
   });
 
+  let searchDebounce = null;
   searchInput.addEventListener("input", (e) => {
     const term = e.target.value.trim().toLowerCase();
+    clearTimeout(searchDebounce);
     if (!term) return;
-    const found = planets.findIndex((p) => p.name.toLowerCase().includes(term));
-    if (found !== -1) show(found);
+    // Espera uma pausa na digitação antes de navegar — sem isso, cada tecla
+    // de um nome digitado rápido podia disparar seu próprio carregamento de
+    // planeta (cada um com sua leva de requisições à SWAPI).
+    searchDebounce = setTimeout(() => {
+      const found = planets.findIndex((p) => p.name.toLowerCase().includes(term));
+      if (found !== -1) show(found);
+    }, 250);
   });
 
   show(0);
