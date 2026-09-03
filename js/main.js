@@ -1,15 +1,15 @@
-import { getPlanets, getPeople, getFilms, getStarships, getVehicles, getSpecies } from "./api.js";
-import {
-  renderHub,
-  renderLoading,
-  renderError,
-  renderPlanetsView,
-  renderPeopleView,
-  renderPersonModal,
-  renderFilmsView,
-  renderVehiclesView,
-  renderSpeciesView,
-} from "./render.js";
+import { renderLoading, renderError } from "./core/dom.js";
+import { renderHub } from "./features/hub/view.js";
+import { getPlanets } from "./features/planets/api.js";
+import { renderPlanetsView } from "./features/planets/view.js";
+import { getPeople } from "./features/people/api.js";
+import { renderPeopleView, renderPersonModal } from "./features/people/view.js";
+import { getFilms } from "./features/films/api.js";
+import { renderFilmsView } from "./features/films/view.js";
+import { getStarships, getVehicles } from "./features/vehicles/api.js";
+import { renderVehiclesView } from "./features/vehicles/view.js";
+import { getSpecies } from "./features/species/api.js";
+import { renderSpeciesView } from "./features/species/view.js";
 
 const app = document.getElementById("app");
 const navButtons = document.querySelectorAll(".topnav [data-nav]");
