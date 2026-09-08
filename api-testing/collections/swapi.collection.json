@@ -1,0 +1,335 @@
+{
+  "info": {
+    "name": "SWAPI — Codex Estelar",
+    "description": "Testes de API contra a SWAPI (https://swapi.info/api), a mesma consumida pelo front-end do Codex Estelar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Dados Válidos",
+      "description": "Cenários com endpoints e parâmetros corretos — caminho feliz.",
+      "item": [
+        {
+          "name": "GET /planets retorna lista válida",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/planets",
+              "host": ["{{baseUrl}}"],
+              "path": ["planets"]
+            },
+            "description": "Lista todos os planetas — usada pelo carrossel do Sistema Planetário."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta deve ser uma lista não vazia', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.be.an('array').that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('Cada planeta deve ter name, climate e residents', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    const primeiro = resposta[0];",
+                  "    pm.expect(primeiro).to.have.property('name');",
+                  "    pm.expect(primeiro).to.have.property('climate');",
+                  "    pm.expect(primeiro).to.have.property('residents').that.is.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people retorna lista válida",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/people",
+              "host": ["{{baseUrl}}"],
+              "path": ["people"]
+            },
+            "description": "Lista todos os personagens — usada pela view Personagens."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta deve ser uma lista não vazia', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.be.an('array').that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('Cada personagem deve ter o campo birth_year', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta[0]).to.have.property('birth_year');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /films retorna os 6 episódios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/films",
+              "host": ["{{baseUrl}}"],
+              "path": ["films"]
+            },
+            "description": "Lista todos os filmes — a SWAPI cobre os Episódios I a VI."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deve retornar exatamente 6 filmes', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.have.lengthOf(6);",
+                  "});",
+                  "",
+                  "pm.test('episode_id deve cobrir de 1 a 6', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    const episodios = resposta.map((f) => f.episode_id).sort((a, b) => a - b);",
+                  "    pm.expect(episodios).to.eql([1, 2, 3, 4, 5, 6]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /species retorna lista válida",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/species",
+              "host": ["{{baseUrl}}"],
+              "path": ["species"]
+            },
+            "description": "Lista todas as espécies — usada pela view Espécies."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta deve ser uma lista não vazia', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.be.an('array').that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('Cada espécie deve ter o campo language', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta[0]).to.have.property('language');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /starships retorna lista válida",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/starships",
+              "host": ["{{baseUrl}}"],
+              "path": ["starships"]
+            },
+            "description": "Lista todas as naves — usada pela aba Naves da view Naves e Veículos."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta deve ser uma lista não vazia', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.be.an('array').that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('Cada nave deve ter o campo starship_class', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta[0]).to.have.property('starship_class');",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta deve ser menor que 5 segundos', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dados Inválidos e Inoportunos",
+      "description": "Cenários com IDs inexistentes, malformados ou parâmetros não suportados pela SWAPI.",
+      "item": [
+        {
+          "name": "GET /planets/9999 — ID inexistente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/planets/9999",
+              "host": ["{{baseUrl}}"],
+              "path": ["planets", "9999"]
+            },
+            "description": "Não existe planeta com esse ID. A aplicação trata esse erro em fetchJSON (js/core/api.js), sem lançar exceção não capturada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /planets/abc — ID malformado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/planets/abc",
+              "host": ["{{baseUrl}}"],
+              "path": ["planets", "abc"]
+            },
+            "description": "ID não numérico — a API deve rejeitar o recurso em vez de retornar 200 com dado inválido."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status não deve ser 200 OK', function () {",
+                  "    pm.expect(pm.response.code).to.not.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /vehicles/9999 — ID inexistente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/vehicles/9999",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles", "9999"]
+            },
+            "description": "Não existe veículo com esse ID."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /species/9999 — ID inexistente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/species/9999",
+              "host": ["{{baseUrl}}"],
+              "path": ["species", "9999"]
+            },
+            "description": "Não existe espécie com esse ID."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people?search=Luke — parâmetro não suportado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/people?search=Luke",
+              "host": ["{{baseUrl}}"],
+              "path": ["people"],
+              "query": [{ "key": "search", "value": "Luke" }]
+            },
+            "description": "A SWAPI não implementa busca server-side (documentado no README do projeto) — espera-se que o parâmetro seja ignorado e a lista completa seja retornada, não uma lista filtrada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK mesmo com parâmetro ignorado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Parâmetro search é ignorado — retorna a lista completa, não filtrada', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.length).to.be.above(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

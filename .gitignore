@@ -2,3 +2,17 @@
 # testes. Não fazem parte da entrega em si (o Plano de Testes formal é
 # entregue separadamente em PDF) e não devem ser versionados.
 docs-local/
+
+# Dependências instaladas (cypress-project/ e api-testing/)
+node_modules/
+
+# Cache/artefatos de execução do Cypress
+cypress-project/cypress/videos/
+cypress-project/cypress/screenshots/
+cypress-project/cypress/downloads/
+
+# Relatórios de execução gerados pelos testes (HTML/JSON) — artefatos de
+# cada execução, não código-fonte
+cypress-project/relatorio/
+cypress-project/cypress-mochawesome-reporter.log
+api-testing/relatorio.html
