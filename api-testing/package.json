@@ -1,0 +1,15 @@
+{
+  "name": "api-testing-codex-estelar",
+  "version": "1.0.0",
+  "description": "Testes de API com Postman/Newman — SWAPI (Codex Estelar)",
+  "author": "Codex Estelar QA",
+  "license": "MIT",
+  "scripts": {
+    "test": "newman run collections/swapi.collection.json -e environments/swapi.environment.json",
+    "test:relatorio": "newman run collections/swapi.collection.json -e environments/swapi.environment.json --reporters cli,htmlextra --reporter-htmlextra-export relatorio.html"
+  },
+  "devDependencies": {
+    "newman": "^6.1.0",
+    "newman-reporter-htmlextra": "^1.22.11"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "cypress-codex-estelar",
+  "version": "1.0.0",
+  "description": "Testes de interface do Codex Estelar com Cypress — POM e BDD (Gherkin)",
+  "author": "Codex Estelar QA",
+  "license": "MIT",
+  "scripts": {
+    "cypress:abrir": "cypress open",
+    "test": "start-server-and-test servidor http://localhost:8080 test:bdd",
+    "test:bdd": "cypress run --config-file cypress.bdd.config.js",
+    "abrir:bdd": "cypress open --config-file cypress.bdd.config.js",
+    "servidor": "http-server .. -p 8080 -s"
+  },
+  "devDependencies": {
+    "@badeball/cypress-cucumber-preprocessor": "^20.1.2",
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.0.0",
+    "cypress": "^13.0.0",
+    "cypress-mochawesome-reporter": "^3.8.4",
+    "esbuild": "^0.20.0",
+    "http-server": "^14.1.1",
+    "start-server-and-test": "^2.0.0"
+  },
+  "cypress-cucumber-preprocessor": {
+    "nonGlobalStepDefinitions": false,
+    "stepDefinitions": "cypress/bdd/step_definitions/**/*.steps.js"
+  }
+}

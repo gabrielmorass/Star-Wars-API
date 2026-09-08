@@ -1,0 +1,8 @@
+{
+  "personagens": {
+    "buscaValida": "Luke",
+    "nomeEsperado": "Luke Skywalker",
+    "buscaSemResultado": "zzzzzz",
+    "mensagemSemResultado": "Nenhum personagem encontrado."
+  }
+}
