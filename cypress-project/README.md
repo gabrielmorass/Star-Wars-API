@@ -47,15 +47,20 @@ São **28 cenários** em 9 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
-| `personagens/personagens.feature` | 2 | busca por nome e estado de "nenhum resultado" |
+| `personagens/busca.feature` | 2 | busca por nome e estado de "nenhum resultado" |
 | `personagens/linha-do-tempo.feature` | 4 | troca de modo, contador, busca no eixo e abertura do modal |
 | `personagens/ordenacao-e-modal.feature` | 4 | ordenação por altura/nascimento/nome e navegação por conexões |
-| `filmes/filmes.feature` | 2 | busca por título e estado de "nenhum resultado" |
+| `filmes/busca.feature` | 2 | busca por título e estado de "nenhum resultado" |
 | `filmes/posteres-e-cronologia.feature` | 4 | grade de pôsteres, arte em SVG, ordenação e barra de cronologia |
 | `filmes/modal-abertura.feature` | 6 | texto de abertura no DOM, abas sob demanda e controles do crawl |
-| `planetas/planetas.feature` | 2 | busca que pula direto para o planeta |
-| `naves-e-veiculos/naves-e-veiculos.feature` | 2 | busca por nome |
-| `especies/especies.feature` | 2 | busca por nome |
+| `planetas/busca.feature` | 2 | busca que pula direto para o planeta |
+| `naves-e-veiculos/busca.feature` | 2 | busca por nome |
+| `especies/busca-e-detalhe.feature` | 2 | busca por nome e detalhe do planeta natal |
+
+Convenção de nomes: cada arquivo `.feature` leva o nome da **capacidade**
+que testa (`busca`, `linha-do-tempo`, `modal-abertura`...), não da view —
+a pasta já diz qual view é. Um mesmo view pode ter vários arquivos
+(como Personagens e Filmes, que têm 3 cada).
 
 ### Duas invariantes que vale destacar
 

@@ -10,7 +10,7 @@
       "description": "Cenários com endpoints e parâmetros corretos — caminho feliz.",
       "item": [
         {
-          "name": "GET /planets retorna lista válida",
+          "name": "TC-011 — GET /planets retorna lista válida",
           "request": {
             "method": "GET",
             "url": {
@@ -48,7 +48,7 @@
           ]
         },
         {
-          "name": "GET /people retorna lista válida",
+          "name": "TC-012 — GET /people retorna lista válida",
           "request": {
             "method": "GET",
             "url": {
@@ -83,7 +83,7 @@
           ]
         },
         {
-          "name": "GET /films retorna os 6 episódios",
+          "name": "TC-013 — GET /films retorna os 6 episódios",
           "request": {
             "method": "GET",
             "url": {
@@ -119,7 +119,7 @@
           ]
         },
         {
-          "name": "GET /species retorna lista válida",
+          "name": "TC-014 — GET /species retorna lista válida",
           "request": {
             "method": "GET",
             "url": {
@@ -154,7 +154,7 @@
           ]
         },
         {
-          "name": "GET /starships retorna lista válida",
+          "name": "TC-015 — GET /starships retorna lista válida",
           "request": {
             "method": "GET",
             "url": {
@@ -199,7 +199,7 @@
       "description": "Cenários com IDs inexistentes, malformados ou parâmetros não suportados pela SWAPI.",
       "item": [
         {
-          "name": "GET /planets/9999 — ID inexistente",
+          "name": "TC-016 — GET /planets/9999 — ID inexistente",
           "request": {
             "method": "GET",
             "url": {
@@ -224,7 +224,7 @@
           ]
         },
         {
-          "name": "GET /planets/abc — ID malformado",
+          "name": "TC-017 — GET /planets/abc — ID malformado",
           "request": {
             "method": "GET",
             "url": {
@@ -249,7 +249,7 @@
           ]
         },
         {
-          "name": "GET /vehicles/9999 — ID inexistente",
+          "name": "TC-018 — GET /vehicles/9999 — ID inexistente",
           "request": {
             "method": "GET",
             "url": {
@@ -274,7 +274,7 @@
           ]
         },
         {
-          "name": "GET /species/9999 — ID inexistente",
+          "name": "TC-019 — GET /species/9999 — ID inexistente",
           "request": {
             "method": "GET",
             "url": {
@@ -299,7 +299,7 @@
           ]
         },
         {
-          "name": "GET /people?search=Luke — parâmetro não suportado",
+          "name": "TC-020 — GET /people?search=Luke — parâmetro não suportado",
           "request": {
             "method": "GET",
             "url": {

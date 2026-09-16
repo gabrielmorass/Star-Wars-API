@@ -8,10 +8,10 @@ Funcionalidade: Busca de Personagens
   Contexto:
     Dado que acesso a página de Personagens
 
-  Cenário: Buscar por um nome parcial retorna o personagem correspondente
+  Cenário: TC-001 — Buscar por um nome parcial retorna o personagem correspondente
     Quando busco por "Luke"
     Então devo ver um único card com o nome "Luke Skywalker"
 
-  Cenário: Buscar por um nome inexistente não retorna nenhum resultado
+  Cenário: TC-006 — Buscar por um nome inexistente não retorna nenhum resultado
     Quando busco por "zzzzzz"
     Então devo ver a mensagem "Nenhum personagem encontrado."
