@@ -41,6 +41,35 @@ Cada execução de `test:bdd` gera um relatório HTML em
 `cypress-project/relatorio/index.html` (via `cypress-mochawesome-reporter`).
 Abra esse arquivo no navegador para ver o resultado detalhado.
 
+## O que a suíte cobre
+
+São **28 cenários** em 9 arquivos `.feature`, organizados por funcionalidade:
+
+| Feature | Cenários | O que verifica |
+|---|---|---|
+| `personagens/personagens.feature` | 2 | busca por nome e estado de "nenhum resultado" |
+| `personagens/linha-do-tempo.feature` | 4 | troca de modo, contador, busca no eixo e abertura do modal |
+| `personagens/ordenacao-e-modal.feature` | 4 | ordenação por altura/nascimento/nome e navegação por conexões |
+| `filmes/filmes.feature` | 2 | busca por título e estado de "nenhum resultado" |
+| `filmes/posteres-e-cronologia.feature` | 4 | grade de pôsteres, arte em SVG, ordenação e barra de cronologia |
+| `filmes/modal-abertura.feature` | 6 | texto de abertura no DOM, abas sob demanda e controles do crawl |
+| `planetas/planetas.feature` | 2 | busca que pula direto para o planeta |
+| `naves-e-veiculos/naves-e-veiculos.feature` | 2 | busca por nome |
+| `especies/especies.feature` | 2 | busca por nome |
+
+### Duas invariantes que vale destacar
+
+**O texto de abertura nunca sai do DOM.** `modal-abertura.feature` verifica que
+o `opening_crawl` completo continua dentro de `.film-crawl` em três situações
+diferentes: logo ao abrir, com outra aba selecionada e com a animação pausada.
+É o tipo de coisa que uma refatoração de animação quebra sem querer.
+
+**A soma da linha do tempo fecha.** Todo personagem com ano conhecido está em
+um de três lugares — desenhado no eixo, dobrado num agrupador `+N`, ou atrás do
+chip dos que nasceram antes do trecho em foco. `verificarCoerenciaDoContador()`
+soma os três e compara com o número anunciado pelo contador. Foi esse cenário
+que pegou uma diferença de 3 entre o contador (43) e o que estava desenhado (40).
+
 ## Estrutura
 
 ```
@@ -48,8 +77,8 @@ cypress-project/
 ├── cypress.bdd.config.js       # config do Cypress (baseUrl, reporter, plugin do Cucumber)
 ├── cypress/
 │   ├── bdd/
-│   │   ├── features/<funcionalidade>/<funcionalidade>.feature   # cenários em Gherkin (pt-BR)
-│   │   └── step_definitions/                                    # implementação dos passos
+│   │   ├── features/<funcionalidade>/*.feature   # cenários em Gherkin (pt-BR)
+│   │   └── step_definitions/                     # implementação dos passos
 │   ├── pages/           # Page Objects — um por view do site
 │   ├── fixtures/        # dados de teste centralizados
 │   └── support/         # comandos customizados e configuração global
@@ -64,3 +93,10 @@ cypress-project/
   em `compartilhado.steps.js`.
 - Seletores CSS só existem dentro dos Page Objects (`cypress/pages/`) —
   step definitions e specs nunca usam `cy.get()` com um seletor cru.
+- Os testes rodam contra a **SWAPI real**, sem mock. Por isso as asserções
+  evitam depender de contagens que a API pode mudar: onde o número importa,
+  ele é lido da própria tela e comparado com outra parte da tela (ver
+  `verificarCoerenciaDoContador`), em vez de ficar fixo no teste.
+- Nada de `cy.wait(<número>)` para "esperar carregar": a espera é sempre por
+  uma condição (`should`), que o Cypress reexecuta até passar ou estourar o
+  timeout. É o que mantém a suíte estável — três execuções seguidas, 28/28.
