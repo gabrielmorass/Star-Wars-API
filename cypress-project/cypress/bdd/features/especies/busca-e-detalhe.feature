@@ -8,11 +8,11 @@ Funcionalidade: Busca e Detalhe de Espécies
   Contexto:
     Dado que acesso a página de Espécies
 
-  Cenário: Selecionar a espécie Human mostra o planeta natal Coruscant
+  Cenário: TC-005 — Selecionar a espécie Human mostra o planeta natal Coruscant
     Quando busco por "Human" em Espécies
     E seleciono o primeiro resultado
     Então devo ver o planeta natal "Coruscant" no detalhe
 
-  Cenário: Buscar por uma espécie inexistente não retorna nenhum resultado
+  Cenário: TC-010 — Buscar por uma espécie inexistente não retorna nenhum resultado
     Quando busco por "zzzzzz" em Espécies
     Então devo ver a mensagem "Nenhuma espécie encontrada."

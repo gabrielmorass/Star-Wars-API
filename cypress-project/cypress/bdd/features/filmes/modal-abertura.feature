@@ -8,39 +8,39 @@ Funcionalidade: Modal de Filmes e texto de abertura
   Contexto:
     Dado que acesso a página de Filmes
 
-  Cenário: O texto de abertura completo fica no DOM ao abrir o filme
+  Cenário: TC-029 — O texto de abertura completo fica no DOM ao abrir o filme
     Quando busco pelo filme "New Hope"
     E abro o primeiro filme
     Então o texto de abertura deve estar no DOM
     E o texto de abertura deve conter "It is a period of civil war"
 
-  Cenário: O texto de abertura continua no DOM em outra aba
+  Cenário: TC-030 — O texto de abertura continua no DOM em outra aba
     Quando busco pelo filme "New Hope"
     E abro o primeiro filme
     E abro a aba "species"
     Então o texto de abertura deve conter "It is a period of civil war"
 
-  Cenário: O texto de abertura continua no DOM com o crawl pausado
+  Cenário: TC-031 — O texto de abertura continua no DOM com o crawl pausado
     Quando busco pelo filme "New Hope"
     E abro o primeiro filme
     E pauso o crawl
     Então o crawl deve estar pausado
     E o texto de abertura deve conter "It is a period of civil war"
 
-  Cenário: Retomar o crawl volta a rodar
+  Cenário: TC-032 — Retomar o crawl volta a rodar
     Quando busco pelo filme "New Hope"
     E abro o primeiro filme
     E pauso o crawl
     E pauso o crawl
     Então o crawl deve estar rodando
 
-  Cenário: A aba Elenco carrega os personagens do filme
+  Cenário: TC-033 — A aba Elenco carrega os personagens do filme
     Quando busco pelo filme "New Hope"
     E abro o primeiro filme
     E abro a aba "cast"
     Então devo ver o elenco carregado
 
-  Cenário: A aba Planetas carrega os planetas do filme
+  Cenário: TC-034 — A aba Planetas carrega os planetas do filme
     Quando busco pelo filme "New Hope"
     E abro o primeiro filme
     E abro a aba "planets"

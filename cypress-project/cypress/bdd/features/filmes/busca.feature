@@ -8,10 +8,10 @@ Funcionalidade: Busca de Filmes
   Contexto:
     Dado que acesso a página de Filmes
 
-  Cenário: Buscar por um título parcial retorna o filme correspondente
+  Cenário: TC-003 — Buscar por um título parcial retorna o filme correspondente
     Quando busco pelo filme "Empire"
     Então devo ver um único filme com o título "The Empire Strikes Back"
 
-  Cenário: Buscar por um título inexistente não retorna nenhum resultado
+  Cenário: TC-008 — Buscar por um título inexistente não retorna nenhum resultado
     Quando busco pelo filme "zzzzzz"
     Então devo ver a mensagem "Nenhum filme encontrado."
