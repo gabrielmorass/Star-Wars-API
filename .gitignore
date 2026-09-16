@@ -16,3 +16,12 @@ cypress-project/cypress/downloads/
 cypress-project/relatorio/
 cypress-project/cypress-mochawesome-reporter.log
 api-testing/relatorio.html
+
+# Página temporária de conferência da renderização procedural
+debug-planets.html
+
+# Specs de diagnóstico: servem para medir a interface durante o
+# desenvolvimento (layout, contagens, animações) e não fazem parte da suíte
+# entregue, que é a BDD em cypress/bdd/
+cypress-project/cypress/diag/
+cypress-project/cypress.diag.config.js

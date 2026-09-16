@@ -16,8 +16,18 @@ const navButtons = document.querySelectorAll(".topnav [data-nav]");
 
 const cache = { planets: null, people: null, films: null, vehiclesData: null, species: null };
 
+const TITLES = {
+  hub: "Codex Estelar | Enciclopédia da saga",
+  planets: "Sistema planetário | Codex Estelar",
+  people: "Personagens | Codex Estelar",
+  films: "Filmes | Codex Estelar",
+  vehicles: "Naves e Veículos | Codex Estelar",
+  species: "Espécies | Codex Estelar",
+};
+
 async function navigate(view) {
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.nav === view));
+  if (TITLES[view]) document.title = TITLES[view];
 
   if (view === "hub") {
     renderHub(app, navigate);
@@ -39,7 +49,7 @@ async function navigate(view) {
     renderLoading(app, "Buscando personagens na SWAPI…");
     try {
       if (!cache.people) cache.people = await getPeople();
-      renderPeopleView(app, cache.people, renderPersonModal);
+      renderPeopleView(app, cache.people, renderPersonModal, navigate);
     } catch (err) {
       renderError(app, `Não foi possível carregar os personagens. (${err.message})`);
     }
@@ -50,7 +60,7 @@ async function navigate(view) {
     renderLoading(app, "Buscando filmes na SWAPI…");
     try {
       if (!cache.films) cache.films = await getFilms();
-      renderFilmsView(app, cache.films);
+      renderFilmsView(app, cache.films, navigate);
     } catch (err) {
       renderError(app, `Não foi possível carregar os filmes. (${err.message})`);
     }

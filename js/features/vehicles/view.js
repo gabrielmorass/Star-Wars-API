@@ -1,3 +1,5 @@
+import { takeIntent } from "../../core/nav-intent.js";
+
 /* ---------------- Naves e Veículos ---------------- */
 
 export function renderVehiclesView(container, { starships, vehicles }) {
@@ -79,4 +81,24 @@ export function renderVehiclesView(container, { starships, vehicles }) {
   });
 
   paintGrid();
+
+  /* Veio do modal de Personagens ("Pilota"): abre já na aba certa e com o
+     item selecionado. Sem intenção, nada muda. */
+  const intent = takeIntent("vehicles");
+  if (intent) {
+    const alvo = (datasets[intent.kind] || []).find((item) => item.name === intent.name);
+    if (alvo) {
+      if (intent.kind !== current) {
+        current = intent.kind;
+        tabButtons.forEach((b) => {
+          const on = b.dataset.tab === current;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", String(on));
+        });
+        paintGrid();
+      }
+      selectItem(alvo);
+      detail.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }
 }
