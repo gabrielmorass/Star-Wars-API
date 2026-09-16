@@ -7,9 +7,12 @@ export function renderHub(container, navigate) {
     <div class="hub-cards">
       <button class="hub-card" data-nav="planets" type="button">
         <span class="hub-card-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"></circle>
-            <ellipse cx="12" cy="12" rx="10" ry="3.2" transform="rotate(-20 12 12)"></ellipse>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"></path>
+            <path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+            <circle cx="19" cy="5" r="2"></circle>
+            <circle cx="5" cy="19" r="2"></circle>
           </svg>
         </span>
         <h2>Sistema planetário</h2>
@@ -18,9 +21,11 @@ export function renderHub(container, navigate) {
       </button>
       <button class="hub-card" data-nav="people" type="button">
         <span class="hub-card-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="8" r="3.2"></circle>
-            <path d="M5 20c0-4 3.2-6.5 7-6.5s7 2.5 7 6.5"></path>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <path d="M16 3.128a4 4 0 0 1 0 7.744"></path>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+            <circle cx="9" cy="7" r="4"></circle>
           </svg>
         </span>
         <h2>Personagens</h2>
@@ -29,9 +34,11 @@ export function renderHub(container, navigate) {
       </button>
       <button class="hub-card" data-nav="films" type="button">
         <span class="hub-card-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="5" width="18" height="14" rx="1.5"></rect>
-            <path d="M3 9h18M8 5v4M16 5v4M8 15v4M16 15v4"></path>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12.296 3.464 3.02 3.956"></path>
+            <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3z"></path>
+            <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <path d="m6.18 5.276 3.1 3.899"></path>
           </svg>
         </span>
         <h2>Filmes</h2>
@@ -40,11 +47,11 @@ export function renderHub(container, navigate) {
       </button>
       <button class="hub-card" data-nav="vehicles" type="button">
         <span class="hub-card-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 15l2-6a2 2 0 0 1 2-1.4h10a2 2 0 0 1 2 1.4l2 6"></path>
-            <path d="M3 15h18v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path>
-            <circle cx="7.5" cy="18" r="1.2"></circle>
-            <circle cx="16.5" cy="18" r="1.2"></circle>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09"></path>
+            <path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z"></path>
+            <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05"></path>
           </svg>
         </span>
         <h2>Naves e Veículos</h2>
@@ -53,10 +60,18 @@ export function renderHub(container, navigate) {
       </button>
       <button class="hub-card" data-nav="species" type="button">
         <span class="hub-card-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3c2 2.5 3 5 3 7.5S13.5 17 12 21c-1.5-4-3-7-3-10.5S10 5.5 12 3Z"></path>
-            <path d="M4.5 9c1.8 1 3 2.6 3 4.5S6.3 17 4.5 18"></path>
-            <path d="M19.5 9c-1.8 1-3 2.6-3 4.5s1.2 3.5 3 4.5"></path>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m10 16 1.5 1.5"></path>
+            <path d="m14 8-1.5-1.5"></path>
+            <path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"></path>
+            <path d="m16.5 10.5 1 1"></path>
+            <path d="m17 6-2.891-2.891"></path>
+            <path d="M2 15c6.667-6 13.333 0 20-6"></path>
+            <path d="m20 9 .891.891"></path>
+            <path d="M3.109 14.109 4 15"></path>
+            <path d="m6.5 12.5 1 1"></path>
+            <path d="m7 18 2.891 2.891"></path>
+            <path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"></path>
           </svg>
         </span>
         <h2>Espécies</h2>

@@ -3,16 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Codex Estelar — Enciclopédia da Saga</title>
+  <title>Codex Estelar | Enciclopédia da saga</title>
+  <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Pathway+Gothic+One&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
+  <script>
+    /* Aplica o tema salvo antes do primeiro paint, para não piscar */
+    (() => {
+      try {
+        const dark = localStorage.getItem('codex-side') === 'dark';
+        document.documentElement.setAttribute('data-theme', dark ? 'dark-side' : 'light-side');
+      } catch (_) {
+        document.documentElement.setAttribute('data-theme', 'light-side');
+      }
+    })();
+  </script>
 </head>
 <body>
-  <div class="stars-bg" aria-hidden="true"></div>
-  <div class="stars-bg stars-bg--far" aria-hidden="true"></div>
-  <div class="nebula" aria-hidden="true"></div>
+  <div class="space-decor" aria-hidden="true"></div>
 
   <header class="topbar">
     <button class="brand" data-nav="hub" type="button">Codex Estelar</button>
@@ -28,9 +38,17 @@
   <main id="app" aria-live="polite"></main>
 
   <footer class="foot">
-    Dados via <a href="https://swapi.info" target="_blank" rel="noopener">SWAPI</a> — cobre os Episódios I–VI.
+    Dados via <a href="https://swapi.info" target="_blank" rel="noopener">SWAPI</a> | cobre os Episódios I a VI.
   </footer>
 
+  <!-- Laço de animação único: precisa existir antes dos efeitos -->
+  <script type="module" src="js/fx/loop.js"></script>
   <script type="module" src="js/main.js"></script>
+  <script defer src="js/fx.js"></script>
+  <script defer src="js/fx/decor.js"></script>
+  <!-- GSAP + MorphSVGPlugin (plugins liberados a partir da 3.13) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/MorphSVGPlugin.min.js"></script>
+  <script defer src="js/fx/toggle.js"></script>
 </body>
 </html>
