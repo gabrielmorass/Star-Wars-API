@@ -191,6 +191,80 @@
               }
             }
           ]
+        },
+        {
+          "name": "TC-044 — GET /starships/10 retorna a nave específica",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/starships/10",
+              "host": ["{{baseUrl}}"],
+              "path": ["starships", "10"]
+            },
+            "description": "Busca um recurso específico (não a listagem) — usada quando o usuário clica numa nave na view Naves e Veículos."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deve retornar a nave Millennium Falcon', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.name).to.eql('Millennium Falcon');",
+                  "});",
+                  "",
+                  "pm.test('Deve conter os campos técnicos exibidos no painel de detalhe', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.have.property('starship_class');",
+                  "    pm.expect(resposta).to.have.property('crew');",
+                  "    pm.expect(resposta).to.have.property('hyperdrive_rating');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-045 — GET /vehicles/4 retorna o veículo específico",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/vehicles/4",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles", "4"]
+            },
+            "description": "Busca um recurso específico (não a listagem) — usada quando o usuário clica num veículo na aba Veículos."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deve retornar o veículo Sand Crawler', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.name).to.eql('Sand Crawler');",
+                  "});",
+                  "",
+                  "pm.test('Deve conter os campos técnicos exibidos no painel de detalhe', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.have.property('vehicle_class');",
+                  "    pm.expect(resposta).to.have.property('crew');",
+                  "    pm.expect(resposta).to.have.property('cargo_capacity');",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
