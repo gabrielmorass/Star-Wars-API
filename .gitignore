@@ -16,6 +16,7 @@ cypress-project/cypress/downloads/
 cypress-project/relatorio/
 cypress-project/cypress-mochawesome-reporter.log
 api-testing/relatorio.html
+performance-testing/relatorio/
 
 # Página temporária de conferência da renderização procedural
 debug-planets.html

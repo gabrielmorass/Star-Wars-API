@@ -54,16 +54,18 @@ src/data/planets-map.json  # região + coordenadas x/y de cada planeta (dado da 
 public/favicon.svg
 cypress-project/           # testes de interface (Cypress + BDD/Gherkin) — ver README próprio
 api-testing/                # testes de API (Postman + Newman) — ver README próprio
+performance-testing/        # testes de carga, bônus (k6) — ver README próprio
 docs-local/                 # notas internas do grupo (não versionadas — ver .gitignore)
 ```
 
 ## Como rodar os testes
 
-Este projeto tem duas suítes de teste independentes, cada uma com seu
-próprio `package.json` e README:
+Este projeto tem três suítes de teste independentes, cada uma com seu
+próprio README:
 
-- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model)
-- **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI
+- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 33 cenários
+- **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 12 requisições
+- **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
 
 Resumo rápido:
 
@@ -73,6 +75,9 @@ cd cypress-project && npm install && npm test
 
 # Testes de API
 cd api-testing && npm install && npm test
+
+# Testes de performance (bônus — requer k6 instalado à parte, ver README da pasta)
+cd performance-testing && k6 run swapi-load.js
 ```
 
 ## Decisões de dados (importante para o Plano de Testes)
