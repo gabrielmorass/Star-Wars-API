@@ -2,6 +2,7 @@
  * Page Object da view Personagens.
  * Seletores e ações desta página ficam centralizados aqui — os step
  * definitions e specs nunca acessam seletores CSS diretamente.
+ * filtros.feature (filtros por espécie e por filme)
  */
 class PersonagensPage {
   // Seletores
@@ -45,6 +46,11 @@ class PersonagensPage {
     return cy.get('.conn-item')
   }
 
+  get seletorFilme() {
+    return cy.get('#people-film')
+  }
+
+
   // Ações
   acessar() {
     cy.irParaFuncionalidade('people')
@@ -68,6 +74,15 @@ class PersonagensPage {
 
   ordenarPor(criterio) {
     this.seletorOrdem.select(criterio)
+  }
+
+  filtrarPorEspecie(chave) {
+    cy.get(`[data-filter="${chave}"]`).click()
+    cy.get(`[data-filter="${chave}"]`).should('have.class', 'is-on')
+  }
+
+  filtrarPorFilme(rotulo) {
+    this.seletorFilme.select(rotulo)
   }
 
   abrirPrimeiroDaLinhaDoTempo() {
@@ -136,6 +151,33 @@ class PersonagensPage {
 
   verificarModalAberto() {
     this.modal.should('exist')
+  }
+
+  guardarQuantidadeAtual(alias) {
+    this.cards.its('length').then((quantidade) => {
+      cy.wrap(quantidade).as(alias)
+    })
+  }
+
+  verificarQuantidadeMudouEmRelacaoA(alias) {
+    cy.get(`@${alias}`).then((quantidadeAnterior) => {
+      this.cards.its('length').should('not.eq', quantidadeAnterior)
+    })
+  }
+
+  verificarQuantidadeIgualA(alias) {
+    cy.get(`@${alias}`).then((quantidadeEsperada) => {
+      this.cards.should('have.length', quantidadeEsperada)
+    })
+  }
+
+  verificarTodosCardsDaEspecie(nomeEspecie) {
+    this.cards.should('have.length.greaterThan', 0)
+    this.cards.each(($card) => {
+      // a espécie é preenchida sob demanda (IntersectionObserver)
+      cy.wrap($card).scrollIntoView()
+      cy.wrap($card).find('.person-species').should('have.text', nomeEspecie)
+    })
   }
 }
 

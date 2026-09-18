@@ -36,6 +36,18 @@ When('abro a primeira conexão do modal', () => {
   PersonagensPage.abrirPrimeiraConexao()
 })
 
+When('filtro personagens por espécie {string}', (chave) => {
+  PersonagensPage.filtrarPorEspecie(chave)
+})
+
+When('filtro personagens pelo filme {string}', (rotulo) => {
+  PersonagensPage.filtrarPorFilme(rotulo)
+})
+
+When('guardo a quantidade atual de cards', () => {
+  PersonagensPage.guardarQuantidadeAtual('quantidadeOriginal')
+})
+
 // =============================================================================
 // ENTÃO — Verificações
 // =============================================================================
@@ -71,3 +83,17 @@ Then('o primeiro card deve ser {string}', (nome) => {
 Then('o modal não deve mais ser de {string}', (nome) => {
   PersonagensPage.modal.find('h3').should('not.have.text', nome)
 })
+
+Then('todos os cards visíveis devem ser da espécie {string}', (nomeEspecie) => {
+  PersonagensPage.verificarTodosCardsDaEspecie(nomeEspecie)
+})
+
+Then('a quantidade de cards deve ser diferente da quantidade original', () => {
+  PersonagensPage.verificarQuantidadeMudouEmRelacaoA('quantidadeOriginal')
+})
+
+Then('a quantidade de cards deve voltar à quantidade original', () => {
+  PersonagensPage.verificarQuantidadeIgualA('quantidadeOriginal')
+})
+
+
