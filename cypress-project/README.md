@@ -43,7 +43,7 @@ Abra esse arquivo no navegador para ver o resultado detalhado.
 
 ## O que a suíte cobre
 
-São **33 cenários** em 10 arquivos `.feature`, organizados por funcionalidade:
+São **33 cenarios** em 10 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
