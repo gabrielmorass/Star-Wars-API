@@ -47,7 +47,7 @@ São **33 cenários** em 10 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
-| `hub/navegacao.feature` | 5 | cada um dos 5 cards do Hub leva à view certa (checagem pelo título da página) |
+| `hub/navegacao.feature` | 5 | cada um dos 5 cards leva à view correta (validado pelo título da página) |
 | `personagens/busca.feature` | 2 | busca por nome e estado de "nenhum resultado" |
 | `personagens/linha-do-tempo.feature` | 4 | troca de modo, contador, busca no eixo e abertura do modal |
 | `personagens/ordenacao-e-modal.feature` | 4 | ordenação por altura/nascimento/nome e navegação por conexões |
@@ -105,4 +105,4 @@ cypress-project/
   `verificarCoerenciaDoContador`), em vez de ficar fixo no teste.
 - Nada de `cy.wait(<número>)` para "esperar carregar": a espera é sempre por
   uma condição (`should`), que o Cypress reexecuta até passar ou estourar o
-  timeout. É o que mantém a suíte estável.
+  timeout. É o que mantém a suíte estável — três execuções seguidas, 28/28.
