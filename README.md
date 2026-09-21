@@ -339,7 +339,40 @@ Aceita: após a correção, reexecutei o teste até passar.
 **Autoria do código:** o código dos cenários, dos steps e dos requests foi escrito com apoio da IA (Claude), a partir das sugestões e exemplos descritos acima; a execução, a revisão e a integração ao repositório foram feitas por mim.
 
 **Como foi a validação:** todos os casos foram executados tanto no terminal (`npm test`) quanto na interface do Cypress, e só foram enviados após passarem.
+**Samile**
 
+*Os prompts abaixo são reconstruídos a partir de uma conversa longa (chat), refletindo o conteúdo técnico exato de cada pedido*
+
+
+
+**Prompt 1: Cobertura de navegação do Hub**
+> "Cria um caso de teste pra navegação do Hub: os 5 cards (`data-nav="planets/people/films/vehicles/species"`) precisam levar cada um pra view certa. Usa uma verificação que não dependa de seletor específico de cada tela, já que são 5 views diferentes — valida pelo título da página."
+
+Aceita com ajustes: a IA leu `js/main.js` para extrair o mapa `TITLES` e criou o `HubPage.js` (Page Object novo, sem precedente no projeto) com os 5 cenários (TC-039 a TC-043). Dois arquivos que colei ficaram corrompidos na cópia (um `Given` faltando no steps, um `/**` virando `**` no Page Object) — corrigidos com apoio da IA a partir do log de erro do terminal (`esbuild`/`TypeError`).
+
+**Prompt 2: Cobertura de recurso específico na API**
+> "Na collection do Newman, a gente só cobre listagem (`GET /starships`) e ID inexistente (`GET /vehicles/9999`). Falta testar `GET /starships/{id}` e `GET /vehicles/{id}` com ID válido, retornando um recurso específico — valida status 200, o `name` esperado e os campos técnicos que a aplicação usa no painel de detalhe."
+
+Aceita: a IA identificou a lacuna de cobertura (endpoint singular vs. listagem, classe de equivalência não coberta) e gerou os requests TC-044 (`/starships/10`, Millennium Falcon) e TC-045 (`/vehicles/4`, Sand Crawler) com `pm.test` para status, nome e propriedades (`starship_class`/`hyperdrive_rating`, `vehicle_class`/`cargo_capacity`).
+
+**Prompt 3: Teste de performance (bônus) com k6**
+> "Fiquei responsável pelo bônus de performance. Confere se o professor demonstrou alguma ferramenta específica no repositório de referência antes de decidir, e monta pelo menos 2 cenários de carga contra a SWAPI com carga modesta (é API pública de terceiros), com threshold de aceite e relatório HTML."
+
+Aceita: a IA verificou o repositório de referência do professor (sem indicação de ferramenta de performance no README) e gerou o script k6 (`swapi-load.js`) com dois cenários — carga constante (`constant-vus`) e pico (`ramping-vus`) — thresholds `p(95)<2000` e `rate<0.05`, e integração com `k6-reporter` para o HTML.
+
+**Prompt 4: Depuração do ambiente (Git/Node/Windows)**
+> "Me guia passo a passo: clonar o repo, criar branch, configurar `user.name`/`user.email`, e resolve esses erros conforme forem aparecendo (colei o log de cada um: política de execução do PowerShell bloqueando `npm`, porta 8080 em uso, `wmic.exe` não encontrado no Windows 11 depois do relatório gerar)."
+
+Aceita: segui as instruções passo a passo e colei cada mensagem de erro do terminal para a IA identificar a causa e o comando de correção.
+
+**Prompt 5: Atualização dos READMEs**
+> "Atualiza a tabela 'O que a suíte cobre' do README do cypress-project e a tabela 'O que é testado' do README do api-testing pra incluir os casos TC-039 a TC-045 que acabamos de adicionar, mantendo o mesmo formato de tabela que já existe."
+
+Aceita: a IA localizou as tabelas nos dois READMEs e propôs a atualização mantendo formatação e convenção de nomenclatura existentes.
+
+**Autoria do código:** o código dos cenários, steps, Page Objects, requests e do script k6 foi escrito com apoio da IA a partir das instruções técnicas acima; a execução, depuração final e integração ao repositório foram feitas por mim.
+
+**Como foi a validação:** todos os casos foram rodados localmente (`npm test` no Cypress e no Newman, `k6 run` no script de performance) e só commitados depois de passar.
 ### O que não foi feito por IA
 
 - Definição do escopo e das views do site (Hub, Planetas, Personagens, Filmes, Naves e Veículos, Espécies).
