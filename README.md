@@ -1,8 +1,12 @@
-# Codex Estelar
+# 🌌 Codex Estelar
 
-Front-end estático (HTML + CSS + JavaScript puro, sem build) conectado à [SWAPI](https://swapi.info) — base do projeto de Qualidade de Software.
+> **"Que a Força esteja com o seu código."**
 
-## Como rodar o site
+Front-end estático (HTML + CSS + JavaScript puro, sem build) conectado à [SWAPI](https://swapi.info) — base do projeto de Qualidade de Software do **Inatel**.
+
+---
+
+## 🛠️ Como rodar o site
 
 Como `js/main.js` usa ES Modules (`import`/`export`), abrir `index.html` direto com duplo-clique (`file://`) pode ser bloqueado pelo navegador. Sirva a pasta com um servidor estático simples:
 
@@ -16,7 +20,9 @@ npx http-server . -p 8080
 
 Depois acesse `http://localhost:8080`.
 
-## Funcionalidades
+---
+
+## 🪐 Funcionalidades
 
 - **Sistema planetário** — mapa da galáxia navegável (clique, setas ou busca com autocomplete) com clima, população, espécies presentes e filmes de cada planeta. A ilustração do planeta no painel é gerada em canvas a partir do `terrain` (que decide o tipo: ecumenópole, vulcânico, gigante gasoso, oceânico, árido, gelado, pantanoso, temperado ou rochoso) e do `climate` (que só ajusta o tom e a cor da atmosfera) — é interpretação visual, não imagem de referência
 - **Personagens** — grade de 6 colunas com foto, espécie (cor da borda por espécie) e ano de nascimento; busca combinada com filtros de espécie e de filme e ordenação por nome, altura ou nascimento. Alterna entre **grade** e **linha do tempo** (eixo em escala por trechos, empilhamento em colunas de até 6 com leque "+N", faixa separada para quem não tem ano). O modal traz ficha técnica, régua de altura, medidor de massa, aparições com o crawl do filme no hover, naves pilotadas e conexões por planeta e por espécie, navegável com ← → entre os personagens da lista filtrada
@@ -24,13 +30,16 @@ Depois acesse `http://localhost:8080`.
 - **Naves e Veículos** — abas Naves/Veículos, busca, filtro por classe (pills geradas do dado) e ordenação com FLIP; cada card tem a silhueta SVG da classe. O painel traz um **hangar 3D** (Three.js carregado sob demanda, modelo montado com primitivas por classe, arraste para girar; sem WebGL cai na silhueta), medidores em arco normalizados pelo teto da categoria (escala log nas métricas de cauda longa), régua de tamanho, radar de 5 eixos, pilotos e aparições. **Comparar** põe duas naves lado a lado, com painel de **escala real** (as duas silhuetas no mesmo fator de metros, lupa quando a razão passa de 500:1) e tabela de quem vence em cada métrica
 - **Espécies** — grade com o glifo da classificação (8 desenhos: mamífero, réptil, anfíbio, insectoide, gastrópode, artificial, senciente, sem classificação) e uma faixa com as cores de pele, cabelo e olhos de cada espécie; busca, filtro por classificação e ordenação por nome, altura ou longevidade. O painel traz réguas de **altura** (linear até 3 m) e **longevidade** (log, de 50 a 1.000 anos) sempre com a marca do humano como referência, as cores como amostras, o planeta natal, os membros conhecidos e as aparições — os três últimos levam à tela correspondente
 
-## Estrutura
+---
+
+## 🗂️ Estrutura
 
 ```
 index.html
 css/style.css              # tokens de design e estilos
 js/
   main.js                  # roteamento entre views e inicialização
+  config.js                # chave pública do TMDB (ver "Pôster oficial via TMDB")
   core/
     api.js                 # fetchJSON/BASE_URL + utilitários usados por mais de uma feature (getPlanetName)
     dom.js                 # estados genéricos de UI (carregando / erro)
@@ -46,7 +55,6 @@ js/
     films/{api,view}.js
     films/poster-art.js    # arte de pôster por episódio, em SVG
     films/tmdb.js          # pôster oficial via TMDB, só de fundo no cabeçalho do modal
-  config.js                # chave pública do TMDB (ver "Pôster oficial via TMDB")
     vehicles/{api,view}.js
     vehicles/silhuetas.js  # silhueta SVG por classe, com viewBox próprio
     vehicles/hud.js        # medidores em arco, régua log, radar e tabela de vitórias
@@ -66,7 +74,9 @@ performance-testing/        # testes de carga, bônus (k6) — ver README própr
 docs-local/                 # notas internas do grupo (não versionadas — ver .gitignore)
 ```
 
-## Como rodar os testes
+---
+
+## 🧪 Como rodar os testes
 
 Este projeto tem três suítes de teste independentes, cada uma com seu
 próprio README:
@@ -88,7 +98,9 @@ cd api-testing && npm install && npm test
 cd performance-testing && k6 run swapi-load.js
 ```
 
-## Decisões de dados (importante para o Plano de Testes)
+---
+
+## 📊 Decisões de dados (importante para o Plano de Testes)
 
 A SWAPI (`https://swapi.info/api`) cobre apenas os Episódios I–VI e tem limitações que afetam a aplicação:
 
@@ -146,7 +158,9 @@ A SWAPI (`https://swapi.info/api`) cobre apenas os Episódios I–VI e tem limit
 
 Esses pontos constam explicitamente no Plano de Testes (seção de Riscos e Limitações), já que são inferências e limitações conhecidas, não falhas da aplicação.
 
-## Idioma
+---
+
+## 🌐 Idioma
 
 A interface é em português e a SWAPI devolve tudo em inglês. A regra que
 resolve o encontro dos dois, em uma linha:
@@ -189,7 +203,9 @@ card do crawl ("Episode IV / A NEW HOPE") é inglês de propósito: ele reproduz
 cartão do filme, então o bloco fica coerente em vez de misturar as duas línguas
 numa linha só.
 
-## Pôster oficial via TMDB
+---
+
+## 🎬 Pôster oficial via TMDB
 
 O cabeçalho do modal de Filmes pode usar o pôster oficial do filme como fundo
 (desfocado, sob um véu preto de 60%). Esses dados vêm **via TMDB** — o site não
@@ -216,7 +232,9 @@ o TMDB só entra no fundo do cabeçalho. O resultado é guardado em
 `sessionStorage` (`codex-estelar:tmdb-poster`), então reabrir o mesmo filme na
 mesma sessão não gasta requisição.
 
-## Créditos
+---
+
+## 🎖️ Créditos
 
 - **Switch "Lado da Luz / Lado Sombrio"** — arte SVG e coreografia das animações são do pen
   [*Star Wars Toggle*](https://codepen.io/kasperdebruyne), de **Kasper De Bruyne**, sob licença **MIT**.
@@ -240,6 +258,54 @@ mesma sessão não gasta requisição.
 > *Star Wars* e seus elementos visuais são marcas da Lucasfilm/Disney. Este é um trabalho
 > acadêmico, sem fins comerciais; a licença MIT citada cobre o código dos pens, não as marcas.
 
-## Uso de IA
+---
 
-Este projeto teve apoio de IA (Claude, Anthropic) na geração do código-base do front-end, na reorganização do código por funcionalidade, na correção de um problema de performance no Sistema Planetário, e na criação das suítes de teste de interface (Cypress/BDD) e de API (Postman/Newman), além de utilizar como revisor dos códigos gerado e aderência ao escopo da proposta do projeto. A declaração acima segue a diretiva item 11 do enunciado.
+## 🤖 Uso de IA
+
+Este projeto teve apoio de IA (Claude, via **Claude Code**) ao longo de várias etapas: geração do código-base do front-end, reorganização do código por funcionalidade, correção de um problema de performance no Sistema Planetário, criação das três suítes de teste automatizado (Cypress/BDD para interface, Postman/Newman para API, k6 para performance) e apoio na documentação do projeto (relatório interno de progresso e Plano de Testes). O uso foi transparente e supervisionado: todo código e documento gerado foi revisado, testado e ajustado pelo grupo antes de ser integrado ao projeto. Conforme item 11 do enunciado, isso é declarado aqui e o grupo domina o funcionamento de cada arquivo.
+
+### Modelo utilizado
+
+- **Claude (Anthropic):** via **Claude Code**, extensão de terminal/CLI.
+
+### Exemplos reais de prompts utilizados
+
+**Gabriel Morass**
+
+**Prompt 1: Redesenho do Sistema Planetário**
+> "nao gostei da pagina de sistema planetario, ta muito feio, gostaria de algo mais interativo, algo que voce passe setas pro lado para mudar de planeta"
+
+Aceita com ajustes: a IA reformulou a tela de Planetas para um mapa/carrossel navegável (clique, setas, busca com autocomplete); o redesenho visual completo (regiões, coordenadas, arte procedural) veio depois, feito por outro integrante em PR próprio.
+
+**Prompt 2: Otimização de performance**
+> "merge feito, agora preciso otimizar o projeto, ele está muito lagado"
+
+Aceita: a IA identificou e corrigiu os gargalos de performance introduzidos pela nova tela do Sistema Planetário (cache por planeta, guarda contra respostas fora de ordem, debounce na busca).
+
+**Prompt 3: Reorganização do código por funcionalidade**
+> "vamos melhorar a organização do projeto, ao invés de 3 arquivos .js, vamos separar por funcionalidades, deixando a pasta o mais organizada possível."
+
+Aceita: a IA reestruturou `js/api.js`/`js/render.js`/`js/main.js` em `js/core/` (utilitários compartilhados) e `js/features/<view>/{api,view}.js`, sem alterar nenhum comportamento da aplicação.
+
+**Prompt 4: Ampliação da suíte além do mínimo exigido**
+> "Conversei com o professor, e podemos fazer mais que 20 casos de teste, e queremos fazer tanto teste de API quanto de interface gráfica"
+
+Aceita: a IA ajustou o plano de testes para cobrir UI e API sem se limitar a 20 casos, resultando nos 53+ casos atuais.
+
+**Prompt 5: Padronização e rastreabilidade dos casos de teste**
+> "quantos testes temos no total até agora? e a renomeação deve ser TC-001 [...], de acordo com a descrição."
+
+Aceita: a IA levantou a contagem total e renomeou os cenários Gherkin e requests Newman com o prefixo `TC-XXX —` correspondente à descrição de cada um, criando rastreabilidade direta com o Plano de Testes.
+
+**Prompt 6: Como visualizar os relatórios de execução**
+> "me ensine a visualizar o deploy dos resultados nos sites que o cypress e o outro geram"
+
+Aceita: a IA esclareceu que os relatórios são páginas HTML geradas localmente a cada execução (Cypress/mochawesome, Newman/htmlextra, k6-reporter), não um deploy on-line, e explicou como abri-los.
+
+### O que não foi feito por IA
+
+- Definição do escopo e das views do site (Hub, Planetas, Personagens, Filmes, Naves e Veículos, Espécies).
+- Decisões de dados e inferências da equipe (regiões/coordenadas do mapa da galáxia, anos da cronologia da saga, vocabulário de tradução pt-BR) — documentadas na seção "Decisões de dados" deste README.
+- Distribuição das tarefas entre os integrantes e organização dos Pull Requests.
+- Escrita dos casos de teste específicos de cada funcionalidade nova (critério de quais cenários válidos/inválidos importavam para cada tela) e revisão final de todo teste antes do merge.
+- Decisão da ferramenta de performance (k6) e da carga usada nos testes, por se tratar de API pública de terceiros.
