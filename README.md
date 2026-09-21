@@ -304,7 +304,7 @@ Aceita: a IA esclareceu que os relatórios são páginas HTML geradas localmente
 
 **Eduardo Bertozzi**
 
-*Os prompts abaixo são trechos literais das conversas no Claude Code (cortados com [...] onde eram longos). Fui responsável pelas views Sistema Planetário, Personagens, Filmes, Naves e Veículos e Espécies, pela intro de hiperespaço e pelos casos TC-021 a TC-038, TC-056 a TC-067 (interface) e TC-068 (API).*
+*Os prompts 1 a 4 são trechos literais das conversas no Claude Code (cortados com [...] onde eram longos); os prompts 5 e 6 são reconstruídos a partir do que foi pedido, refletindo o conteúdo e a intenção, não a redação literal. Fui responsável pelas views Sistema Planetário, Personagens, Filmes, Naves e Veículos e Espécies, pela intro de hiperespaço e pelos casos TC-021 a TC-038, TC-056 a TC-067 (interface) e TC-068 (API).*
 
 **Prompt 1: Direção visual com os seletores dos testes como regra fixa**
 > "O redesign anterior ficou limpo demais, parece dashboard corporativo. Quero o OPOSTO: o Codex Estelar tem que dar sensação de 'uau', cinematográfico [...] REGRAS OBRIGATÓRIAS (tem suíte Cypress dependendo disso): [...] NUNCA remove nem renomeia id, classe, data-nav/data-tab, nem muda texto de mensagem. Lista antes os seletores usados em cypress-project/cypress/pages/*.js e trata como intocáveis. [...] Ao final de cada etapa roda os testes [...] Quebrou, corrige o CSS, não o teste."
@@ -326,15 +326,15 @@ Aceita com ajustes: a IA implementou grade, filtros, linha do tempo e modal. Os 
 
 Aceita: o texto de abertura fica sempre no DOM, independente da aba ou da animação, e isso virou os casos TC-029 a TC-031. Os anos da cronologia foram documentados como inferência da equipe na seção "Decisões de dados".
 
-**Prompt 5: Testes das views novas em PR separado**
-> "o PR q c abriu ta sem os testes novos seus / abre um pr com eles / explica"
+**Prompt 5: Testes das views novas em PR separado, com rastreabilidade**
+> "Os cenários que escrevemos durante o desenvolvimento das views não entraram no PR do código. Abre um PR só com os testes, separado do PR das views, e explica o que cada arquivo `.feature`, cada step e cada Page Object cobre."
 
-Aceita: a IA separou os cenários escritos durante o desenvolvimento das views (TC-021 a TC-038: linha do tempo, ordenação e modal de Personagens; modal, abas, crawl, pôsteres e cronologia de Filmes) em um PR próprio, com explicação do que cada arquivo `.feature`, step e Page Object fazia.
+Aceita: a IA separou os cenários (TC-021 a TC-038: linha do tempo, ordenação e modal de Personagens; modal, abas, crawl, pôsteres e cronologia de Filmes) em um PR próprio, com a descrição de cada arquivo. Separar código e teste em PRs diferentes deixou a revisão de cada um independente.
 
-**Prompt 6: Levantamento de lacunas e casos novos**
-> "preciso agr entenfer os testes q eu fiz e se falta algum" e, depois da análise, "vamos por vamos vamos, vamos."
+**Prompt 6: Levantamento de lacunas de cobertura em Personagens e Filmes**
+> "Faz um levantamento de cobertura da minha parte (Personagens e Filmes): o que os cenários atuais já verificam, o que ainda não está coberto e quais casos valeria adicionar, sem entrar nas telas dos outros integrantes (Naves e Veículos, Espécies)."
 
-Aceita com ajustes: a IA listou os casos existentes por tela e apontou o que não estava coberto na minha parte (fechar o modal por botão e por Esc, setas do teclado, atalho para o planeta natal, abas Naves e Espécies do filme, o vínculo Filmes → Personagens e o caso de API do humano sem espécie). Aprovei a lista e ela virou os TC-056 a TC-068. Um dos casos (TC-066) apareceu intermitente na primeira execução e foi corrigido no Page Object antes do commit.
+Aceita com ajustes: a IA listou os casos existentes por tela e apontou as lacunas (fechar o modal por botão e por Esc, setas do teclado, atalho para o planeta natal, abas Naves e Espécies do filme, o vínculo Filmes → Personagens e o caso de API do humano sem espécie). Revisei a lista, aprovei os casos e eles viraram os TC-056 a TC-068. Um deles (TC-066) apareceu intermitente na primeira execução e foi corrigido no Page Object antes do commit, sem afrouxar a asserção.
 
 **Autoria do código:** o código das views, dos efeitos visuais, dos cenários Gherkin, dos steps, dos Page Objects e da requisição de API foi escrito com apoio da IA (Claude) a partir das especificações acima; a direção visual, a regra dos seletores intocáveis, a escolha de quais lacunas cobrir e a revisão de cada tela no navegador foram feitas por mim.
 
