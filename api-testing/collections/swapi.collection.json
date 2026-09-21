@@ -15,8 +15,12 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/planets",
-              "host": ["{{baseUrl}}"],
-              "path": ["planets"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "planets"
+              ]
             },
             "description": "Lista todos os planetas — usada pelo carrossel do Sistema Planetário."
           },
@@ -53,8 +57,12 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/people",
-              "host": ["{{baseUrl}}"],
-              "path": ["people"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people"
+              ]
             },
             "description": "Lista todos os personagens — usada pela view Personagens."
           },
@@ -88,8 +96,12 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/films",
-              "host": ["{{baseUrl}}"],
-              "path": ["films"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "films"
+              ]
             },
             "description": "Lista todos os filmes — a SWAPI cobre os Episódios I a VI."
           },
@@ -124,8 +136,12 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/species",
-              "host": ["{{baseUrl}}"],
-              "path": ["species"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "species"
+              ]
             },
             "description": "Lista todas as espécies — usada pela view Espécies."
           },
@@ -159,8 +175,12 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/starships",
-              "host": ["{{baseUrl}}"],
-              "path": ["starships"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "starships"
+              ]
             },
             "description": "Lista todas as naves — usada pela aba Naves da view Naves e Veículos."
           },
@@ -198,8 +218,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/starships/10",
-              "host": ["{{baseUrl}}"],
-              "path": ["starships", "10"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "starships",
+                "10"
+              ]
             },
             "description": "Busca um recurso específico (não a listagem) — usada quando o usuário clica numa nave na view Naves e Veículos."
           },
@@ -235,8 +260,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/vehicles/4",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehicles", "4"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehicles",
+                "4"
+              ]
             },
             "description": "Busca um recurso específico (não a listagem) — usada quando o usuário clica num veículo na aba Veículos."
           },
@@ -272,8 +302,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/people/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["people", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "1"
+              ]
             },
             "description": "Decisão de dados nº 1 do README: a SWAPI deixa `species` vazio nos humanos. O front-end trata lista vazia como Human; este caso fixa esse contrato para a regressão apontar se a API mudar."
           },
@@ -282,7 +317,26 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Status deve ser 200 OK', function () {", "    pm.response.to.have.status(200);", "});", "", "pm.test('Deve ser o Luke Skywalker', function () {", "    const resposta = pm.response.json();", "    pm.expect(resposta.name).to.eql('Luke Skywalker');", "});", "", "pm.test('species deve ser uma lista VAZIA (humano implícito, ver README)', function () {", "    const resposta = pm.response.json();", "    pm.expect(resposta.species).to.be.an('array').that.is.empty;", "});", "", "pm.test('Deve trazer a URL do planeta natal, que o front-end resolve por conta própria', function () {", "    const resposta = pm.response.json();", "    pm.expect(resposta.homeworld).to.match(/\\/planets\\/\\d+$/);", "});"]
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deve ser o Luke Skywalker', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.name).to.eql('Luke Skywalker');",
+                  "});",
+                  "",
+                  "pm.test('species deve ser uma lista VAZIA (humano implícito, ver README)', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.species).to.be.an('array').that.is.empty;",
+                  "});",
+                  "",
+                  "pm.test('Deve trazer a URL do planeta natal, que o front-end resolve por conta própria', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.homeworld).to.match(/\\/planets\\/\\d+$/);",
+                  "});"
+                ]
               }
             }
           ]
@@ -299,8 +353,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/planets/9999",
-              "host": ["{{baseUrl}}"],
-              "path": ["planets", "9999"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "planets",
+                "9999"
+              ]
             },
             "description": "Não existe planeta com esse ID. A aplicação trata esse erro em fetchJSON (js/core/api.js), sem lançar exceção não capturada."
           },
@@ -324,8 +383,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/planets/abc",
-              "host": ["{{baseUrl}}"],
-              "path": ["planets", "abc"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "planets",
+                "abc"
+              ]
             },
             "description": "ID não numérico — a API deve rejeitar o recurso em vez de retornar 200 com dado inválido."
           },
@@ -349,8 +413,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/vehicles/9999",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehicles", "9999"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehicles",
+                "9999"
+              ]
             },
             "description": "Não existe veículo com esse ID."
           },
@@ -374,8 +443,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/species/9999",
-              "host": ["{{baseUrl}}"],
-              "path": ["species", "9999"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "species",
+                "9999"
+              ]
             },
             "description": "Não existe espécie com esse ID."
           },
@@ -399,9 +473,18 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/people?search=Luke",
-              "host": ["{{baseUrl}}"],
-              "path": ["people"],
-              "query": [{ "key": "search", "value": "Luke" }]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Luke"
+                }
+              ]
             },
             "description": "A SWAPI não implementa busca server-side (documentado no README do projeto) — espera-se que o parâmetro seja ignorado e a lista completa seja retornada, não uma lista filtrada."
           },
@@ -418,6 +501,186 @@
                   "pm.test('Parâmetro search é ignorado — retorna a lista completa, não filtrada', function () {",
                   "    const resposta = pm.response.json();",
                   "    pm.expect(resposta.length).to.be.above(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-075 - GET /films/9999 - ID inexistente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/films/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "films",
+                "9999"
+              ]
+            },
+            "description": "Não existe filme com esse ID. A API deve responder 404, e a aplicação já trata esse caso em fetchJSON."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-076 - GET /people/9999 - ID inexistente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/people/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "9999"
+              ]
+            },
+            "description": "Não existe personagem com esse ID (o maior ID real é bem menor). Deve retornar 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-077 - GET /starships/9999 - ID inexistente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/starships/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "starships",
+                "9999"
+              ]
+            },
+            "description": "Não existe nave com esse ID. Deve retornar 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-078 - GET /people/0 - valor limite abaixo do menor ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/people/0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "0"
+              ]
+            },
+            "description": "Análise de valor limite: os IDs da SWAPI começam em 1, então 0 está logo abaixo do limite inferior válido. A API não deve devolver 200 com dado."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status não deve ser 200 OK', function () {",
+                  "    pm.expect(pm.response.code).to.not.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-079 - GET /people/-1 - ID negativo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/people/-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "-1"
+              ]
+            },
+            "description": "ID negativo é inválido. A API não deve devolver 200 com dado de personagem."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status não deve ser 200 OK', function () {",
+                  "    pm.expect(pm.response.code).to.not.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-080 - GET /people/1abc - ID com sufixo inválido",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/people/1abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "1abc"
+              ]
+            },
+            "description": "Começa com um ID válido (1) mas termina com letras. A API não deve interpretar como o personagem 1."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status não deve ser 200 OK', function () {",
+                  "    pm.expect(pm.response.code).to.not.equal(200);",
                   "});"
                 ]
               }
