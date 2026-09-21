@@ -1,3 +1,4 @@
+import { estadoVazio } from "../../core/dom.js";
 import { setIntent, takeIntent } from "../../core/nav-intent.js";
 import { getPlanetName } from "../../core/api.js";
 import {
@@ -309,7 +310,7 @@ export function renderSpeciesView(container, species, navigate) {
 
     grid.innerHTML = visiveis.length
       ? visiveis.map(cardHTML).join("")
-      : `<p class="state-msg">Nenhuma espécie encontrada.</p>`;
+      : estadoVazio("Nenhuma espécie encontrada.");
 
     grid.querySelectorAll(".sp-card").forEach((el, i) => {
       itemDoCard.set(el, visiveis[i]);

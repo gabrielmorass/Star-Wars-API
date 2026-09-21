@@ -1,3 +1,4 @@
+import { estadoVazio } from "../../core/dom.js";
 import {
   getPortraits,
   getPersonSpecies,
@@ -214,7 +215,7 @@ export async function renderPeopleView(container, people, onOpenPerson, navigate
     visible = list;
 
     if (list.length === 0) {
-      grid.innerHTML = `<p class="state-msg">Nenhum personagem encontrado.</p>`;
+      grid.innerHTML = estadoVazio("Nenhum personagem encontrado.");
       atualizarContador();
       return;
     }

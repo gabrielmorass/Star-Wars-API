@@ -8,8 +8,11 @@
 /* ---------- Tema: lado da luz (padrão) ---------- */
 :root,
 html[data-theme="light-side"] {
-  --bg-1: #636363;
-  --bg-2: #182121;
+  /* Lado da Luz: azul-noite profundo. O cinza anterior (#636363 → #182121)
+     era elegante, mas "luz" pede um céu, e o acento azul-claro brilha
+     de verdade sobre ele. */
+  --bg-1: #35486a;
+  --bg-2: #0c1424;
 
   /* Planetas e decoração do fundo */
   --planet-1: rgba(255, 255, 255, 0.10);
@@ -17,10 +20,14 @@ html[data-theme="light-side"] {
   --planet-3: rgba(255, 255, 255, 0.13);
 
   /* Gradiente da pílula do toggle */
-  --pill-1: #636363;
-  --pill-2: #182121;
+  --pill-1: #35486a;
+  --pill-2: #0c1424;
 
   --accent: #cfe4ff;
+  /* segunda cor de destaque, para tudo que é "A contra B" (comparação de
+     naves, marca do humano nas réguas). Aqui o branco já contrasta com o
+     azul-claro; no Lado Sombrio, onde o acento É branco, vira dourado. */
+  --accent-b: #ffffff;
 
   --text: #ffffff;
   --text-soft: rgba(255, 255, 255, 0.72);
@@ -47,6 +54,7 @@ html[data-theme="dark-side"] {
   --pill-2: #ff4200;
 
   --accent: #ffffff;
+  --accent-b: #ffd166;
 
   --ink: #2a0a04;
 }
@@ -98,6 +106,25 @@ h1, h2, h3, .brand {
   font-weight: 700;
   letter-spacing: -0.015em;
 }
+
+/* Fonte de display só onde o site fala alto: o título do hero, a marca, os
+   títulos dos cards do hub, o nome do item nos painéis e nos modais, e a
+   intro. O corpo continua em Inter e os subtítulos em Poppins — a Orbitron
+   é larga e geométrica demais para texto corrido. */
+.hub-hero h1,
+.brand,
+.hub-card h2,
+.detail-panel h3,
+.planet-panel h3,
+.modal-person h3,
+.modal-film .fm-headtext h3,
+.intro-title {
+  font-family: "Orbitron", "Poppins", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.brand { font-size: 0.95rem; letter-spacing: 0.05em; }
+.hub-card h2 { letter-spacing: 0.01em; }
 
 /* ============================================================
    Fundo decorativo (montado por js/fx/decor.js)
@@ -250,7 +277,13 @@ h1, h2, h3, .brand {
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem clamp(1rem, 4vw, 2.75rem);
-  background: transparent;
+  /* Fundo de verdade: sem ele, tudo o que rola passava por baixo da barra e
+     ficava ilegível. Escuro translúcido com desfoque funciona nos dois temas
+     (o vermelho do Lado Sombrio continua aparecendo através). */
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .brand {
@@ -374,10 +407,12 @@ h1, h2, h3, .brand {
 }
 
 .hub-hero h1 {
-  font-size: clamp(2.4rem, 7vw, 4.2rem);
+  /* Orbitron é ~30% mais larga que Poppins: o clamp encolhe para caber
+     "Codex Estelar" numa linha em 390px */
+  font-size: clamp(1.9rem, 6.2vw, 3.7rem);
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
   margin: 0 0 1rem;
   color: var(--text);
 }
@@ -494,6 +529,50 @@ h1, h2, h3, .brand {
 }
 
 .state-msg.error { color: #ffd9d2; }
+
+/* Estado vazio das grades: a frase é a mesma de sempre (os testes a
+   afirmam); o que muda é o radar varrendo em cima dela. Dentro de uma
+   grade o <p> era um item de uma coluna só — agora ocupa a linha inteira. */
+.card-grid > .state-msg,
+.people-grid > .state-msg { grid-column: 1 / -1; }
+
+.state-msg--vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.sv-radar {
+  width: 58px;
+  height: 58px;
+  fill: none;
+  stroke: var(--surface-line);
+  stroke-width: 1;
+  overflow: visible;
+}
+
+.sv-cruz { opacity: 0.55; }
+
+.sv-varredura {
+  fill: color-mix(in srgb, var(--accent) 38%, transparent);
+  stroke: none;
+  transform-origin: 24px 24px;
+  animation: sv-gira 2.8s linear infinite;
+}
+
+.sv-eco {
+  fill: var(--accent);
+  stroke: none;
+  animation: sv-pisca 2.8s ease-out infinite;
+}
+
+@keyframes sv-gira { to { transform: rotate(360deg); } }
+@keyframes sv-pisca { 0%, 18% { opacity: 1; } 55%, 100% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-varredura, .sv-eco { animation: none; }
+}
 
 /* ============================================================
    Busca — pílula branca translúcida com lupa em traço fino
@@ -2956,9 +3035,9 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 /* ============================================================
    Intro de primeira visita (js/fx/intro.js)
    ============================================================
-   Cortina opaca que nunca captura clique (pointer-events: none): os testes
-   do hub e o usuário apressado clicam nos cards por baixo dela desde o
-   primeiro quadro. O único ponto clicável é o botão "Pular". */
+   Cortina opaca. No navegador ela é um botão de tela inteira que espera o
+   clique (is-interativa). Sob o Cypress ela não captura ponteiro nem espera:
+   a suíte clica nos cards do hub por baixo dela no primeiro quadro. */
 .intro-overlay {
   position: fixed;
   inset: 0;
@@ -2972,7 +3051,25 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   animation: fade-in 200ms ease-out;
 }
 
+.intro-overlay.is-interativa { pointer-events: auto; cursor: pointer; }
+.intro-overlay.is-interativa:focus-visible { outline: 2px solid var(--accent); outline-offset: -6px; }
+
 .intro-overlay.is-done { opacity: 0; transition: opacity 600ms ease-out; }
+
+/* clarão do salto: luz de acento que sobe do centro enquanto as estrelas
+   viram traços; o texto some junto para não ficar "atravessado" no meio */
+.intro-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(55% 55% at 50% 50%, color-mix(in srgb, var(--accent) 55%, transparent), transparent 72%);
+  opacity: 0;
+  transition: opacity 320ms ease-out;
+}
+
+.intro-overlay.is-salto::after { opacity: 0.55; }
+.intro-overlay.is-salto .intro-texto { opacity: 0; transition: opacity 260ms ease-out; }
 
 .intro-warp {
   position: absolute;
@@ -3029,16 +3126,16 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 /* O título entra letra por letra enquanto o espaçamento fecha: o efeito de
    "encaixe" vem das duas transições correndo ao mesmo tempo. */
 .intro-title {
-  font-family: "Poppins", sans-serif;
-  font-size: clamp(1.6rem, 7vw, 3.6rem);
+  font-family: "Orbitron", "Poppins", sans-serif;
+  font-size: clamp(1.35rem, 5.6vw, 3.1rem);
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   color: #ffffff;
   white-space: nowrap;
   transition: letter-spacing 900ms cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
-.intro-title.is-on { letter-spacing: -0.03em; }
+.intro-title.is-on { letter-spacing: 0.04em; }
 
 .intro-letra {
   display: inline-block;
@@ -3051,27 +3148,24 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 
 .intro-title.is-on .intro-letra { opacity: 1; transform: none; }
 
-.intro-pular {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  pointer-events: auto;
-  font-family: "Inter", sans-serif;
-  font-size: 0.76rem;
-  font-weight: 500;
+/* "Clique para entrar": aparece quando a sequência termina e pulsa devagar
+   enquanto a pessoa olha o fundo */
+.intro-convite {
+  margin: 1.7rem 0 0;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--text-soft);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--surface-line);
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  cursor: pointer;
   opacity: 0;
-  transition: opacity 300ms ease-out, background-color 160ms ease-out, color 160ms ease-out;
 }
 
-.intro-pular.is-on { opacity: 1; }
-.intro-pular:hover { background: var(--surface-hover); color: var(--text); }
-.intro-pular:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.intro-overlay.is-pronta .intro-convite {
+  animation: intro-aparece 500ms ease-out forwards, intro-pulsa 2.2s ease-in-out 500ms infinite;
+}
+
+@keyframes intro-aparece { to { opacity: 1; } }
+@keyframes intro-pulsa { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 /* Cascata dos cards do hub ao fim da intro. `backwards` e não `both`: o
    card volta ao estilo normal ao terminar, senão o preenchimento da
@@ -3137,15 +3231,42 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
     padding: 0.85rem 1rem;
   }
 
-  .topnav { order: 3; width: 100%; }
+  /* uma fileira só, rolável de lado, com a borda direita esmaecida como
+     dica de que há mais: duas linhas de botões roubavam metade da tela */
+  .topnav {
+    order: 3;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(90deg, #000 88%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
+    padding-bottom: 2px;
+  }
+  .topnav::-webkit-scrollbar { display: none; }
+  .topnav button { flex: 0 0 auto; }
 
-  html { scroll-padding-top: 130px; }
+  html { scroll-padding-top: 112px; }
 }
 
 @media (max-width: 480px) {
   .people-grid, .card-grid { grid-template-columns: 1fr; }
 
   .topnav button { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+
+  /* Ep. IV, V e VI caem em 4 anos: em 390px duas alturas não bastam e os
+     rótulos se sobrepunham. Três alturas, ciclando pela ordem dos pontos. */
+  .saga-bar { height: 94px; }
+  .sb-line { top: 64px; }
+  .sb-ends { top: 72px; }
+  .sb-dot b { font-size: 0.56rem; padding: 0.06rem 0.34rem; }
+  .sb-dot:nth-child(3n + 1) b { --alt: 0; }
+  .sb-dot:nth-child(3n + 2) b { --alt: 1; }
+  .sb-dot:nth-child(3n + 3) b { --alt: 2; }
+  /* o "Batalha de Yavin" cai a 80% do eixo e batia no "10ABY" da ponta; em
+     tela estreita fica só o tracinho (o título do ponto continua no hover) */
+  .sb-yavin b { display: none; }
 
   .carousel { gap: 0.6rem; }
   .carousel-arrow { width: 42px; height: 42px; font-size: 1.3rem; }
@@ -3725,7 +3846,7 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   white-space: nowrap;
 }
 
-.rg-item--b { color: #ffffff; opacity: 0.8; }
+.rg-item--b { color: var(--accent-b); opacity: 0.85; }
 
 .rg-sem { position: absolute; left: 0; bottom: 44px; font-size: 0.74rem; color: var(--text-dim); }
 .rg-legenda { font-size: 0.64rem; color: var(--text-dim); margin: 0; }
@@ -3749,8 +3870,8 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 }
 
 .radar-poli--b {
-  fill: rgba(255, 255, 255, 0.18);
-  stroke: rgba(255, 255, 255, 0.85);
+  fill: color-mix(in srgb, var(--accent-b) 20%, transparent);
+  stroke: color-mix(in srgb, var(--accent-b) 88%, transparent);
 }
 
 .radar-rot { font-family: "Inter", sans-serif; font-size: 6px; fill: var(--text-soft); }
@@ -3768,7 +3889,7 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 
 .nv-chip { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .nv-chip--a { background: var(--accent); }
-.nv-chip--b { background: rgba(255, 255, 255, 0.85); }
+.nv-chip--b { background: var(--accent-b); }
 .nv-legenda .nv-chip:not(:first-child) { margin-left: 0.6rem; }
 
 /* ---------- Pilotos e filmes ---------- */
@@ -3827,8 +3948,8 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 .nv-detalhe.is-duplo .hud-dial { width: 90px; height: 68px; }
 .nv-detalhe.is-duplo .hud-num b { font-size: 16px; }
 
-.nv-detalhe.is-duplo .nv-col--b .nv-head-sil { color: #ffffff; }
-.nv-detalhe.is-duplo .nv-col--b .hud-cheio { stroke: rgba(255, 255, 255, 0.85); }
+.nv-detalhe.is-duplo .nv-col--b .nv-head-sil { color: var(--accent-b); }
+.nv-detalhe.is-duplo .nv-col--b .hud-cheio { stroke: color-mix(in srgb, var(--accent-b) 88%, transparent); }
 
 /* ---------- Escala real ---------- */
 .er-bloco { margin-top: 0; margin-bottom: 1.8rem; }
@@ -3853,7 +3974,7 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 }
 
 .er-nave--a * { stroke: var(--accent); }
-.er-nave--b * { stroke: rgba(255, 255, 255, 0.9); }
+.er-nave--b * { stroke: color-mix(in srgb, var(--accent-b) 92%, transparent); }
 
 .er-humano * {
   vector-effect: non-scaling-stroke;
@@ -4336,8 +4457,8 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   bottom: -5px;
   width: 2px;
   margin-left: -1px;
-  background: #ffffff;
-  opacity: 0.85;
+  background: var(--accent-b);
+  opacity: 0.9;
 }
 
 .sp-regua-ref em {

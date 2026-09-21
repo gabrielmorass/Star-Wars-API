@@ -7,7 +7,7 @@
    a sintaxe do GSAP 3, reduzidas a ~96px, encapsuladas num <button>
    acessível e ligadas ao tema do site.
 
-   Os gradientes do pen (#636363→#182121 e #7B0000→#FF4200) são os
+   Os gradientes do pen (#35486a→#0c1424 e #7B0000→#FF4200) são os
    mesmos das variáveis de tema, então a peça encaixa na paleta.
 
    Puramente decorativo: injeta o próprio markup na .topbar e não toca
@@ -30,10 +30,10 @@
 <svg class="side-toggle-svg" xmlns="http://www.w3.org/2000/svg" viewBox="209 194 398 212" aria-hidden="true" focusable="false">
 <defs>
     <linearGradient id="BGDarkGrad" gradientUnits="userSpaceOnUse" x1="217" y1="300" x2="599" y2="300">
-        <stop offset="0" style="stop-color:#636363"/>
+        <stop offset="0" style="stop-color:#35486a"/>
         <stop offset="0.1597" style="stop-color:#555757"/>
         <stop offset="0.7174" style="stop-color:#293030"/>
-        <stop offset="1" style="stop-color:#182121"/>
+        <stop offset="1" style="stop-color:#0c1424"/>
     </linearGradient>
     <linearGradient id="BGLightGrad" gradientUnits="userSpaceOnUse" x1="217" y1="300" x2="599" y2="300">
         <stop offset="0" style="stop-color:#7B0000"/>
