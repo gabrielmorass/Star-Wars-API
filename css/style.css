@@ -3035,9 +3035,9 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 /* ============================================================
    Intro de primeira visita (js/fx/intro.js)
    ============================================================
-   Cortina opaca que nunca captura clique (pointer-events: none): os testes
-   do hub e o usuário apressado clicam nos cards por baixo dela desde o
-   primeiro quadro. O único ponto clicável é o botão "Pular". */
+   Cortina opaca. No navegador ela é um botão de tela inteira que espera o
+   clique (is-interativa). Sob o Cypress ela não captura ponteiro nem espera:
+   a suíte clica nos cards do hub por baixo dela no primeiro quadro. */
 .intro-overlay {
   position: fixed;
   inset: 0;
@@ -3051,7 +3051,25 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   animation: fade-in 200ms ease-out;
 }
 
+.intro-overlay.is-interativa { pointer-events: auto; cursor: pointer; }
+.intro-overlay.is-interativa:focus-visible { outline: 2px solid var(--accent); outline-offset: -6px; }
+
 .intro-overlay.is-done { opacity: 0; transition: opacity 600ms ease-out; }
+
+/* clarão do salto: luz de acento que sobe do centro enquanto as estrelas
+   viram traços; o texto some junto para não ficar "atravessado" no meio */
+.intro-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(55% 55% at 50% 50%, color-mix(in srgb, var(--accent) 55%, transparent), transparent 72%);
+  opacity: 0;
+  transition: opacity 320ms ease-out;
+}
+
+.intro-overlay.is-salto::after { opacity: 0.55; }
+.intro-overlay.is-salto .intro-texto { opacity: 0; transition: opacity 260ms ease-out; }
 
 .intro-warp {
   position: absolute;
@@ -3130,27 +3148,24 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 
 .intro-title.is-on .intro-letra { opacity: 1; transform: none; }
 
-.intro-pular {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  pointer-events: auto;
-  font-family: "Inter", sans-serif;
-  font-size: 0.76rem;
-  font-weight: 500;
+/* "Clique para entrar": aparece quando a sequência termina e pulsa devagar
+   enquanto a pessoa olha o fundo */
+.intro-convite {
+  margin: 1.7rem 0 0;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--text-soft);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--surface-line);
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  cursor: pointer;
   opacity: 0;
-  transition: opacity 300ms ease-out, background-color 160ms ease-out, color 160ms ease-out;
 }
 
-.intro-pular.is-on { opacity: 1; }
-.intro-pular:hover { background: var(--surface-hover); color: var(--text); }
-.intro-pular:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.intro-overlay.is-pronta .intro-convite {
+  animation: intro-aparece 500ms ease-out forwards, intro-pulsa 2.2s ease-in-out 500ms infinite;
+}
+
+@keyframes intro-aparece { to { opacity: 1; } }
+@keyframes intro-pulsa { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 /* Cascata dos cards do hub ao fim da intro. `backwards` e não `both`: o
    card volta ao estilo normal ao terminar, senão o preenchimento da
