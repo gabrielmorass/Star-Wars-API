@@ -43,7 +43,7 @@ Abra esse arquivo no navegador para ver o resultado detalhado.
 
 ## O que a suíte cobre
 
-São **33 cenarios** em 10 arquivos `.feature`, organizados por funcionalidade:
+São **43 cenários** em 12 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
@@ -51,10 +51,12 @@ São **33 cenarios** em 10 arquivos `.feature`, organizados por funcionalidade:
 | `personagens/busca.feature` | 2 | busca por nome e estado de "nenhum resultado" |
 | `personagens/linha-do-tempo.feature` | 4 | troca de modo, contador, busca no eixo e abertura do modal |
 | `personagens/ordenacao-e-modal.feature` | 4 | ordenação por altura/nascimento/nome e navegação por conexões |
+| `personagens/filtros.feature` | 6 | filtro por espécie, por filme, combinação dos dois e retorno a "Todos" |
 | `filmes/busca.feature` | 2 | busca por título e estado de "nenhum resultado" |
 | `filmes/posteres-e-cronologia.feature` | 4 | grade de pôsteres, arte em SVG, ordenação e barra de cronologia |
 | `filmes/modal-abertura.feature` | 6 | texto de abertura no DOM, abas sob demanda e controles do crawl |
 | `planetas/busca.feature` | 2 | busca que pula direto para o planeta |
+| `planetas/navegacao-por-setas.feature` | 4 | avançar/retroceder no carrossel e o "dar a volta" nas duas pontas (valor limite) |
 | `naves-e-veiculos/busca.feature` | 2 | busca por nome |
 | `especies/busca-e-detalhe.feature` | 2 | busca por nome e detalhe do planeta natal |
 
@@ -63,7 +65,7 @@ que testa (`busca`, `linha-do-tempo`, `modal-abertura`...), não da view —
 a pasta já diz qual view é. Um mesmo view pode ter vários arquivos
 (como Personagens e Filmes, que têm 3 cada).
 
-### Duas invariantes que vale destacar
+### Três invariantes que vale destacar
 
 **O texto de abertura nunca sai do DOM.** `modal-abertura.feature` verifica que
 o `opening_crawl` completo continua dentro de `.film-crawl` em três situações
@@ -75,6 +77,13 @@ um de três lugares — desenhado no eixo, dobrado num agrupador `+N`, ou atrás
 chip dos que nasceram antes do trecho em foco. `verificarCoerenciaDoContador()`
 soma os três e compara com o número anunciado pelo contador. Foi esse cenário
 que pegou uma diferença de 3 entre o contador (43) e o que estava desenhado (40).
+
+**O carrossel de planetas nunca trava numa ponta.** `navegacao-por-setas.feature`
+cobre o caso de valor limite do índice: `index = (newIndex + planets.length) %
+planets.length` em `js/features/planets/view.js` faz a seta "anterior" dar a
+volta do primeiro para o último planeta, e a seta "próxima" do último de volta
+para o primeiro, em vez de travar ou lançar um índice inválido. TC-054 e
+TC-055 fixam exatamente essas duas pontas.
 
 ## Estrutura
 
@@ -105,4 +114,4 @@ cypress-project/
   `verificarCoerenciaDoContador`), em vez de ficar fixo no teste.
 - Nada de `cy.wait(<número>)` para "esperar carregar": a espera é sempre por
   uma condição (`should`), que o Cypress reexecuta até passar ou estourar o
-  timeout. É o que mantém a suíte estável — três execuções seguidas, 28/28.
+  timeout. É o que mantém a suíte estável.
