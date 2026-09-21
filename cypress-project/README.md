@@ -43,12 +43,13 @@ Abra esse arquivo no navegador para ver o resultado detalhado.
 
 ## O que a suíte cobre
 
-São **55 cenários** em 12 arquivos `.feature`, organizados por funcionalidade:
+São **61 cenários** em 13 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
 | `hub/navegacao.feature` | 5 | cada um dos 5 cards leva à view correta (validado pelo título da página) |
 | `personagens/busca.feature` | 2 | busca por nome e estado de "nenhum resultado" |
+| `personagens/busca-invalida.feature` | 6 | espaços em branco, caixa alta, caracteres especiais, tag HTML, texto de 300 caracteres e limpar a busca |
 | `personagens/linha-do-tempo.feature` | 7 | troca de modo, contador, busca no eixo (com e sem resultado), filtro de espécie no eixo, "Ver tudo" e abertura do modal |
 | `personagens/ordenacao-e-modal.feature` | 8 | ordenação por altura/nascimento/nome, conexões, fechar (botão e Esc), setas do teclado e atalho para o planeta natal |
 | `personagens/filtros.feature` | 6 | filtro por espécie, por filme, combinação dos dois e retorno a "Todos" |
