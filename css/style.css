@@ -21,6 +21,10 @@ html[data-theme="light-side"] {
   --pill-2: #182121;
 
   --accent: #cfe4ff;
+  /* segunda cor de destaque, para tudo que é "A contra B" (comparação de
+     naves, marca do humano nas réguas). Aqui o branco já contrasta com o
+     azul-claro; no Lado Sombrio, onde o acento É branco, vira dourado. */
+  --accent-b: #ffffff;
 
   --text: #ffffff;
   --text-soft: rgba(255, 255, 255, 0.72);
@@ -47,6 +51,7 @@ html[data-theme="dark-side"] {
   --pill-2: #ff4200;
 
   --accent: #ffffff;
+  --accent-b: #ffd166;
 
   --ink: #2a0a04;
 }
@@ -250,7 +255,13 @@ h1, h2, h3, .brand {
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem clamp(1rem, 4vw, 2.75rem);
-  background: transparent;
+  /* Fundo de verdade: sem ele, tudo o que rola passava por baixo da barra e
+     ficava ilegível. Escuro translúcido com desfoque funciona nos dois temas
+     (o vermelho do Lado Sombrio continua aparecendo através). */
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .brand {
@@ -3137,15 +3148,42 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
     padding: 0.85rem 1rem;
   }
 
-  .topnav { order: 3; width: 100%; }
+  /* uma fileira só, rolável de lado, com a borda direita esmaecida como
+     dica de que há mais: duas linhas de botões roubavam metade da tela */
+  .topnav {
+    order: 3;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(90deg, #000 88%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
+    padding-bottom: 2px;
+  }
+  .topnav::-webkit-scrollbar { display: none; }
+  .topnav button { flex: 0 0 auto; }
 
-  html { scroll-padding-top: 130px; }
+  html { scroll-padding-top: 112px; }
 }
 
 @media (max-width: 480px) {
   .people-grid, .card-grid { grid-template-columns: 1fr; }
 
   .topnav button { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+
+  /* Ep. IV, V e VI caem em 4 anos: em 390px duas alturas não bastam e os
+     rótulos se sobrepunham. Três alturas, ciclando pela ordem dos pontos. */
+  .saga-bar { height: 94px; }
+  .sb-line { top: 64px; }
+  .sb-ends { top: 72px; }
+  .sb-dot b { font-size: 0.56rem; padding: 0.06rem 0.34rem; }
+  .sb-dot:nth-child(3n + 1) b { --alt: 0; }
+  .sb-dot:nth-child(3n + 2) b { --alt: 1; }
+  .sb-dot:nth-child(3n + 3) b { --alt: 2; }
+  /* o "Batalha de Yavin" cai a 80% do eixo e batia no "10ABY" da ponta; em
+     tela estreita fica só o tracinho (o título do ponto continua no hover) */
+  .sb-yavin b { display: none; }
 
   .carousel { gap: 0.6rem; }
   .carousel-arrow { width: 42px; height: 42px; font-size: 1.3rem; }
@@ -3725,7 +3763,7 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   white-space: nowrap;
 }
 
-.rg-item--b { color: #ffffff; opacity: 0.8; }
+.rg-item--b { color: var(--accent-b); opacity: 0.85; }
 
 .rg-sem { position: absolute; left: 0; bottom: 44px; font-size: 0.74rem; color: var(--text-dim); }
 .rg-legenda { font-size: 0.64rem; color: var(--text-dim); margin: 0; }
@@ -3749,8 +3787,8 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 }
 
 .radar-poli--b {
-  fill: rgba(255, 255, 255, 0.18);
-  stroke: rgba(255, 255, 255, 0.85);
+  fill: color-mix(in srgb, var(--accent-b) 20%, transparent);
+  stroke: color-mix(in srgb, var(--accent-b) 88%, transparent);
 }
 
 .radar-rot { font-family: "Inter", sans-serif; font-size: 6px; fill: var(--text-soft); }
@@ -3768,7 +3806,7 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 
 .nv-chip { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .nv-chip--a { background: var(--accent); }
-.nv-chip--b { background: rgba(255, 255, 255, 0.85); }
+.nv-chip--b { background: var(--accent-b); }
 .nv-legenda .nv-chip:not(:first-child) { margin-left: 0.6rem; }
 
 /* ---------- Pilotos e filmes ---------- */
@@ -3827,8 +3865,8 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 .nv-detalhe.is-duplo .hud-dial { width: 90px; height: 68px; }
 .nv-detalhe.is-duplo .hud-num b { font-size: 16px; }
 
-.nv-detalhe.is-duplo .nv-col--b .nv-head-sil { color: #ffffff; }
-.nv-detalhe.is-duplo .nv-col--b .hud-cheio { stroke: rgba(255, 255, 255, 0.85); }
+.nv-detalhe.is-duplo .nv-col--b .nv-head-sil { color: var(--accent-b); }
+.nv-detalhe.is-duplo .nv-col--b .hud-cheio { stroke: color-mix(in srgb, var(--accent-b) 88%, transparent); }
 
 /* ---------- Escala real ---------- */
 .er-bloco { margin-top: 0; margin-bottom: 1.8rem; }
@@ -3853,7 +3891,7 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 }
 
 .er-nave--a * { stroke: var(--accent); }
-.er-nave--b * { stroke: rgba(255, 255, 255, 0.9); }
+.er-nave--b * { stroke: color-mix(in srgb, var(--accent-b) 92%, transparent); }
 
 .er-humano * {
   vector-effect: non-scaling-stroke;
@@ -4336,8 +4374,8 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   bottom: -5px;
   width: 2px;
   margin-left: -1px;
-  background: #ffffff;
-  opacity: 0.85;
+  background: var(--accent-b);
+  opacity: 0.9;
 }
 
 .sp-regua-ref em {

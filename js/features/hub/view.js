@@ -2,7 +2,7 @@ export function renderHub(container, navigate) {
   container.innerHTML = `
     <section class="hub-hero">
       <h1>Codex Estelar</h1>
-      <p>Uma enciclopédia navegável da saga: explore o sistema planetário e conheça os personagens que o habitam.</p>
+      <p>Uma enciclopédia navegável da saga: um mapa da galáxia, os personagens numa linha do tempo, a abertura de cada filme como no cinema, um hangar 3D e as espécies que povoam tudo isso.</p>
     </section>
     <div class="hub-cards">
       <button class="hub-card" data-nav="planets" type="button">
@@ -16,7 +16,7 @@ export function renderHub(container, navigate) {
           </svg>
         </span>
         <h2>Sistema planetário</h2>
-        <p>Navegue pelos planetas e veja espécies presentes e filmes em que aparecem.</p>
+        <p>Um mapa da galáxia por regiões. Escolha um planeta e veja clima, população, espécies presentes e os filmes em que ele aparece.</p>
         <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
       <button class="hub-card" data-nav="people" type="button">
@@ -29,7 +29,7 @@ export function renderHub(container, navigate) {
           </svg>
         </span>
         <h2>Personagens</h2>
-        <p>Busque e explore os personagens da saga, com detalhes de cada um.</p>
+        <p>Grade com fotos e filtros por espécie e filme, ou uma linha do tempo por ano de nascimento. Cada ficha liga a planeta, naves e conexões.</p>
         <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
       <button class="hub-card" data-nav="films" type="button">
@@ -42,7 +42,7 @@ export function renderHub(container, navigate) {
           </svg>
         </span>
         <h2>Filmes</h2>
-        <p>Percorra os episódios da saga e leia a abertura de cada um.</p>
+        <p>Os seis episódios como pôsteres. Ordene por lançamento ou cronologia e leia a abertura de cada um em perspectiva, como na tela.</p>
         <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
       <button class="hub-card" data-nav="vehicles" type="button">
@@ -55,7 +55,7 @@ export function renderHub(container, navigate) {
           </svg>
         </span>
         <h2>Naves e Veículos</h2>
-        <p>Compare specs de naves estelares e veículos usados na saga.</p>
+        <p>Silhuetas por classe, um hangar 3D e medidores de desempenho. Compare duas naves em escala real e veja quem vence em cada métrica.</p>
         <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
       <button class="hub-card" data-nav="species" type="button">
@@ -75,7 +75,7 @@ export function renderHub(container, navigate) {
           </svg>
         </span>
         <h2>Espécies</h2>
-        <p>Conheça as espécies da galáxia, seu idioma e planeta natal.</p>
+        <p>Um glifo por classificação, as cores de pele, cabelo e olhos como amostras, e réguas de altura e longevidade contra a referência humana.</p>
         <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
     </div>
