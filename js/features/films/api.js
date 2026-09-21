@@ -24,7 +24,11 @@ function mapaPorUrl(caminho) {
   };
 }
 
-export const getPeopleMap = mapaPorUrl("people");
+/* O mapa de personagens mora em people/api.js — é dado de Personagens, e
+   Naves e Veículos também precisa dele para resolver os pilotos. Reexportado
+   aqui para as abas do modal continuarem importando de um lugar só. */
+export { getPeopleMap } from "../people/api.js";
+
 export const getPlanetsMap = mapaPorUrl("planets");
 export const getSpeciesFullMap = mapaPorUrl("species");
 

@@ -47,7 +47,7 @@ São **43 cenários** em 12 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
-| `hub/navegacao.feature` | 5 | cada um dos 5 cards do Hub leva à view certa (checagem pelo título da página) |
+| `hub/navegacao.feature` | 5 | cada um dos 5 cards leva à view correta (validado pelo título da página) |
 | `personagens/busca.feature` | 2 | busca por nome e estado de "nenhum resultado" |
 | `personagens/linha-do-tempo.feature` | 4 | troca de modo, contador, busca no eixo e abertura do modal |
 | `personagens/ordenacao-e-modal.feature` | 4 | ordenação por altura/nascimento/nome e navegação por conexões |

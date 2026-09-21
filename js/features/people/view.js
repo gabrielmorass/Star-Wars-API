@@ -9,6 +9,7 @@ import {
 import { getPlanetName } from "../../core/api.js";
 import { setIntent, takeIntent } from "../../core/nav-intent.js";
 import { ANOS_FILMES } from "../../core/saga.js";
+import { CORES, GENERO, VAZIO, legivel, traduzir } from "../../core/vocabulario.js";
 import { createPlanetView } from "../planets/planet-art.js";
 import { subscribe, unsubscribe } from "../../fx/loop.js";
 import {
@@ -28,83 +29,9 @@ import {
    Espécie, filmes e naves vêm de três mapas memorizados (js/features/
    people/api.js): uma requisição cada, e não uma por card. */
 
-/* ---------------- Localização dos valores da SWAPI ----------------
-   A API devolve tudo em inglês e em texto livre. Traduzimos o que está no
-   dicionário e mantemos o original no que não está — assim um valor novo
-   aparece como veio, em vez de sumir. */
-
-const GENERO = {
-  male: "masculino",
-  female: "feminino",
-  hermaphrodite: "hermafrodita",
-  "n/a": "não se aplica",
-  none: "nenhum",
-  unknown: "desconhecido",
-};
-
-const CORES = {
-  blue: "azul",
-  "blue-gray": "azul-acinzentado",
-  red: "vermelho",
-  "red, blue": "vermelho e azul",
-  white: "branco",
-  brown: "castanho",
-  "brown mottle": "castanho malhado",
-  black: "preto",
-  blond: "loiro",
-  blonde: "loiro",
-  auburn: "ruivo",
-  grey: "cinza",
-  gray: "cinza",
-  green: "verde",
-  "green-tan": "verde-bege",
-  yellow: "amarelo",
-  orange: "laranja",
-  pink: "rosa",
-  gold: "dourado",
-  silver: "prateado",
-  tan: "bege",
-  fair: "clara",
-  light: "clara",
-  dark: "escura",
-  pale: "pálida",
-  mottled: "malhada",
-  "mottled green": "verde malhada",
-  metal: "metálica",
-  "white, blue": "branco e azul",
-  hazel: "castanho-esverdeado",
-  none: "nenhum",
-  unknown: "desconhecido",
-  "n/a": "não se aplica",
-};
-
-const VAZIO = new Set(["unknown", "n/a", "none", ""]);
-
-function traduzir(valor, dicionario) {
-  if (valor === undefined || valor === null) return "desconhecido";
-  const bruto = String(valor).trim();
-  const chave = bruto.toLowerCase();
-  if (VAZIO.has(chave)) return dicionario[chave] || "desconhecido";
-  if (dicionario[chave]) return dicionario[chave];
-  /* valores compostos ("brown, grey", "green-tan"): traduz peça por peça */
-  return bruto
-    .split(",")
-    .map((parte) => {
-      const t = parte.trim();
-      const k = t.toLowerCase();
-      if (dicionario[k]) return dicionario[k];
-      const hifen = t.split("-").map((x) => dicionario[x.trim().toLowerCase()] || x.trim());
-      return hifen.join("-");
-    })
-    .join(", ");
-}
-
-/* "unknown" / "n/a" da SWAPI viram texto legível */
-function legivel(valor) {
-  if (valor === undefined || valor === null) return "desconhecido";
-  const v = String(valor).trim().toLowerCase();
-  return VAZIO.has(v) ? "desconhecido" : String(valor);
-}
+/* Os dicionários e o `traduzir` moram em core/vocabulario.js, compartilhados
+   com Planetas e Espécies — ver o comentário de abertura de lá para a regra
+   de o que traduz e o que fica em inglês. */
 
 /* Números da SWAPI vêm como texto ("1358"); aqui viram 1.358 */
 function numero(valor, sufixo) {

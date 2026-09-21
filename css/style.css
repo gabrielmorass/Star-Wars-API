@@ -2163,7 +2163,16 @@ html[data-theme="dark-side"] .modal {
    Filmes — grade de pôsteres, barra de cronologia e modal
    ============================================================ */
 
-.films-bar { align-items: center; }
+/* Busca e toggle de ordem na mesma linha, como a barra de Personagens.
+   O row-gap é quem dá o respiro de 12px quando o toggle quebra pra baixo. */
+.films-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.films-bar input { flex: 1 1 260px; max-width: 340px; }
 
 /* 6 colunas em desktop, 3 em tablet, 2 no mobile */
 #films-grid {
@@ -2462,12 +2471,46 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 .fm-ghost svg { width: 100%; height: 100%; display: block; }
 
 .fm-head {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.9rem;
   padding-right: 3rem;
   margin-bottom: 1rem;
 }
+
+/* Pôster oficial (via TMDB) atrás do cabeçalho. Só entra em cena com a
+   classe `tem-poster`, que o JS põe quando a busca deu certo — sem chave,
+   sem rede ou sem resultado, o cabeçalho continua o de sempre. */
+.fm-head-bg {
+  position: absolute;
+  /* sangra pra fora: o blur desbota as bordas e sem a sangria sobraria
+     uma moldura clara em volta do cabeçalho */
+  inset: -1.1rem -1.1rem -0.5rem;
+  z-index: 0;
+  border-radius: 20px;
+  background-position: center 30%;
+  background-size: cover;
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 320ms ease-out;
+  pointer-events: none;
+}
+
+.fm-head.tem-poster .fm-head-bg { opacity: 1; }
+
+/* véu escuro por cima do pôster: é ele que segura o contraste do título */
+.fm-head-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* o texto do cabeçalho fica acima do fundo */
+.fm-head > .fm-roman,
+.fm-head > .fm-headtext { position: relative; z-index: 1; }
 
 .fm-roman {
   font-family: "Poppins", sans-serif;
@@ -2546,7 +2589,11 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   border-radius: 18px;
   overflow: hidden;
   background: #000000;
-  perspective: 400px;
+  /* fonte única da inclinação: o CSS usa em `.crawl-road`, o JS lê daqui
+     para calcular onde o texto termina de subir */
+  --crawl-tilt: 24;
+  perspective: 380px;
+  perspective-origin: 50% 100%;
 }
 
 .film-crawl-stage:fullscreen,
@@ -2574,15 +2621,26 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   opacity: 0.9;
 }
 
-/* fala de abertura */
+/* Camada da frase azul e do flash — um nível abaixo do palco, fora do
+   alcance da `perspective`. Ver o comentário no markup, em films/view.js. */
+.crawl-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Fala de abertura. Centralizada por flex, não por translate. */
 .crawl-intro {
   position: absolute;
-  left: 50%;
-  top: 42%;
-  transform: translate(-50%, -50%);
-  width: min(86%, 640px);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7%;
   margin: 0;
   z-index: 3;
+  pointer-events: none;
   text-align: center;
   font-family: "Pathway Gothic One", "Poppins", sans-serif;
   font-size: 28px;
@@ -2594,43 +2652,54 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 /* O bloco que sobe. O texto integral do opening_crawl mora no
    <p class="crawl-body"> aqui dentro, e nunca sai do DOM: a animação só
    transforma o bloco. */
-/* O bloco que sobe. A inclinação é um transform ESTÁTICO e quem anima é o
-   `top`.
-
-   Por quê: animando `transform: translateY(...)` junto com o rotateX, o
-   Chrome promove o bloco a camada de composição e, dentro de um contêiner
-   com `perspective`, essa camada não chega a ser pintada — o texto ficava
-   no DOM, clicável e com a geometria certa, e mesmo assim invisível (testado
-   no Electron e no Chrome, headless e com janela). Animando `top`, que é
-   propriedade de layout, a animação roda na thread principal e pinta. É um
-   elemento só, então o custo de layout por quadro é aceitável. */
-.film-crawl {
+/* O chão inclinado. Fica ancorado na borda de baixo do palco — o mesmo ponto
+   do `perspective-origin` —, então ali a escala é 1:1 e vai diminuindo para
+   cima. A inclinação é um transform ESTÁTICO: quem se move é o texto por
+   cima dele.
+   60% da largura, com teto de 900px. O `max()` no margin negativo é o que
+   centraliza nos dois regimes: enquanto vale a porcentagem ele devolve -30%,
+   e depois que o teto entra ele trava em -450px. */
+.crawl-road {
   position: absolute;
   left: 50%;
-  top: 100%;
-  width: min(62%, 620px);
-  margin-left: min(-31%, -310px);
+  bottom: 0;
+  width: min(60%, 900px);
+  margin-left: max(-30%, -450px);
+  height: 100%;
   transform-origin: 50% 100%;
-  transform: rotateX(25deg);
+  transform: rotateX(calc(var(--crawl-tilt) * 1deg));
+}
+
+/* O texto que sobe pelo chão. A subida vem do JS, escrevendo `top` em pixel
+   a cada quadro — uma animação CSS aqui dentro impede a pintura da camada.
+   O porquê está em films/view.js, em `passoCrawl`. */
+.film-crawl {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
   text-align: justify;
   font-family: "Pathway Gothic One", "Poppins", sans-serif;
-  font-size: 1.7rem;
-  line-height: 1.25;
-  letter-spacing: 0.045em;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 64px;
+  line-height: 1.35;
+  letter-spacing: 1px;
   color: #ffe81f;
 }
 
 .crawl-title {
-  margin: 0 0 1rem;
+  margin: 0 0 1.4rem;
   text-align: center;
   font-family: "Pathway Gothic One", "Poppins", sans-serif;
   font-weight: 400;
-  line-height: 1.15;
+  font-style: normal;
+  line-height: 1.1;
   color: #ffe81f;
 }
 
-.crawl-title .crawl-ep { display: block; font-size: 1.9rem; letter-spacing: 0.24em; }
-.crawl-title .crawl-name { display: block; font-size: 2.6rem; letter-spacing: 0.08em; }
+.crawl-title .crawl-ep { display: block; font-size: 90px; letter-spacing: 0.16em; }
+.crawl-title .crawl-name { display: block; font-size: 120px; letter-spacing: 0.04em; }
 
 .crawl-body { margin: 0; white-space: pre-line; }
 
@@ -2642,49 +2711,89 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   left: 0;
   right: 0;
   top: 0;
-  height: 30%;
+  height: 35%;
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.82) 40%, rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.82) 45%, rgba(0, 0, 0, 0) 100%);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
           mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
 }
 
-/* Sequência: a fala azul entra e sai em 1s cada, e só depois o crawl sobe */
-.film-crawl-stage.is-rolling .crawl-intro {
-  animation: crawl-intro 3s ease-in-out 200ms 1 both;
+/* Flash do título entre a fala azul e o crawl: entra grande e fecha em 1,
+   como o logo do filme aparecendo e sumindo ao longe.
+   O zoom sai do `font-size` e não de um `scale()` — mesma razão da fala
+   azul. Os filhos medem em `em`, então encolhem junto. */
+.crawl-flash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7%;
+  margin: 0;
+  z-index: 3;
+  pointer-events: none;
+  text-align: center;
+  font-family: "Pathway Gothic One", "Poppins", sans-serif;
+  font-weight: 400;
+  --flash: 72px;
+  font-size: var(--flash);
+  line-height: 1.05;
+  color: #ffe81f;
+  opacity: 0;
 }
 
-.film-crawl-stage.is-rolling .film-crawl {
-  animation: crawl-up 60s linear 2200ms infinite;
+.crawl-flash .crawl-flash-ep { display: block; font-size: 0.44em; letter-spacing: 0.3em; }
+.crawl-flash .crawl-flash-name { display: block; font-size: 1em; letter-spacing: 0.05em; }
+
+/* Sequência: fala azul (2s) → flash do título (1,5s) → o crawl sobe */
+.film-crawl-stage.is-rolling .crawl-intro {
+  animation: crawl-intro 2s ease-in-out 200ms 1 both;
 }
+
+.film-crawl-stage.is-rolling .crawl-flash {
+  animation: crawl-flash 1.5s ease-out 2200ms 1 both;
+}
+
+/* A subida em si não é uma @keyframes: é o rAF de films/view.js escrevendo
+   `top` em pixel. Ver o comentário em `passoCrawl` — com uma animação CSS
+   viva neste bloco (que tem rotateX dentro de um contêiner com perspective)
+   o Chrome não pinta a camada, e o texto some da tela. */
 
 .film-crawl-stage.is-paused .crawl-intro,
-.film-crawl-stage.is-paused .film-crawl { animation-play-state: paused; }
+.film-crawl-stage.is-paused .crawl-flash { animation-play-state: paused; }
 
 @keyframes crawl-intro {
   0% { opacity: 0; }
-  33% { opacity: 1; }
-  67% { opacity: 1; }
+  25% { opacity: 1; }
+  75% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-/* O fim vem do JS (--crawl-fim), medido a partir da altura real do texto:
-   cada filme tem um crawl de tamanho diferente, e uma porcentagem fixa ou
-   deixava texto na tela no fim ou criava um vão de vários segundos. */
-@keyframes crawl-up {
-  from { top: 100%; }
-  to { top: var(--crawl-fim, -220%); }
+@keyframes crawl-flash {
+  0% { opacity: 0; font-size: calc(var(--flash) * 1.2); }
+  22% { opacity: 1; font-size: calc(var(--flash) * 1.125); }
+  70% { opacity: 1; font-size: calc(var(--flash) * 1.015); }
+  100% { opacity: 0; font-size: var(--flash); }
 }
 
+/* Faixa escura própria: em cinema o painel inteiro é preto e os controles
+   precisam de um fundo pra não competir com o texto que entra por baixo. */
 .crawl-ctrl {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: 0.7rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .crawl-btn {
@@ -2768,12 +2877,24 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   to { background-position: 0 50%; }
 }
 
+/* Os 64px/90px/120px são medidos pra tela de cinema (95vw). Abaixo disso a
+   proporção é mantida, mas em escala — senão cabem três palavras por linha. */
+@media (max-width: 1100px) {
+  .crawl-road { width: 74%; margin-left: -37%; }
+  .film-crawl { font-size: 42px; }
+  .crawl-title .crawl-ep { font-size: 58px; }
+  .crawl-title .crawl-name { font-size: 76px; }
+  .crawl-flash { --flash: 52px; }
+}
+
 @media (max-width: 760px) {
   .film-crawl-stage { height: 260px; min-height: 50vh; }
-  .film-crawl { font-size: 1.15rem; width: 80%; margin-left: -40%; }
+  .crawl-road { width: 82%; margin-left: -41%; }
+  .film-crawl { font-size: 24px; }
   .crawl-intro { font-size: 20px; }
-  .crawl-title .crawl-ep { font-size: 1.2rem; }
-  .crawl-title .crawl-name { font-size: 1.6rem; }
+  .crawl-title .crawl-ep { font-size: 30px; }
+  .crawl-title .crawl-name { font-size: 42px; }
+  .crawl-flash { --flash: 34px; }
   .fm-head { gap: 0.6rem; }
   .fm-roman { font-size: 1.9rem; }
   .modal-film h3 { font-size: 1.15rem; }
@@ -2833,35 +2954,137 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 }
 
 /* ============================================================
-   Intro de primeira visita
-   ============================================================ */
+   Intro de primeira visita (js/fx/intro.js)
+   ============================================================
+   Cortina opaca que nunca captura clique (pointer-events: none): os testes
+   do hub e o usuário apressado clicam nos cards por baixo dela desde o
+   primeiro quadro. O único ponto clicável é o botão "Pular". */
 .intro-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
   pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(155deg, var(--bg-1), var(--bg-2));
+  display: grid;
+  place-items: center;
+  /* espaço profundo nos dois temas: o gradiente da página começa em cinza
+     claro e lavava as estrelas; a chegada ao tema acontece na dissolução */
+  background: radial-gradient(120% 120% at 50% 50%, #1d2626 0%, #0b1010 70%);
   animation: fade-in 200ms ease-out;
 }
 
-.intro-overlay.is-done { opacity: 0; transition: opacity 500ms ease-out; }
+.intro-overlay.is-done { opacity: 0; transition: opacity 600ms ease-out; }
 
-.intro-line { display: none; }
-
-.intro-title {
-  font-family: "Poppins", sans-serif;
-  font-size: clamp(2rem, 7vw, 3.6rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: #ffffff;
-  animation: intro-title 900ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+.intro-warp {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
-@keyframes intro-title {
-  from { opacity: 0; transform: scale(0.82); }
+.intro-texto {
+  position: relative;
+  text-align: center;
+  padding: 0 16px;
+  max-width: 100%;
+}
+
+/* a frase digitada: mono, com cursor piscando até o fim */
+.intro-line {
+  margin: 0 0 0.55rem;
+  min-height: 1.5em;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: clamp(0.72rem, 1.6vw, 0.9rem);
+  letter-spacing: 0.04em;
+  color: var(--text-soft);
+}
+
+.intro-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--accent);
+  animation: intro-pisca 900ms steps(2, start) infinite;
+}
+
+.intro-line.is-fim .intro-cursor { animation: none; opacity: 0.35; }
+
+@keyframes intro-pisca { to { visibility: hidden; } }
+
+.intro-sinal {
+  margin: 0 0 1.4rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: clamp(0.72rem, 1.6vw, 0.9rem);
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 350ms ease-out, transform 350ms ease-out;
+}
+
+.intro-sinal.is-on { opacity: 1; transform: none; }
+
+/* O título entra letra por letra enquanto o espaçamento fecha: o efeito de
+   "encaixe" vem das duas transições correndo ao mesmo tempo. */
+.intro-title {
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(1.6rem, 7vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #ffffff;
+  white-space: nowrap;
+  transition: letter-spacing 900ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.intro-title.is-on { letter-spacing: -0.03em; }
+
+.intro-letra {
+  display: inline-block;
+  white-space: pre;
+  opacity: 0;
+  transform: translateY(0.45em);
+  transition: opacity 420ms ease-out, transform 520ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  transition-delay: calc(var(--i) * 45ms);
+}
+
+.intro-title.is-on .intro-letra { opacity: 1; transform: none; }
+
+.intro-pular {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  pointer-events: auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--surface-line);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 300ms ease-out, background-color 160ms ease-out, color 160ms ease-out;
+}
+
+.intro-pular.is-on { opacity: 1; }
+.intro-pular:hover { background: var(--surface-hover); color: var(--text); }
+.intro-pular:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Cascata dos cards do hub ao fim da intro. `backwards` e não `both`: o
+   card volta ao estilo normal ao terminar, senão o preenchimento da
+   animação passaria por cima do transform de hover. A opacidade parte de
+   0,3 e não de 0 de propósito: um card com opacity 0 conta como invisível
+   para quem clica nele naquele instante (os testes, por exemplo). */
+.hub-cards.is-cascata .hub-card {
+  animation: hub-sobe 520ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@keyframes hub-sobe {
+  from { opacity: 0.3; transform: translateY(18px); }
   to { opacity: 1; transform: none; }
 }
 
@@ -2953,6 +3176,13 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
     perspective: none;
     padding: 1.2rem;
   }
+  .crawl-road {
+    position: static;
+    transform: none;
+    width: 100%;
+    height: auto;
+    margin-left: 0;
+  }
   .film-crawl {
     position: static;
     transform: none;
@@ -2961,9 +3191,11 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
     animation: none;
     font-size: 1.1rem;
     text-align: left;
+    letter-spacing: normal;
   }
   .crawl-title .crawl-ep { font-size: 1.1rem; }
   .crawl-title .crawl-name { font-size: 1.5rem; }
+  .crawl-flash { display: none; }
   .crawl-intro {
     position: static;
     transform: none;
@@ -2977,9 +3209,1263 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
   .film-card:hover { transform: none; }
   .fc-sheen { display: none; }
 
+  /* Naves e Veículos: os arcos já nascem cheios, sem piscar; a silhueta do
+     cabeçalho aparece inteira em vez de se desenhar; a régua vai direto para
+     a posição final. */
+  .hud-cheio { transition: none; stroke-dasharray: var(--cheio) var(--arco); }
+  .hud-med.is-ligando .hud-arco { animation: none; }
+  .sil--desenha * { stroke-dashoffset: 0; animation: none; }
+  .er-cresce { animation: none; transform: none; opacity: 1; }
+  /* sem hangar 3D: o bloco encolhe para a silhueta estática caber sozinha */
+  .nv-hangar { height: 150px; }
+  .rg-item { transition: none; }
+  .nv-card:hover { transform: none; }
+
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+
+/* ============================================================
+   Naves e Veículos — lista com silhuetas e painel de HUD
+   ============================================================ */
+
+/* Três blocos no grid: topo (abas + busca + filtros), lista e painel.
+   No modo normal o painel ocupa a coluna da direita inteira; em comparação
+   ele passa a ocupar a largura toda logo abaixo do topo, e a lista desce.
+   É só troca de área — nenhum nó muda de lugar no DOM. */
+.nv-layout {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+  grid-template-columns: minmax(0, 55fr) minmax(460px, 45fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "topo   painel"
+    "lista  painel";
+}
+
+.nv-topo { grid-area: topo; }
+#vehicles-grid { grid-area: lista; }
+#vehicle-detail { grid-area: painel; }
+
+.nv-layout.is-comparando {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "topo"
+    "painel"
+    "lista";
+}
+
+/* O painel acompanha a rolagem e rola por dentro: sem isso o radar e a
+   régua ficavam abaixo da dobra e o usuário nunca chegava neles. */
+.nv-layout #vehicle-detail {
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-line) transparent;
+}
+
+.nv-layout #vehicle-detail::-webkit-scrollbar { width: 6px; }
+.nv-layout #vehicle-detail::-webkit-scrollbar-track { background: transparent; }
+.nv-layout #vehicle-detail::-webkit-scrollbar-thumb {
+  background: var(--surface-line);
+  border-radius: 999px;
+}
+
+/* Em comparação ele ocupa a largura toda e não precisa mais grudar. */
+.nv-layout.is-comparando #vehicle-detail {
+  position: static;
+  max-height: none;
+  overflow: visible;
+}
+
+/* ---------- Barra ---------- */
+.nv-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.nv-bar input { flex: 1 1 220px; max-width: 320px; }
+
+.nv-ordem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.nv-ordem select {
+  font-family: "Inter", sans-serif;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.nv-classes { margin: 0 0 0.25rem; gap: 0.4rem; }
+
+.nv-pill { display: inline-flex; align-items: center; gap: 0.35rem; }
+.nv-pill .sil { flex: none; opacity: 0.85; }
+.nv-pill i {
+  font-style: normal;
+  font-size: 0.68rem;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Lista ---------- */
+#vehicles-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Altura uniforme vem de reservar duas linhas para o nome (ver .nv-card h3),
+     não de `grid-auto-rows: 1fr`: dentro deste layout o `1fr` resolvia contra
+     a altura da LINHA do grid externo, que acompanha o painel grudado ao lado,
+     e cada card virava uma faixa de 211px com metade vazia. */
+  align-self: start;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+@media (max-width: 1100px) {
+  #vehicles-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  #vehicles-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* O placeholder de `content-visibility: auto` herdado de .info-card é de
+   180px de conteúdo — o tamanho dos cards grandes de Personagens. Estes são
+   compactos (≈107px no total), e com o placeholder errado toda linha abaixo
+   da dobra media 211px e a página pulava ao rolar. O valor é o conteúdo sem
+   padding e borda; `auto` troca pelo tamanho real assim que o card pinta. */
+.nv-card {
+  contain-intrinsic-size: auto 76px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: start;
+  align-items: start;
+  gap: 0.35rem 0.75rem;
+  padding: 0.9rem 1rem;
+  height: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  transition: transform 180ms ease-out, border-color 180ms ease-out,
+    background-color 180ms ease-out;
+}
+
+.nv-card:hover { transform: translateY(-3px); }
+
+.nv-card.is-sel {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.nv-sil {
+  grid-row: 1 / 3;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  opacity: 0.9;
+}
+
+.nv-txt { min-width: 0; }
+
+/* Nome em no máximo 2 linhas, modelo em 1: é o que trava a altura do card
+   independente do tamanho do texto que a API mandar. */
+.nv-card h3 {
+  font-size: 0.9rem;
+  line-height: 1.25;
+  /* duas linhas sempre reservadas: é isso que iguala a altura dos cards */
+  min-height: 2.5em;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.nv-card .meta {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--text-dim);
+  margin: 0.15rem 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nv-classe {
+  grid-column: 2;
+  align-self: end;
+  justify-self: start;
+  max-width: 100%;
+  font-size: 0.64rem;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Cabeçalho do painel ---------- */
+.nv-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.nv-head-sil { flex: none; color: var(--accent); line-height: 0; }
+
+/* ---------- Hangar 3D ----------
+   O cabeçalho vira coluna quando há hangar: o canvas ocupa a largura toda e
+   o título fica embaixo. */
+.nv-head.tem-hangar {
+  display: block;
+  margin-bottom: 1.2rem;
+}
+
+.nv-hangar {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  margin-bottom: 0.9rem;
+  border-radius: 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 120%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--surface-line);
+}
+
+.hg-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.hg-canvas.is-grabbing { cursor: grabbing; }
+
+/* O rótulo do comprimento é HTML por cima do canvas, não geometria: texto em
+   3D vira borrão e não herda a fonte do tema. */
+.hg-metros {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  pointer-events: none;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-soft);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--surface-line);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.hg-metros[hidden] { display: none; }
+
+/* A silhueta SVG é o fallback: fica centralizada no fundo do hangar e some
+   assim que o canvas entra por cima dela. */
+.nv-hangar .nv-head-sil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.nv-head-txt { min-width: 0; }
+.nv-head h3 { margin: 0 0 0.5rem; overflow-wrap: anywhere; }
+.nv-head-pills .pill { font-size: 0.66rem; padding: 0.18rem 0.5rem; }
+
+/* A silhueta do cabeçalho se desenha ao selecionar. O pathLength="100" no
+   SVG faz todo traço medir 100, então um dasharray único serve para todos. */
+.sil--desenha * {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: sil-desenha 700ms cubic-bezier(0.3, 0.7, 0.3, 1) forwards;
+}
+
+.sil--desenha *:nth-child(2) { animation-delay: 90ms; }
+.sil--desenha *:nth-child(3) { animation-delay: 180ms; }
+.sil--desenha *:nth-child(4) { animation-delay: 270ms; }
+.sil--desenha *:nth-child(5) { animation-delay: 360ms; }
+
+@keyframes sil-desenha { to { stroke-dashoffset: 0; } }
+
+.nv-secao { margin-top: 1.6rem; }
+
+.nv-secao h4 {
+  font-family: "Poppins", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 0.8rem;
+}
+
+.nv-vazio { font-size: 0.78rem; color: var(--text-dim); margin: 0; }
+
+/* ---------- Medidores ---------- */
+.nv-hud {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 0.5rem;
+  margin-top: 1.3rem;
+}
+
+.hud-med {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+/* O dial tem tamanho fixo: é ele que garante os 100px pedidos, e o número
+   fica posicionado contra ele, não contra a caixa inteira do medidor. */
+.hud-dial {
+  position: relative;
+  width: 100px;
+  height: 76px;
+  max-width: 100%;
+}
+
+.hud-arco { width: 100%; height: 100%; display: block; }
+
+.hud-trilho {
+  fill: none;
+  stroke: var(--surface-line);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+/* Nasce em zero; o JS põe .is-on no quadro seguinte e a transição faz o
+   resto. O --i de cada medidor escalona a partida. */
+.hud-cheio {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 0 var(--arco);
+  transition: stroke-dasharray 500ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+
+.hud-cheio.is-on { stroke-dasharray: var(--cheio) var(--arco); }
+
+.hud-tick { stroke: var(--text-dim); stroke-width: 1.6; }
+
+.hud-num {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  transform: translateY(-50%);
+  text-align: center;
+  line-height: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.hud-num b {
+  font-family: "JetBrains Mono", ui-monospace, "Space Mono", monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* multiplicador (mil/mi/tri) e unidade sempre menores que o número */
+.hud-mult {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-style: normal;
+  font-size: 10px;
+  color: var(--text-soft);
+  margin-left: 0.15em;
+}
+
+.hud-cheio-txt {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-cheio-txt i { font-style: normal; margin-left: 0.2em; opacity: 0.8; }
+
+.hud-rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.25;
+}
+
+.hud-vs { font-size: 9px; }
+.hud-vs--ganha { color: #8ff0a4; }
+.hud-vs--perde { color: rgba(255, 255, 255, 0.3); }
+
+.hud-med.is-ligando .hud-arco { animation: hud-flicker 100ms steps(2) 2; }
+
+@keyframes hud-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+/* Métricas sem número: linha de texto, nunca arco vazio. */
+.hud-faltantes {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0.7rem 0 0;
+  border-top: 1px solid var(--surface-line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.hud-sem {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.hud-sem span { color: var(--text-soft); }
+
+/* ---------- Régua de tamanho ---------- */
+.rg-barra {
+  position: relative;
+  height: 140px;
+  margin-bottom: 0.3rem;
+}
+
+.rg-linha {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  height: 1px;
+  background: var(--surface-line);
+}
+
+.rg-ref { position: absolute; bottom: 0; transform: translateX(-50%); text-align: center; }
+
+.rg-ref i {
+  position: absolute;
+  bottom: 17px;
+  left: 50%;
+  width: 1px;
+  height: 9px;
+  background: var(--surface-line);
+}
+
+.rg-ref b {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.rg-item {
+  position: absolute;
+  bottom: 27px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--accent);
+  line-height: 0;
+  transition: left 420ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.rg-item b {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.rg-item--b { color: #ffffff; opacity: 0.8; }
+
+.rg-sem { position: absolute; left: 0; bottom: 44px; font-size: 0.74rem; color: var(--text-dim); }
+.rg-legenda { font-size: 0.64rem; color: var(--text-dim); margin: 0; }
+
+/* ---------- Radar ---------- */
+.radar {
+  width: 100%;
+  max-width: 340px;
+  min-height: 140px;
+  display: block;
+  margin: 0 auto;
+}
+
+.radar-teia, .radar-raio { fill: none; stroke: var(--surface-line); stroke-width: 0.7; }
+
+.radar-poli { stroke-width: 1.6; }
+
+.radar-poli--a {
+  fill: color-mix(in srgb, var(--accent) 30%, transparent);
+  stroke: var(--accent);
+}
+
+.radar-poli--b {
+  fill: rgba(255, 255, 255, 0.18);
+  stroke: rgba(255, 255, 255, 0.85);
+}
+
+.radar-rot { font-family: "Inter", sans-serif; font-size: 6px; fill: var(--text-soft); }
+
+.nv-legenda {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--text-soft);
+  margin: 0.6rem 0 0;
+  flex-wrap: wrap;
+}
+
+.nv-chip { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.nv-chip--a { background: var(--accent); }
+.nv-chip--b { background: rgba(255, 255, 255, 0.85); }
+.nv-legenda .nv-chip:not(:first-child) { margin-left: 0.6rem; }
+
+/* ---------- Pilotos e filmes ---------- */
+.nv-gente {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 0.7rem 0.4rem;
+}
+
+.nv-piloto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  padding: 0.3rem 0.15rem;
+  cursor: pointer;
+  border-radius: 12px;
+  color: var(--text-soft);
+  font-size: 0.68rem;
+  text-align: center;
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+}
+
+.nv-piloto:hover { background: var(--surface-hover); color: var(--text); }
+
+.nv-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.nv-filme {
+  cursor: pointer;
+  border: 1px solid var(--surface-line);
+  background: var(--surface);
+  color: var(--text-soft);
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+}
+
+.nv-filme:hover { background: var(--surface-hover); color: var(--text); }
+
+/* ---------- Comparação ---------- */
+.nv-acoes { margin-top: 1.6rem; display: flex; gap: 0.4rem; }
+
+.nv-detalhe.is-duplo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+/* Lado a lado só vale se as duas réguas começarem na mesma altura. O que
+   varia entre as colunas é o número de linhas das pills (fabricantes com
+   nome comprido quebram em três), então o bloco de texto do cabeçalho tem
+   piso — assim os arcos de cima ficam na mesma linha nas duas colunas. */
+.nv-detalhe.is-duplo .nv-head-txt { min-height: 118px; }
+.nv-detalhe.is-duplo .nv-head { align-items: flex-start; }
+.nv-detalhe.is-duplo .nv-hud { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.nv-detalhe.is-duplo .hud-dial { width: 90px; height: 68px; }
+.nv-detalhe.is-duplo .hud-num b { font-size: 16px; }
+
+.nv-detalhe.is-duplo .nv-col--b .nv-head-sil { color: #ffffff; }
+.nv-detalhe.is-duplo .nv-col--b .hud-cheio { stroke: rgba(255, 255, 255, 0.85); }
+
+/* ---------- Escala real ---------- */
+.er-bloco { margin-top: 0; margin-bottom: 1.8rem; }
+
+/* `overflow: hidden` é rede de segurança: a geometria já garante que nada
+   sai da caixa, mas um desenho novo com proporção extrema não vai vazar por
+   cima da navegação. */
+.er-svg {
+  width: 100%;
+  display: block;
+  overflow: hidden;
+}
+
+/* O traço não acompanha a escala: com fator 0,008 a nave menor sumiria de
+   vez em vez de virar um risco fino, que é justamente o que se quer ver. */
+.er-nave * {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.6;
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.er-nave--a * { stroke: var(--accent); }
+.er-nave--b * { stroke: rgba(255, 255, 255, 0.9); }
+
+.er-humano * {
+  vector-effect: non-scaling-stroke;
+  stroke: var(--text-dim);
+  stroke-width: 1.4;
+  fill: none;
+  stroke-linecap: round;
+}
+
+.er-linha, .er-tick { stroke: var(--surface-line); stroke-width: 1.4; }
+
+.er-num {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  fill: var(--text-dim);
+}
+
+.er-unid-tit {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.7;
+}
+
+.er-rot {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.er-rot--a { fill: var(--accent); }
+.er-rot--b { fill: rgba(255, 255, 255, 0.9); }
+
+.er-lupa {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: var(--surface-line);
+  stroke-width: 1.4;
+}
+
+.er-guia {
+  stroke: var(--surface-line);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+
+.er-nota {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin: 0.4rem 0 0;
+}
+
+.er-nota b { color: var(--text); }
+
+/* Entrada: as naves crescem a partir da margem esquerda, que é a origem
+   comum das duas linhas de base. */
+.er-cresce {
+  transform-box: view-box;
+  transform-origin: 34px 0;
+  animation: er-cresce 620ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  animation-delay: var(--atraso, 0ms);
+}
+
+@keyframes er-cresce {
+  from { transform: scaleX(0.02); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+/* Tabela de quem vence: a métrica fica no meio e cada lado puxa para fora,
+   então a seta aponta fisicamente para o vencedor. */
+.cmp-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+}
+
+.cmp-cap {
+  font-family: "Poppins", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: left;
+  padding-bottom: 0.7rem;
+}
+
+.cmp-tabela th {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  text-align: center;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--surface-line);
+}
+
+.cmp-tabela th:first-child { text-align: right; }
+.cmp-tabela th:last-child { text-align: left; }
+
+.cmp-tabela td {
+  padding: 0.42rem 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-line) 55%, transparent);
+  color: var(--text-dim);
+}
+
+.cmp-a, .cmp-b {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cmp-a { text-align: right; }
+.cmp-b { text-align: left; }
+.cmp-rot { text-align: center; color: var(--text-soft); }
+.cmp-seta { text-align: center; width: 1.6rem; color: var(--text-dim); }
+
+.cmp-l--a .cmp-a, .cmp-l--b .cmp-b { color: var(--text); font-weight: 600; }
+.cmp-l--a .cmp-seta, .cmp-l--b .cmp-seta { color: #8ff0a4; }
+
+.cmp-placar td {
+  border-bottom: none;
+  padding-top: 0.7rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+.cmp-placar td:first-child { text-align: right; }
+.cmp-placar td:last-child { text-align: left; }
+.cmp-placar td:nth-child(3) {
+  font-weight: 500;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+/* ---------- Seletor da comparação ---------- */
+.nv-seletor[hidden] { display: none; }
+
+.nv-seletor {
+  margin-top: 0.9rem;
+  padding: 0.9rem;
+  border: 1px solid var(--surface-line);
+  border-radius: 18px;
+  max-width: 460px;
+}
+
+.nv-seletor-campo { display: block; margin-bottom: 0.6rem; }
+
+.nv-seletor-campo span {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  margin-bottom: 0.3rem;
+}
+
+.nv-cmp-busca {
+  width: 100%;
+  border: 1px solid var(--surface-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 0.9rem;
+  color: var(--text);
+  font-family: "Inter", sans-serif;
+  font-size: 0.82rem;
+}
+
+.nv-cmp-lista { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.nv-cmp-op {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  text-align: left;
+  transition: background-color 150ms ease-out;
+}
+
+.nv-cmp-op:hover { background: var(--surface-hover); color: var(--text); }
+.nv-cmp-op .sil { flex: none; color: var(--accent); }
+.nv-cmp-op span { flex: 1 1 auto; min-width: 0; }
+.nv-cmp-op i { font-style: normal; font-size: 0.64rem; color: var(--text-dim); }
+
+@media (max-width: 1000px) {
+  .nv-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "topo" "painel" "lista";
+  }
+  .nv-layout #vehicle-detail { position: static; max-height: none; overflow: visible; }
+  .nv-detalhe.is-duplo { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ============================================================
+   Espécies — ficha de espécime
+   ============================================================
+   Mesma arquitetura de Naves e Veículos: barra em cima, grade à esquerda e
+   painel grudado à direita. O que muda é o vocabulário visual: glifo por
+   classificação, faixa de cores no card, e réguas contra a referência
+   humana no painel. */
+.sp-layout {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+  grid-template-columns: minmax(0, 55fr) minmax(420px, 45fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "topo   painel"
+    "lista  painel";
+}
+
+.sp-topo { grid-area: topo; }
+#species-grid { grid-area: lista; }
+#species-detail { grid-area: painel; }
+
+.sp-layout #species-detail {
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-line) transparent;
+}
+
+.sp-layout #species-detail::-webkit-scrollbar { width: 6px; }
+.sp-layout #species-detail::-webkit-scrollbar-track { background: transparent; }
+.sp-layout #species-detail::-webkit-scrollbar-thumb {
+  background: var(--surface-line);
+  border-radius: 999px;
+}
+
+@media (max-width: 960px) {
+  .sp-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "topo"
+      "lista"
+      "painel";
+  }
+  .sp-layout #species-detail {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* ---------- Barra ---------- */
+.sp-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.sp-bar input { flex: 1 1 220px; max-width: 320px; }
+
+.sp-ordem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.sp-ordem select {
+  font-family: "Inter", sans-serif;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.sp-classes { margin: 0 0 0.25rem; gap: 0.4rem; }
+
+.sp-pill { display: inline-flex; align-items: center; gap: 0.35rem; }
+.sp-pill .sp-glifo-svg { flex: none; opacity: 0.85; }
+.sp-pill i {
+  font-style: normal;
+  font-size: 0.68rem;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Lista ---------- */
+#species-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-self: start;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+@media (max-width: 1100px) {
+  #species-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  #species-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* mesmo ajuste de placeholder que .nv-card (ver comentário lá) */
+.sp-card {
+  contain-intrinsic-size: auto 66px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: start;
+  align-items: start;
+  gap: 0.45rem 0.75rem;
+  padding: 0.9rem 1rem;
+  height: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  transition: transform 180ms ease-out, border-color 180ms ease-out,
+    background-color 180ms ease-out;
+}
+
+.sp-card:hover { transform: translateY(-3px); }
+
+.sp-card.is-sel {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.sp-glifo {
+  grid-row: 1 / 3;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  opacity: 0.95;
+}
+
+.sp-txt { min-width: 0; }
+
+.sp-card h3 {
+  font-size: 0.9rem;
+  line-height: 1.25;
+  min-height: 2.5em;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.sp-card .meta {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--text-dim);
+  margin: 0.15rem 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A faixa de cores é a assinatura do card: cada amostra é um segmento de
+   largura igual, como uma fita de identificação. */
+.sp-dna {
+  grid-column: 2;
+  align-self: end;
+  display: flex;
+  height: 6px;
+  width: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.sp-dna i { flex: 1 1 0; display: block; }
+.sp-dna--vazia { border: 1px dashed var(--surface-line); }
+
+/* ---------- Cabeçalho do painel ---------- */
+.sp-head {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.2rem;
+}
+
+.sp-head-glifo { flex: none; line-height: 0; }
+.sp-head-txt { min-width: 0; }
+.sp-head h3 { margin: 0 0 0.5rem; overflow-wrap: anywhere; }
+.sp-head-pills .pill { font-size: 0.66rem; padding: 0.18rem 0.5rem; }
+
+.sp-secao { margin-top: 1.6rem; }
+
+.sp-secao h4 {
+  font-family: "Poppins", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 0.7rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.sp-secao-nota {
+  font-family: "Inter", sans-serif;
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.8;
+}
+
+.sp-conta {
+  font-style: normal;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.68rem;
+  opacity: 0.7;
+}
+
+.sp-vazio { font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+
+/* ---------- Réguas ---------- */
+.sp-regua { margin-bottom: 1.1rem; }
+.sp-regua--sem { margin-bottom: 0.6rem; }
+
+.sp-regua-cab {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  /* a faixa entre o cabeçalho e a barra é do rótulo "humano": em telas
+     estreitas ele colidia com o nome da régua */
+  margin-bottom: 1.25rem;
+}
+
+.sp-regua-cab b {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-regua-barra {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+}
+
+/* nasce em zero; `is-on` leva à largura calculada */
+.sp-regua-val {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, transparent), var(--accent));
+  transition: width 600ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.sp-regua-val.is-on { width: var(--w); }
+
+/* a marca do humano: um risco fino com rótulo em cima */
+.sp-regua-ref {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  margin-left: -1px;
+  background: #ffffff;
+  opacity: 0.85;
+}
+
+.sp-regua-ref em {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  font-style: normal;
+  font-size: 0.56rem;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+
+.sp-regua-esc {
+  position: relative;
+  height: 0.9rem;
+  margin-top: 0.3rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+}
+
+.sp-regua-esc span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.sp-regua-esc span:first-child { transform: none; }
+.sp-regua-esc span:last-child { transform: translateX(-100%); }
+
+/* ---------- Cores ---------- */
+.sp-cor-linha {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  margin-bottom: 0.55rem;
+}
+
+.sp-cor-rot {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding-top: 0.2rem;
+}
+
+.sp-cores { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.sp-cor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem 0.18rem 0.3rem;
+}
+
+.sp-cor i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  flex: none;
+}
+
+.sp-cor--sem { padding-left: 0.6rem; color: var(--text-dim); font-style: italic; }
+
+/* ---------- Planeta natal, membros e filmes ---------- */
+.sp-planeta { gap: 0.45rem; }
+
+.sp-planeta-orbe {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff, var(--accent) 55%, #3b5b7a);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+}
+
+.sp-planeta-carregando { font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+
+.sp-gente {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 0.7rem 0.4rem;
+}
+
+.sp-membro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  padding: 0.3rem 0.15rem;
+  cursor: pointer;
+  border-radius: 12px;
+  color: var(--text-soft);
+  font-size: 0.68rem;
+  text-align: center;
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+}
+
+.sp-membro:hover { background: var(--surface-hover); color: var(--text); }
+
+.sp-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.sp-filme {
+  cursor: pointer;
+  border: 1px solid var(--surface-line);
+  background: var(--surface);
+  color: var(--text-soft);
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+}
+
+.sp-filme:hover { background: var(--surface-hover); color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-card, .sp-membro, .sp-regua-val { transition: none; }
+  .sp-card:hover { transform: none; }
+  .sp-regua-val.is-on { width: var(--w); }
 }

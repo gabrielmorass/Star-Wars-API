@@ -2,6 +2,7 @@ import { getPlanetSpecies, getPlanetFilms } from "./api.js";
 import { createPlanetView, createSpin } from "./planet-art.js";
 import { subscribe, unsubscribe } from "../../fx/loop.js";
 import { takeIntent } from "../../core/nav-intent.js";
+import { CLIMA, TERRENO, traduzir } from "../../core/vocabulario.js";
 
 /* ---------------- Mapa da galáxia ----------------
    Fundo (galáxia espiral, grid e blobs de região) é SVG desenhado em
@@ -347,7 +348,7 @@ export function renderPlanetsView(container, planets) {
       ${coord ? `<p class="planet-region" style="--pa:${color}">${coord.region}</p>` : ""}
       <div class="detail-row">
         <div class="label">Clima / Terreno</div>
-        <div class="value">${planet.climate} · ${planet.terrain}</div>
+        <div class="value">${traduzir(planet.climate, CLIMA)} · ${traduzir(planet.terrain, TERRENO)}</div>
       </div>
       <div class="detail-row">
         <div class="label">População</div>
@@ -718,7 +719,7 @@ export function renderPlanetsView(container, planets) {
             <span class="gx-name">${planet.name}</span>
             <span class="gx-tip" aria-hidden="true">
               <strong>${planet.name}</strong>
-              <em>${planet.climate} · ${pop}</em>
+              <em>${traduzir(planet.climate, CLIMA)} · ${pop}</em>
             </span>
           </button>`;
       })
