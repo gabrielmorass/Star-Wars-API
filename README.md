@@ -285,7 +285,7 @@ Aceita com ajustes: a IA reformulou a tela de Planetas para um mapa/carrossel na
 
 Aceita: a IA identificou e corrigiu os gargalos de performance introduzidos pela nova tela do Sistema Planetário (cache por planeta, guarda contra respostas fora de ordem, debounce na busca).
 
-**Prompt 3: Reorganização do código por funcionalidade**
+**Prompt 3: Reorganização do código por funcionalidade e contexto**
 > "vamos melhorar a organização do projeto, ao invés de 3 arquivos .js, vamos separar por funcionalidades, deixando a pasta o mais organizada possível."
 
 Aceita: a IA reestruturou `js/api.js`/`js/render.js`/`js/main.js` em `js/core/` (utilitários compartilhados) e `js/features/<view>/{api,view}.js`, sem alterar nenhum comportamento da aplicação.
@@ -300,7 +300,7 @@ Aceita: a IA ajustou o plano de testes para cobrir UI e API sem se limitar a 20 
 
 Aceita: a IA levantou a contagem total e renomeou os cenários Gherkin e requests Newman com o prefixo `TC-XXX —` correspondente à descrição de cada um, criando rastreabilidade direta com o Plano de Testes.
 
-**Prompt 6: Como visualizar os relatórios de execução**
+**Prompt 6: Como visualizar os relatórios de teste de execução**
 > "me ensine a visualizar o deploy dos resultados nos sites que o cypress e o outro geram"
 
 Aceita: a IA esclareceu que os relatórios são páginas HTML geradas localmente a cada execução (Cypress/mochawesome, Newman/htmlextra, k6-reporter), não um deploy on-line, e explicou como abri-los.
@@ -314,7 +314,7 @@ Aceita: a IA esclareceu que os relatórios são páginas HTML geradas localmente
 
 Aceita: a IA levantou os seletores e mensagens que os Page Objects usam e tratou a lista como contrato durante todo o redesign (fundo de estrelas, hiperespaço, tema Lado da Luz / Lado Sombrio). A regra "quebrou, corrige o CSS, não o teste" foi mantida em todas as etapas seguintes.
 
-**Prompt 2: Verificação antes de seguir e documentação de dado inferido**
+**Prompt 2: Verificação antes da continuação e documentação de dado inferido**
 > "Antes de continuar: 1. Roda npm run test:bdd e me mostra o resultado completo. 2. Me diz de onde vieram as coordenadas e regiões do mapa (arquivo e fonte). Se foi hardcoded, adiciona uma seção no README explicando que é inferência da equipe, não dado da SWAPI. 3. O painel de detalhe do planeta (#planet-card com h3 nome, clima, população, espécies, filmes) continua existindo e atualiza ao navegar com as setas [...]? Se não, restaura ele [...] sem mudar os ids."
 
 Aceita: a suíte foi executada e o resultado mostrado; as coordenadas e regiões do mapa da galáxia eram inferência, e a IA documentou isso na seção "Decisões de dados" deste README; o painel `#planet-card` foi mantido com os mesmos ids.
@@ -385,7 +385,7 @@ Aceita: após a correção, reexecutei o teste até passar.
 **Aceita:** após a análise e leitura do estado atual do projeto iniciei os testes.
 
 **Prompt 2: Revisão**
-> Given the new tests generated analyse it against the old ones, analysing the full project scope and tests coverage compliance.
+> Given the new tests developed analyse it against the old ones, analysing the full project scope and tests coverage compliance.
 
 **Aceita:** após análise e sugestão de melhoria, o código foi modificado a fim de melhorar a aderência ao escopo.
 
