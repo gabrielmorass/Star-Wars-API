@@ -3,6 +3,8 @@
 > **"Que a Força esteja com o seu código."**
 
 Front-end estático (HTML + CSS + JavaScript puro, sem build) conectado à [SWAPI](https://swapi.info) — base do projeto de Qualidade de Software do **Inatel**.
+## Acess o site em:
+[Codex Estelar](https://swapi.info)
 
 ---
 
