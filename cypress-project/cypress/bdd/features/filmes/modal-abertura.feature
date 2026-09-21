@@ -45,3 +45,28 @@ Funcionalidade: Modal de Filmes e texto de abertura
     E abro o primeiro filme
     E abro a aba "planets"
     Então devo ver os planetas carregados
+
+  Cenário: TC-063 — A aba Naves e Veículos carrega as naves do filme
+    Quando busco pelo filme "New Hope"
+    E abro o primeiro filme
+    E abro a aba "craft"
+    Então devo ver as naves carregadas
+
+  Cenário: TC-064 — A aba Espécies carrega as espécies do filme
+    Quando busco pelo filme "New Hope"
+    E abro o primeiro filme
+    E abro a aba "species"
+    Então devo ver as espécies carregadas
+
+  Cenário: TC-065 — O botão de fechar encerra o modal do filme
+    Quando busco pelo filme "New Hope"
+    E abro o primeiro filme
+    E fecho o modal do filme
+    Então o modal do filme deve estar fechado
+
+  Cenário: TC-066 — Um nome do elenco leva a Personagens já com o modal dele aberto
+    Quando busco pelo filme "New Hope"
+    E abro o primeiro filme
+    E abro a aba "cast"
+    E abro o primeiro personagem do elenco
+    Então devo estar em Personagens com o modal do personagem que abri

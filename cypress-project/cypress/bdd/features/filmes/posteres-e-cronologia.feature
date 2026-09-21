@@ -23,3 +23,9 @@ Funcionalidade: Pôsteres e cronologia de Filmes
   Cenário: TC-038 — Clicar num ponto da cronologia abre o filme correspondente
     Quando clico no primeiro ponto da cronologia
     Então o modal do filme deve ser "The Phantom Menace"
+
+  Cenário: TC-067 — Limpar a busca volta a mostrar os seis pôsteres
+    Quando busco pelo filme "New Hope"
+    Então devo ver 1 filme na grade
+    Quando limpo a busca de filmes
+    Então devo ver 6 filmes na grade

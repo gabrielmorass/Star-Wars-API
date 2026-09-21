@@ -27,3 +27,27 @@ Funcionalidade: Ordenação e modal de Personagens
     E abro a primeira conexão do modal
     Então o modal do personagem deve estar aberto
     E o modal não deve mais ser de "Chewbacca"
+
+  Cenário: TC-059 — O botão de fechar encerra o modal
+    Quando busco por "Chewbacca"
+    E abro o primeiro resultado
+    E fecho o modal do personagem
+    Então o modal do personagem deve estar fechado
+
+  Cenário: TC-060 — A tecla Esc encerra o modal
+    Quando busco por "Chewbacca"
+    E abro o primeiro resultado
+    E pressiono a tecla Esc
+    Então o modal do personagem deve estar fechado
+
+  Cenário: TC-061 — A seta para a direita avança para o próximo personagem sem fechar o modal
+    Quando abro o primeiro resultado
+    E pressiono a seta para a direita
+    Então o modal do personagem deve estar aberto
+    E o modal não deve mais ser de "Ackbar"
+
+  Cenário: TC-062 — O planeta natal do modal leva ao Sistema Planetário já no planeta
+    Quando busco por "Chewbacca"
+    E abro o primeiro resultado
+    E abro o planeta natal no modal
+    Então devo estar no Sistema Planetário vendo "Kashyyyk"

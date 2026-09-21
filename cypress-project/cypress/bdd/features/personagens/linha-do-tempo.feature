@@ -26,3 +26,21 @@ Funcionalidade: Linha do tempo de Personagens
     Quando alterno para a linha do tempo
     E abro o primeiro personagem do eixo
     Então o modal do personagem deve estar aberto
+
+  Cenário: TC-056 — Buscar um nome inexistente na linha do tempo esvazia o eixo
+    Quando alterno para a linha do tempo
+    E busco por "zzzzzz"
+    Então não devo ver nenhum personagem no eixo
+    E o contador deve indicar 0 com ano
+
+  Cenário: TC-057 — O filtro de espécie vale na linha do tempo e o contador fecha com a grade
+    Quando filtro personagens por espécie "droid"
+    E guardo a quantidade atual de cards
+    E alterno para a linha do tempo
+    Então a soma do contador deve ser igual à quantidade original
+
+  Cenário: TC-058 — "Ver tudo" traz para o eixo quem nasceu antes de 120BBY
+    Quando alterno para a linha do tempo
+    E amplio a linha do tempo para ver tudo
+    Então o chip dos que nasceram antes de 120BBY não deve existir
+    E devo ver "Yoda" no eixo

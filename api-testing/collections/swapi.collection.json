@@ -265,6 +265,27 @@
               }
             }
           ]
+        },
+        {
+          "name": "TC-068 — GET /people/1 — humano vem com species vazio",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/people/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["people", "1"]
+            },
+            "description": "Decisão de dados nº 1 do README: a SWAPI deixa `species` vazio nos humanos. O front-end trata lista vazia como Human; este caso fixa esse contrato para a regressão apontar se a API mudar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status deve ser 200 OK', function () {", "    pm.response.to.have.status(200);", "});", "", "pm.test('Deve ser o Luke Skywalker', function () {", "    const resposta = pm.response.json();", "    pm.expect(resposta.name).to.eql('Luke Skywalker');", "});", "", "pm.test('species deve ser uma lista VAZIA (humano implícito, ver README)', function () {", "    const resposta = pm.response.json();", "    pm.expect(resposta.species).to.be.an('array').that.is.empty;", "});", "", "pm.test('Deve trazer a URL do planeta natal, que o front-end resolve por conta própria', function () {", "    const resposta = pm.response.json();", "    pm.expect(resposta.homeworld).to.match(/\\/planets\\/\\d+$/);", "});"]
+              }
+            }
+          ]
         }
       ]
     },

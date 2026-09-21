@@ -7,6 +7,7 @@
  */
 import { When, Then } from '@badeball/cypress-cucumber-preprocessor'
 import PersonagensPage from '../../pages/PersonagensPage'
+import PlanetasPage from '../../pages/PlanetasPage'
 
 // =============================================================================
 // QUANDO — Ações
@@ -46,6 +47,26 @@ When('filtro personagens pelo filme {string}', (rotulo) => {
 
 When('guardo a quantidade atual de cards', () => {
   PersonagensPage.guardarQuantidadeAtual('quantidadeOriginal')
+})
+
+When('amplio a linha do tempo para ver tudo', () => {
+  PersonagensPage.ampliarLinhaDoTempo()
+})
+
+When('fecho o modal do personagem', () => {
+  PersonagensPage.fecharModal()
+})
+
+When('pressiono a tecla Esc', () => {
+  PersonagensPage.pressionarEsc()
+})
+
+When('pressiono a seta para a direita', () => {
+  PersonagensPage.pressionarSetaDireita()
+})
+
+When('abro o planeta natal no modal', () => {
+  PersonagensPage.abrirPlanetaNatal()
 })
 
 // =============================================================================
@@ -96,4 +117,31 @@ Then('a quantidade de cards deve voltar à quantidade original', () => {
   PersonagensPage.verificarQuantidadeIgualA('quantidadeOriginal')
 })
 
+Then('não devo ver nenhum personagem no eixo', () => {
+  PersonagensPage.verificarEixoVazio()
+})
 
+Then('o contador deve indicar {int} com ano', (quantidade) => {
+  PersonagensPage.verificarContadorComAno(quantidade)
+})
+
+Then('a soma do contador deve ser igual à quantidade original', () => {
+  PersonagensPage.verificarSomaDoContadorIgualA('quantidadeOriginal')
+})
+
+Then('o chip dos que nasceram antes de 120BBY não deve existir', () => {
+  PersonagensPage.verificarChipDosAnterioresAusente()
+})
+
+Then('devo ver {string} no eixo', (nome) => {
+  PersonagensPage.verificarNoEixo(nome)
+})
+
+Then('o modal do personagem deve estar fechado', () => {
+  PersonagensPage.verificarModalFechado()
+})
+
+Then('devo estar no Sistema Planetário vendo {string}', (planeta) => {
+  cy.title().should('eq', 'Sistema planetário | Codex Estelar')
+  PlanetasPage.verificarNomePlaneta(planeta)
+})
