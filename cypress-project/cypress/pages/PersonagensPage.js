@@ -78,6 +78,10 @@ class PersonagensPage {
     this.campoBusca.clear().type(termo)
   }
 
+  limparBusca() {
+    this.campoBusca.clear()
+  }
+
   abrirPrimeiroResultado() {
     this.cards.first().click()
   }
