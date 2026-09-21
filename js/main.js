@@ -85,7 +85,7 @@ async function navigate(view) {
     renderLoading(app, "Buscando espécies na SWAPI…");
     try {
       if (!cache.species) cache.species = await getSpecies();
-      renderSpeciesView(app, cache.species);
+      renderSpeciesView(app, cache.species, navigate);
     } catch (err) {
       renderError(app, `Não foi possível carregar as espécies. (${err.message})`);
     }

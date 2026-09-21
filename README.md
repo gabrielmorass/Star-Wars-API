@@ -21,8 +21,8 @@ Depois acesse `http://localhost:8080`.
 - **Sistema planetário** — mapa da galáxia navegável (clique, setas ou busca com autocomplete) com clima, população, espécies presentes e filmes de cada planeta. A ilustração do planeta no painel é gerada em canvas a partir do `terrain` (que decide o tipo: ecumenópole, vulcânico, gigante gasoso, oceânico, árido, gelado, pantanoso, temperado ou rochoso) e do `climate` (que só ajusta o tom e a cor da atmosfera) — é interpretação visual, não imagem de referência
 - **Personagens** — grade de 6 colunas com foto, espécie (cor da borda por espécie) e ano de nascimento; busca combinada com filtros de espécie e de filme e ordenação por nome, altura ou nascimento. Alterna entre **grade** e **linha do tempo** (eixo em escala por trechos, empilhamento em colunas de até 6 com leque "+N", faixa separada para quem não tem ano). O modal traz ficha técnica, régua de altura, medidor de massa, aparições com o crawl do filme no hover, naves pilotadas e conexões por planeta e por espécie, navegável com ← → entre os personagens da lista filtrada
 - **Filmes** — os 6 episódios como pôsteres 2:3 com arte procedural em SVG por episódio (desenhada no projeto, sem imagem externa), numeral romano, rodapé com contagem de personagens/planetas/naves e as duas primeiras linhas da abertura no hover. Ordenação por lançamento ou cronológica (com animação FLIP) e barra de cronologia galáctica clicável. O modal traz abas: **Abertura** (o crawl em perspectiva, com pausar/reiniciar/tela cheia), **Elenco**, **Planetas**, **Naves e Veículos** e **Espécies**, todas resolvidas sob demanda e com atalho para as outras telas
-- **Naves e Veículos** — abas Naves/Veículos, busca por nome, detalhe técnico
-- **Espécies** — busca por nome, detalhe com planeta natal resolvido
+- **Naves e Veículos** — abas Naves/Veículos, busca, filtro por classe (pills geradas do dado) e ordenação com FLIP; cada card tem a silhueta SVG da classe. O painel traz um **hangar 3D** (Three.js carregado sob demanda, modelo montado com primitivas por classe, arraste para girar; sem WebGL cai na silhueta), medidores em arco normalizados pelo teto da categoria (escala log nas métricas de cauda longa), régua de tamanho, radar de 5 eixos, pilotos e aparições. **Comparar** põe duas naves lado a lado, com painel de **escala real** (as duas silhuetas no mesmo fator de metros, lupa quando a razão passa de 500:1) e tabela de quem vence em cada métrica
+- **Espécies** — grade com o glifo da classificação (8 desenhos: mamífero, réptil, anfíbio, insectoide, gastrópode, artificial, senciente, sem classificação) e uma faixa com as cores de pele, cabelo e olhos de cada espécie; busca, filtro por classificação e ordenação por nome, altura ou longevidade. O painel traz réguas de **altura** (linear até 3 m) e **longevidade** (log, de 50 a 1.000 anos) sempre com a marca do humano como referência, as cores como amostras, o planeta natal, os membros conhecidos e as aparições — os três últimos levam à tela correspondente
 
 ## Estrutura
 
@@ -48,7 +48,12 @@ js/
     films/tmdb.js          # pôster oficial via TMDB, só de fundo no cabeçalho do modal
   config.js                # chave pública do TMDB (ver "Pôster oficial via TMDB")
     vehicles/{api,view}.js
+    vehicles/silhuetas.js  # silhueta SVG por classe, com viewBox próprio
+    vehicles/hud.js        # medidores em arco, régua log, radar e tabela de vitórias
+    vehicles/escala-real.js# as duas naves da comparação no mesmo fator de metros
+    vehicles/hangar.js     # hangar 3D (Three.js r128 sob demanda, modelos por primitivas)
     species/{api,view}.js
+    species/glifos.js      # glifo por classificação + nome de cor → valor CSS
   fx/
     loop.js                # laço de animação único — todo efeito se inscreve aqui
     decor.js               # fundo decorativo + parallax
@@ -131,6 +136,13 @@ A SWAPI (`https://swapi.info/api`) cobre apenas os Episódios I–VI e tem limit
 
    Como nos demais itens: **isso é inferência da equipe**, não deve embasar asserção de teste
    sobre a SWAPI.
+
+6. **A lista `people` de cada espécie é parcial.** `species/1` (Human) traz 4 personagens, mas 35
+   dos 82 personagens são humanos — a SWAPI deixa o campo `species` deles **vazio** (ver item sobre
+   Personagens). Por isso a seção "Membros conhecidos" da tela Espécies não usa `species.people`:
+   ela é derivada da lista de personagens (todo mundo cujo `species` aponta para a espécie, mais os
+   de `species` vazio quando a espécie é Human), unida à lista da API. As referências das réguas
+   (humano com 1,80 m e 120 anos) vêm do próprio registro `species/1`.
 
 Esses pontos constam explicitamente no Plano de Testes (seção de Riscos e Limitações), já que são inferências e limitações conhecidas, não falhas da aplicação.
 
