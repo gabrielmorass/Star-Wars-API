@@ -2954,35 +2954,137 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 }
 
 /* ============================================================
-   Intro de primeira visita
-   ============================================================ */
+   Intro de primeira visita (js/fx/intro.js)
+   ============================================================
+   Cortina opaca que nunca captura clique (pointer-events: none): os testes
+   do hub e o usuário apressado clicam nos cards por baixo dela desde o
+   primeiro quadro. O único ponto clicável é o botão "Pular". */
 .intro-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
   pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(155deg, var(--bg-1), var(--bg-2));
+  display: grid;
+  place-items: center;
+  /* espaço profundo nos dois temas: o gradiente da página começa em cinza
+     claro e lavava as estrelas; a chegada ao tema acontece na dissolução */
+  background: radial-gradient(120% 120% at 50% 50%, #1d2626 0%, #0b1010 70%);
   animation: fade-in 200ms ease-out;
 }
 
-.intro-overlay.is-done { opacity: 0; transition: opacity 500ms ease-out; }
+.intro-overlay.is-done { opacity: 0; transition: opacity 600ms ease-out; }
 
-.intro-line { display: none; }
-
-.intro-title {
-  font-family: "Poppins", sans-serif;
-  font-size: clamp(2rem, 7vw, 3.6rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: #ffffff;
-  animation: intro-title 900ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+.intro-warp {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
-@keyframes intro-title {
-  from { opacity: 0; transform: scale(0.82); }
+.intro-texto {
+  position: relative;
+  text-align: center;
+  padding: 0 16px;
+  max-width: 100%;
+}
+
+/* a frase digitada: mono, com cursor piscando até o fim */
+.intro-line {
+  margin: 0 0 0.55rem;
+  min-height: 1.5em;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: clamp(0.72rem, 1.6vw, 0.9rem);
+  letter-spacing: 0.04em;
+  color: var(--text-soft);
+}
+
+.intro-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--accent);
+  animation: intro-pisca 900ms steps(2, start) infinite;
+}
+
+.intro-line.is-fim .intro-cursor { animation: none; opacity: 0.35; }
+
+@keyframes intro-pisca { to { visibility: hidden; } }
+
+.intro-sinal {
+  margin: 0 0 1.4rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: clamp(0.72rem, 1.6vw, 0.9rem);
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 350ms ease-out, transform 350ms ease-out;
+}
+
+.intro-sinal.is-on { opacity: 1; transform: none; }
+
+/* O título entra letra por letra enquanto o espaçamento fecha: o efeito de
+   "encaixe" vem das duas transições correndo ao mesmo tempo. */
+.intro-title {
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(1.6rem, 7vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #ffffff;
+  white-space: nowrap;
+  transition: letter-spacing 900ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.intro-title.is-on { letter-spacing: -0.03em; }
+
+.intro-letra {
+  display: inline-block;
+  white-space: pre;
+  opacity: 0;
+  transform: translateY(0.45em);
+  transition: opacity 420ms ease-out, transform 520ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  transition-delay: calc(var(--i) * 45ms);
+}
+
+.intro-title.is-on .intro-letra { opacity: 1; transform: none; }
+
+.intro-pular {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  pointer-events: auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--surface-line);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 300ms ease-out, background-color 160ms ease-out, color 160ms ease-out;
+}
+
+.intro-pular.is-on { opacity: 1; }
+.intro-pular:hover { background: var(--surface-hover); color: var(--text); }
+.intro-pular:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Cascata dos cards do hub ao fim da intro. `backwards` e não `both`: o
+   card volta ao estilo normal ao terminar, senão o preenchimento da
+   animação passaria por cima do transform de hover. A opacidade parte de
+   0,3 e não de 0 de propósito: um card com opacity 0 conta como invisível
+   para quem clica nele naquele instante (os testes, por exemplo). */
+.hub-cards.is-cascata .hub-card {
+  animation: hub-sobe 520ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@keyframes hub-sobe {
+  from { opacity: 0.3; transform: translateY(18px); }
   to { opacity: 1; transform: none; }
 }
 

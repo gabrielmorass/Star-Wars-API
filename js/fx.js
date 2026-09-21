@@ -26,8 +26,8 @@
 
 
   /* ============================================================
-     INTRO DE PRIMEIRA VISITA
-     (o salto de hiperespaço da navegação vive em js/fx/hyperspace.js)
+     TRANSIÇÃO ENTRE VIEWS
+     (a intro de primeira visita vive em js/fx/intro.js)
      ============================================================ */
   const app = document.getElementById('app');
 
@@ -41,24 +41,6 @@
       app.classList.add('view-enter');
     }, { passive: true });
   }
-
-  /* Intro "conectando" — uma vez por sessão, puramente visual
-     (pointer-events: none; nunca bloqueia cliques nem os testes) */
-  try {
-    if (!reduce && !sessionStorage.getItem('codex-intro')) {
-      sessionStorage.setItem('codex-intro', '1');
-      const intro = document.createElement('div');
-      intro.className = 'intro-overlay';
-      intro.setAttribute('aria-hidden', 'true');
-      intro.innerHTML = `
-        <p class="intro-line">Conectando aos arquivos da galáxia… <span>Sinal recebido.</span></p>
-        <div class="intro-title">Codex Estelar</div>
-      `;
-      document.body.appendChild(intro);
-      setTimeout(() => intro.classList.add('is-done'), 2000);
-      setTimeout(() => intro.remove(), 2600);
-    }
-  } catch (_) { /* sessionStorage indisponível: segue sem intro */ }
 
   /* ============================================================
      4. MODAL DE FILMES — crawl com pausa e "Episódio N" em azul
