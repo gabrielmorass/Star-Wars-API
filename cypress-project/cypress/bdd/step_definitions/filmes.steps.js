@@ -7,6 +7,7 @@
  */
 import { When, Then } from '@badeball/cypress-cucumber-preprocessor'
 import FilmesPage from '../../pages/FilmesPage'
+import PersonagensPage from '../../pages/PersonagensPage'
 
 // =============================================================================
 // QUANDO — Ações
@@ -36,6 +37,18 @@ When('pauso o crawl', () => {
   FilmesPage.pausarOuRetomarCrawl()
 })
 
+When('fecho o modal do filme', () => {
+  FilmesPage.fecharModal()
+})
+
+When('limpo a busca de filmes', () => {
+  FilmesPage.limparBusca()
+})
+
+When('abro o primeiro personagem do elenco', () => {
+  FilmesPage.abrirPrimeiroDoElenco()
+})
+
 // =============================================================================
 // ENTÃO — Verificações
 // =============================================================================
@@ -44,7 +57,7 @@ Then('devo ver um único filme com o título {string}', (titulo) => {
   FilmesPage.verificarUnicoFilmeComTitulo(titulo)
 })
 
-Then('devo ver {int} filmes na grade', (quantidade) => {
+Then('devo ver {int} filme(s) na grade', (quantidade) => {
   FilmesPage.verificarQuantidadeDeFilmes(quantidade)
 })
 
@@ -82,4 +95,25 @@ Then('o crawl deve estar pausado', () => {
 
 Then('o crawl deve estar rodando', () => {
   FilmesPage.verificarCrawlRodando()
+})
+
+Then('devo ver as naves carregadas', () => {
+  FilmesPage.verificarNavesCarregadas()
+})
+
+Then('devo ver as espécies carregadas', () => {
+  FilmesPage.verificarEspeciesCarregadas()
+})
+
+Then('o modal do filme deve estar fechado', () => {
+  FilmesPage.verificarModalFechado()
+})
+
+/* Atalho entre telas: o clique no elenco leva a Personagens com a intenção
+   de abrir aquele personagem — a view de destino abre o modal ao montar. */
+Then('devo estar em Personagens com o modal do personagem que abri', () => {
+  cy.title().should('eq', 'Personagens | Codex Estelar')
+  cy.get('@nomeDoElenco').then((nome) => {
+    PersonagensPage.verificarNomeNoModal(nome.trim())
+  })
 })

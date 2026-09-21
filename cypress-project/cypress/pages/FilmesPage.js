@@ -28,7 +28,19 @@ class FilmesPage {
   }
 
   get botaoFechar() {
-    return cy.get('.modal-close')
+    return cy.get('.modal-film .modal-close')
+  }
+
+  get elenco() {
+    return cy.get('.fm-person')
+  }
+
+  get navesDaAba() {
+    return cy.get('.fm-panel[data-panel="craft"] .pill-link')
+  }
+
+  get especiesDaAba() {
+    return cy.get('.fm-panel[data-panel="species"] .pill-species')
   }
 
   // Ações
@@ -65,6 +77,21 @@ class FilmesPage {
 
   fecharModal() {
     this.botaoFechar.click()
+  }
+
+  limparBusca() {
+    this.campoBusca.clear()
+  }
+
+  /**
+   * Guarda o nome antes de clicar: o clique fecha o modal e troca de view,
+   * e a verificação precisa saber quem foi aberto. O nome é o ÚLTIMO filho
+   * direto do botão — o avatar (primeiro filho) tem um span de iniciais
+   * dentro que também seria "span:last-child" enquanto a foto não chega.
+   */
+  abrirPrimeiroDoElenco() {
+    this.elenco.first().children('span').last().invoke('text').as('nomeDoElenco')
+    this.elenco.first().click()
   }
 
   // Verificações
@@ -121,6 +148,18 @@ class FilmesPage {
 
   verificarPlanetasCarregados() {
     cy.get('.fm-planet').should('have.length.greaterThan', 0)
+  }
+
+  verificarNavesCarregadas() {
+    this.navesDaAba.should('have.length.greaterThan', 0)
+  }
+
+  verificarEspeciesCarregadas() {
+    this.especiesDaAba.should('have.length.greaterThan', 0)
+  }
+
+  verificarModalFechado() {
+    this.modal.should('not.exist')
   }
 
   verificarCrawlPausado() {

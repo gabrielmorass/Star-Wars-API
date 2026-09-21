@@ -50,6 +50,22 @@ class PersonagensPage {
     return cy.get('#people-film')
   }
 
+  get botaoEscopoDaLinhaDoTempo() {
+    return cy.get('.tl-scope')
+  }
+
+  get chipDosAnteriores() {
+    return cy.get('.tl-older')
+  }
+
+  get botaoFecharModal() {
+    return cy.get('.modal-person .modal-close')
+  }
+
+  get pillPlanetaNatal() {
+    return cy.get('#modal-homeworld')
+  }
+
 
   // Ações
   acessar() {
@@ -91,6 +107,32 @@ class PersonagensPage {
 
   abrirPrimeiraConexao() {
     this.conexoes.first().click()
+  }
+
+  ampliarLinhaDoTempo() {
+    this.botaoEscopoDaLinhaDoTempo.click()
+    // o eixo é remontado; o botão troca de rótulo quando termina
+    this.botaoEscopoDaLinhaDoTempo.should('contain.text', 'Focar')
+  }
+
+  fecharModal() {
+    this.botaoFecharModal.click()
+  }
+
+  pressionarEsc() {
+    cy.get('body').type('{esc}')
+  }
+
+  pressionarSetaDireita() {
+    cy.get('body').type('{rightarrow}')
+  }
+
+  /**
+   * O planeta natal é resolvido sob demanda (a SWAPI só dá a URL): espera
+   * o "Carregando…" virar nome antes de clicar.
+   */
+  abrirPlanetaNatal() {
+    this.pillPlanetaNatal.should('not.contain.text', 'Carregando').click()
   }
 
   // Verificações
@@ -135,6 +177,41 @@ class PersonagensPage {
         )
       })
     })
+  }
+
+  verificarEixoVazio() {
+    this.avataresComAno.should('have.length', 0)
+  }
+
+  verificarContadorComAno(quantidade) {
+    this.contador.invoke('text').should('match', new RegExp(`^${quantidade} com ano · `))
+  }
+
+  /**
+   * Com um filtro ativo, a linha do tempo conta a MESMA lista da grade:
+   * "com ano" + "desconhecidos" tem que dar o número de cards que a grade
+   * mostrava antes de trocar de modo.
+   */
+  verificarSomaDoContadorIgualA(alias) {
+    cy.get(`@${alias}`).then((quantidadeEsperada) => {
+      this.contador.invoke('text').then((texto) => {
+        const [, comAno, semAno] = texto.match(/^(\d+) com ano · (\d+) desconhecidos?$/)
+        cy.wrap(Number(comAno) + Number(semAno)).should('eq', quantidadeEsperada)
+      })
+    })
+  }
+
+  verificarChipDosAnterioresAusente() {
+    this.chipDosAnteriores.should('not.exist')
+  }
+
+  /** Cada avatar do eixo tem aria-label "Nome — ano". */
+  verificarNoEixo(nome) {
+    cy.get(`.tl-people > .tl-person[aria-label^="${nome}"]`).should('exist')
+  }
+
+  verificarModalFechado() {
+    this.modal.should('not.exist')
   }
 
   verificarGradeEscondida() {

@@ -43,18 +43,18 @@ Abra esse arquivo no navegador para ver o resultado detalhado.
 
 ## O que a suíte cobre
 
-São **43 cenários** em 12 arquivos `.feature`, organizados por funcionalidade:
+São **55 cenários** em 12 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
 | `hub/navegacao.feature` | 5 | cada um dos 5 cards leva à view correta (validado pelo título da página) |
 | `personagens/busca.feature` | 2 | busca por nome e estado de "nenhum resultado" |
-| `personagens/linha-do-tempo.feature` | 4 | troca de modo, contador, busca no eixo e abertura do modal |
-| `personagens/ordenacao-e-modal.feature` | 4 | ordenação por altura/nascimento/nome e navegação por conexões |
+| `personagens/linha-do-tempo.feature` | 7 | troca de modo, contador, busca no eixo (com e sem resultado), filtro de espécie no eixo, "Ver tudo" e abertura do modal |
+| `personagens/ordenacao-e-modal.feature` | 8 | ordenação por altura/nascimento/nome, conexões, fechar (botão e Esc), setas do teclado e atalho para o planeta natal |
 | `personagens/filtros.feature` | 6 | filtro por espécie, por filme, combinação dos dois e retorno a "Todos" |
 | `filmes/busca.feature` | 2 | busca por título e estado de "nenhum resultado" |
-| `filmes/posteres-e-cronologia.feature` | 4 | grade de pôsteres, arte em SVG, ordenação e barra de cronologia |
-| `filmes/modal-abertura.feature` | 6 | texto de abertura no DOM, abas sob demanda e controles do crawl |
+| `filmes/posteres-e-cronologia.feature` | 5 | grade de pôsteres, arte em SVG, ordenação, barra de cronologia e limpar a busca |
+| `filmes/modal-abertura.feature` | 10 | texto de abertura no DOM, as quatro abas sob demanda, controles do crawl, fechar e atalho do elenco para Personagens |
 | `planetas/busca.feature` | 2 | busca que pula direto para o planeta |
 | `planetas/navegacao-por-setas.feature` | 4 | avançar/retroceder no carrossel e o "dar a volta" nas duas pontas (valor limite) |
 | `naves-e-veiculos/busca.feature` | 2 | busca por nome |
