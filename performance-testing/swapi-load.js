@@ -58,5 +58,5 @@ export function picoFilmes() {
 }
 
 export function handleSummary(data) {
-  return { 'performance-testing/relatorio/index.html': htmlReport(data) }
+  return { 'relatorio/index.html': htmlReport(data) }
 }
