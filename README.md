@@ -302,10 +302,48 @@ Aceita: a IA levantou a contagem total e renomeou os cenários Gherkin e request
 
 Aceita: a IA esclareceu que os relatórios são páginas HTML geradas localmente a cada execução (Cypress/mochawesome, Newman/htmlextra, k6-reporter), não um deploy on-line, e explicou como abri-los.
 
+**Daniele Letícia**
+
+*As perguntas abaixo são reconstruídas a partir do que foi perguntado à IA (Claude, via Claude Code e via chat) e refletem o conteúdo e a intenção, não a redação literal.*
+
+**Prompt 1: Como funciona a estrutura em três etapas e o Gherkin**
+> "como funciona essa divisão em três etapas (feature, steps e page object) e como o gherkin liga o cenário ao código do cypress?"
+
+Aceita: a IA explicou a divisão de responsabilidades entre as camadas e deu um exemplo da estrutura Dado/Quando/Então (`Given`/`When`/`Then`), usado como referência para escrever os cenários.
+
+**Prompt 2: Como funciona o Cypress de forma geral**
+> "como funciona o cypress de maneira geral?"
+
+Aceita: usada como base de estudo antes de escrever os testes.
+
+**Prompt 3: Levantamento de lacunas de cobertura**
+> "rodei os testes e li o código, quais partes do projeto ainda não foram testadas?"
+
+Aceita com ajustes: a análise apontou os filtros de espécie e de filme e a ausência de buscas inoportunas em Personagens, que originaram os TC-046 a TC-051 e TC-069 a TC-074.
+
+**Prompt 4: Casos inválidos e valores limite na API**
+> "que casos inválidos dá para testar na API da SWAPI?"
+
+Aceita: a IA propôs IDs inexistentes (`9999`) e valores limite (`0`, `-1`, `1abc`), que viraram os TC-075 a TC-080.
+
+**Prompt 5: Descrição dos Pull Requests**
+Pedi ajuda à IA para escrever as descrições dos pull requests dos meus testes (filtros de Personagens, buscas inoportunas e IDs inválidos na API).
+
+Aceita com ajustes: usei a estrutura sugerida como base e ajustei o texto para refletir o que cada PR realmente continha.
+
+**Prompt 6: Correção de um teste que falhou**
+Durante a escrita dos cenários de filtros de Personagens (TC-046 a TC-051), um dos testes falhou na execução e pedi ajuda à IA para entender a falha e corrigi-lo.
+
+Aceita: após a correção, reexecutei o teste até passar.
+
+**Autoria do código:** o código dos cenários, dos steps e dos requests foi escrito com apoio da IA (Claude), a partir das sugestões e exemplos descritos acima; a execução, a revisão e a integração ao repositório foram feitas por mim.
+
+**Como foi a validação:** todos os casos foram executados tanto no terminal (`npm test`) quanto na interface do Cypress, e só foram enviados após passarem.
+
 ### O que não foi feito por IA
 
 - Definição do escopo e das views do site (Hub, Planetas, Personagens, Filmes, Naves e Veículos, Espécies).
 - Decisões de dados e inferências da equipe (regiões/coordenadas do mapa da galáxia, anos da cronologia da saga, vocabulário de tradução pt-BR) — documentadas na seção "Decisões de dados" deste README.
 - Distribuição das tarefas entre os integrantes e organização dos Pull Requests.
-- Escrita dos casos de teste específicos de cada funcionalidade nova (critério de quais cenários válidos/inválidos importavam para cada tela) e revisão final de todo teste antes do merge.
+- Definição dos casos de teste específicos de cada funcionalidade nova (critério de quais cenários válidos/inválidos importavam para cada tela) e revisão final de todo teste antes do merge.
 - Decisão da ferramenta de performance (k6) e da carga usada nos testes, por se tratar de API pública de terceiros.
