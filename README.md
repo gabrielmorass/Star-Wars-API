@@ -63,7 +63,7 @@ docs-local/                 # notas internas do grupo (não versionadas — ver 
 Este projeto tem três suítes de teste independentes, cada uma com seu
 próprio README:
 
-- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 33 cenários
+- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 43 cenários
 - **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 12 requisições
 - **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
 
@@ -153,4 +153,4 @@ Esses pontos constam explicitamente no Plano de Testes (seção de Riscos e Limi
 
 ## Uso de IA
 
-Este projeto teve apoio de IA (Claude, Anthropic) na geração do código-base do front-end, na reorganização do código por funcionalidade, na correção de um problema de performance no Sistema Planetário, e na criação das suítes de teste de interface (Cypress/BDD) e de API (Postman/Newman). Conforme item 11 do enunciado, isso deve ser declarado na apresentação e o grupo deve dominar o funcionamento de cada arquivo.
+Este projeto teve apoio de IA (Claude, Anthropic) na geração do código-base do front-end, na reorganização do código por funcionalidade, na correção de um problema de performance no Sistema Planetário, e na criação das suítes de teste de interface (Cypress/BDD) e de API (Postman/Newman), além de utilizar como revisor dos códigos gerado e aderência ao escopo da proposta do projeto. A declaração acima segue a diretiva item 11 do enunciado.
