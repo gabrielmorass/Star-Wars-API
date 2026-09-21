@@ -8,8 +8,11 @@
 /* ---------- Tema: lado da luz (padrão) ---------- */
 :root,
 html[data-theme="light-side"] {
-  --bg-1: #636363;
-  --bg-2: #182121;
+  /* Lado da Luz: azul-noite profundo. O cinza anterior (#636363 → #182121)
+     era elegante, mas "luz" pede um céu, e o acento azul-claro brilha
+     de verdade sobre ele. */
+  --bg-1: #35486a;
+  --bg-2: #0c1424;
 
   /* Planetas e decoração do fundo */
   --planet-1: rgba(255, 255, 255, 0.10);
@@ -17,8 +20,8 @@ html[data-theme="light-side"] {
   --planet-3: rgba(255, 255, 255, 0.13);
 
   /* Gradiente da pílula do toggle */
-  --pill-1: #636363;
-  --pill-2: #182121;
+  --pill-1: #35486a;
+  --pill-2: #0c1424;
 
   --accent: #cfe4ff;
   /* segunda cor de destaque, para tudo que é "A contra B" (comparação de
@@ -103,6 +106,25 @@ h1, h2, h3, .brand {
   font-weight: 700;
   letter-spacing: -0.015em;
 }
+
+/* Fonte de display só onde o site fala alto: o título do hero, a marca, os
+   títulos dos cards do hub, o nome do item nos painéis e nos modais, e a
+   intro. O corpo continua em Inter e os subtítulos em Poppins — a Orbitron
+   é larga e geométrica demais para texto corrido. */
+.hub-hero h1,
+.brand,
+.hub-card h2,
+.detail-panel h3,
+.planet-panel h3,
+.modal-person h3,
+.modal-film .fm-headtext h3,
+.intro-title {
+  font-family: "Orbitron", "Poppins", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.brand { font-size: 0.95rem; letter-spacing: 0.05em; }
+.hub-card h2 { letter-spacing: 0.01em; }
 
 /* ============================================================
    Fundo decorativo (montado por js/fx/decor.js)
@@ -385,10 +407,12 @@ h1, h2, h3, .brand {
 }
 
 .hub-hero h1 {
-  font-size: clamp(2.4rem, 7vw, 4.2rem);
+  /* Orbitron é ~30% mais larga que Poppins: o clamp encolhe para caber
+     "Codex Estelar" numa linha em 390px */
+  font-size: clamp(1.9rem, 6.2vw, 3.7rem);
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
   margin: 0 0 1rem;
   color: var(--text);
 }
@@ -505,6 +529,50 @@ h1, h2, h3, .brand {
 }
 
 .state-msg.error { color: #ffd9d2; }
+
+/* Estado vazio das grades: a frase é a mesma de sempre (os testes a
+   afirmam); o que muda é o radar varrendo em cima dela. Dentro de uma
+   grade o <p> era um item de uma coluna só — agora ocupa a linha inteira. */
+.card-grid > .state-msg,
+.people-grid > .state-msg { grid-column: 1 / -1; }
+
+.state-msg--vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.sv-radar {
+  width: 58px;
+  height: 58px;
+  fill: none;
+  stroke: var(--surface-line);
+  stroke-width: 1;
+  overflow: visible;
+}
+
+.sv-cruz { opacity: 0.55; }
+
+.sv-varredura {
+  fill: color-mix(in srgb, var(--accent) 38%, transparent);
+  stroke: none;
+  transform-origin: 24px 24px;
+  animation: sv-gira 2.8s linear infinite;
+}
+
+.sv-eco {
+  fill: var(--accent);
+  stroke: none;
+  animation: sv-pisca 2.8s ease-out infinite;
+}
+
+@keyframes sv-gira { to { transform: rotate(360deg); } }
+@keyframes sv-pisca { 0%, 18% { opacity: 1; } 55%, 100% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-varredura, .sv-eco { animation: none; }
+}
 
 /* ============================================================
    Busca — pílula branca translúcida com lupa em traço fino
@@ -3040,16 +3108,16 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 /* O título entra letra por letra enquanto o espaçamento fecha: o efeito de
    "encaixe" vem das duas transições correndo ao mesmo tempo. */
 .intro-title {
-  font-family: "Poppins", sans-serif;
-  font-size: clamp(1.6rem, 7vw, 3.6rem);
+  font-family: "Orbitron", "Poppins", sans-serif;
+  font-size: clamp(1.35rem, 5.6vw, 3.1rem);
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   color: #ffffff;
   white-space: nowrap;
   transition: letter-spacing 900ms cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
-.intro-title.is-on { letter-spacing: -0.03em; }
+.intro-title.is-on { letter-spacing: 0.04em; }
 
 .intro-letra {
   display: inline-block;

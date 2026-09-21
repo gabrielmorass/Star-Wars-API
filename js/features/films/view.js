@@ -1,3 +1,4 @@
+import { estadoVazio } from "../../core/dom.js";
 import { setIntent, takeIntent } from "../../core/nav-intent.js";
 import { ANOS_FILMES, anoDoEpisodio, romanoDe } from "../../core/saga.js";
 import { posterDe } from "./poster-art.js";
@@ -117,7 +118,7 @@ export function renderFilmsView(container, films, navigate) {
     visible = list;
 
     if (!list.length) {
-      grid.innerHTML = `<p class="state-msg">Nenhum filme encontrado.</p>`;
+      grid.innerHTML = estadoVazio("Nenhum filme encontrado.");
       return;
     }
 

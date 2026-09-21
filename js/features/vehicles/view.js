@@ -1,3 +1,4 @@
+import { estadoVazio } from "../../core/dom.js";
 import { setIntent, takeIntent } from "../../core/nav-intent.js";
 import { classeDeNave, duracao } from "../../core/vocabulario.js";
 import { getPeopleMap, getPortraits } from "../people/api.js";
@@ -256,7 +257,7 @@ export function renderVehiclesView(container, { starships, vehicles }, navigate)
 
     grid.innerHTML = visiveis.length
       ? visiveis.map(cardHTML).join("")
-      : `<p class="state-msg">Nenhum ${emptyLabel[current]} encontrado.</p>`;
+      : estadoVazio(`Nenhum ${emptyLabel[current]} encontrado.`);
 
     grid.querySelectorAll(".nv-card").forEach((el, i) => {
       itemDoCard.set(el, visiveis[i]);
