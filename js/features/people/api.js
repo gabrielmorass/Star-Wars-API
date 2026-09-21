@@ -4,6 +4,21 @@ export function getPeople() {
   return fetchJSON(`${BASE_URL}/people`);
 }
 
+/* url do personagem → o personagem inteiro.
+   Filmes (aba Elenco) e Naves e Veículos (pilotos) recebem listas de url e
+   precisam resolver nome e retrato. Memorizado por promessa, não por valor:
+   duas telas pedindo ao mesmo tempo compartilham a mesma requisição. */
+let peopleMapPromise = null;
+
+export function getPeopleMap() {
+  if (!peopleMapPromise) {
+    peopleMapPromise = fetchJSON(`${BASE_URL}/people`)
+      .then((lista) => new Map(lista.map((p) => [p.url, p])))
+      .catch(() => new Map());
+  }
+  return peopleMapPromise;
+}
+
 // A SWAPI não fornece fotos. Usamos o dataset público akabab/starwars-api
 // (hospedado no GitHub, fora da SWAPI) só para casar nomes de personagens
 // com uma URL de imagem. Casamos por nome normalizado, não por ID — as

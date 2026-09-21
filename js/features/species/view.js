@@ -1,4 +1,10 @@
 import { getPlanetName } from "../../core/api.js";
+import {
+  CLASSIFICACAO,
+  DESIGNACAO,
+  normalizarLingua,
+  traduzir,
+} from "../../core/vocabulario.js";
 
 /* ---------------- Espécies ---------------- */
 
@@ -26,8 +32,8 @@ export function renderSpeciesView(container, species) {
     const homeworld = await getPlanetName(sp.homeworld);
     detail.innerHTML = `
       <h3>${sp.name}</h3>
-      <div class="detail-row"><div class="label">Classificação</div><div class="value">${sp.classification} (${sp.designation})</div></div>
-      <div class="detail-row"><div class="label">Idioma</div><div class="value">${sp.language}</div></div>
+      <div class="detail-row"><div class="label">Classificação</div><div class="value">${traduzir(sp.classification, CLASSIFICACAO)} (${traduzir(sp.designation, DESIGNACAO)})</div></div>
+      <div class="detail-row"><div class="label">Idioma</div><div class="value">${normalizarLingua(sp.language)}</div></div>
       <div class="detail-row"><div class="label">Expectativa de vida</div><div class="value">${sp.average_lifespan === "unknown" ? "Desconhecida" : `${sp.average_lifespan} anos`}</div></div>
       <div class="detail-row"><div class="label">Planeta natal</div><div class="value">${homeworld}</div></div>
     `;
@@ -40,7 +46,7 @@ export function renderSpeciesView(container, species) {
             (s, i) => `
           <button class="info-card" data-index="${i}" type="button">
             <h3>${s.name}</h3>
-            <p class="meta">${s.classification} · ${s.language}</p>
+            <p class="meta">${traduzir(s.classification, CLASSIFICACAO)} · ${normalizarLingua(s.language)}</p>
           </button>`
           )
           .join("")

@@ -74,7 +74,7 @@ async function navigate(view) {
         const [starships, vehicles] = await Promise.all([getStarships(), getVehicles()]);
         cache.vehiclesData = { starships, vehicles };
       }
-      renderVehiclesView(app, cache.vehiclesData);
+      renderVehiclesView(app, cache.vehiclesData, navigate);
     } catch (err) {
       renderError(app, `Não foi possível carregar naves e veículos. (${err.message})`);
     }

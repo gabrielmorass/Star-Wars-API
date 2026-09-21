@@ -1,6 +1,7 @@
-import { setIntent } from "../../core/nav-intent.js";
+import { setIntent, takeIntent } from "../../core/nav-intent.js";
 import { ANOS_FILMES, anoDoEpisodio, romanoDe } from "../../core/saga.js";
 import { posterDe } from "./poster-art.js";
+import { posterDoTmdb } from "./tmdb.js";
 import {
   getPeopleMap,
   getPlanetsMap,
@@ -233,6 +234,19 @@ export function renderFilmsView(container, films, navigate) {
 
   montarBarra();
   aplicarBusca();
+
+  /* Veio de outra tela com um episódio em mente (a pill "Aparições" de Naves
+     e Veículos): abre o modal desse filme já de cara. Sem intenção, nada
+     muda. */
+  const intent = takeIntent("films");
+  if (intent) {
+    const alvo = films.find(
+      (f) =>
+        (intent.episode && Number(f.episode_id) === Number(intent.episode)) ||
+        (intent.name && f.title === intent.name)
+    );
+    if (alvo) abrirModal(alvo, null);
+  }
 }
 
 /* ================= Modal ================= */
@@ -265,6 +279,7 @@ export function renderFilmModal(film, ctx = {}) {
     <div class="modal modal-film" role="dialog" aria-modal="true" aria-label="Detalhes do filme" data-sem-claquete="1">
       <button class="modal-close" type="button" aria-label="Fechar">×</button>
       <div class="fm-head">
+        <span class="fm-head-bg" aria-hidden="true"></span>
         <span class="fm-roman" aria-hidden="true"></span>
         <div class="fm-headtext">
           <h3></h3>
@@ -281,10 +296,28 @@ export function renderFilmModal(film, ctx = {}) {
         <div class="fm-panel" data-panel="crawl" role="tabpanel">
           <div class="film-crawl-stage crawl-stage">
             <div class="crawl-sky" aria-hidden="true"></div>
-            <p class="crawl-intro">Há muito tempo, numa galáxia muito, muito distante...</p>
-            <div class="film-crawl">
-              <h4 class="crawl-title"><span class="crawl-ep"></span><span class="crawl-name"></span></h4>
-              <p class="crawl-body"></p>
+            <!-- A frase azul e o flash moram numa camada à parte de propósito:
+                 filhos diretos do palco eles herdam a perspective e viram
+                 camada 3D, e aí a animação deles não pinta (o mesmo problema
+                 do bloco do crawl). Um nível abaixo, a perspective não os
+                 alcança e eles voltam a ser 2D normais. -->
+            <div class="crawl-hud">
+              <p class="crawl-intro">Há muito tempo, numa galáxia muito, muito distante...</p>
+              <p class="crawl-flash" aria-hidden="true">
+                <span class="crawl-flash-ep"></span><span class="crawl-flash-name"></span>
+              </p>
+            </div>
+            <!-- .crawl-road é o "chão" inclinado, ancorado na borda de baixo
+                 do palco. Quem sobe é o .film-crawl por cima dele: assim cada
+                 linha passa pela base em tamanho real e vai encolhendo à
+                 medida que se afasta. Com o rotateX no próprio bloco de texto,
+                 a ancoragem seria a base DO TEXTO, e aí nenhuma linha chegava
+                 a aparecer em tamanho cheio. -->
+            <div class="crawl-road">
+              <div class="film-crawl">
+                <h4 class="crawl-title"><span class="crawl-ep"></span><span class="crawl-name"></span></h4>
+                <p class="crawl-body"></p>
+              </div>
             </div>
             <div class="crawl-fade" aria-hidden="true"></div>
           </div>
@@ -306,6 +339,8 @@ export function renderFilmModal(film, ctx = {}) {
   document.body.appendChild(backdrop);
 
   const modal = backdrop.querySelector(".modal-film");
+  const cabecalho = backdrop.querySelector(".fm-head");
+  const fundoCabecalho = backdrop.querySelector(".fm-head-bg");
   const roman = backdrop.querySelector(".fm-roman");
   const titulo = backdrop.querySelector("h3");
   const pills = backdrop.querySelector(".fm-pills");
@@ -314,8 +349,6 @@ export function renderFilmModal(film, ctx = {}) {
     [...backdrop.querySelectorAll(".fm-panel")].map((p) => [p.dataset.panel, p])
   );
   const palco = backdrop.querySelector(".crawl-stage");
-  const texto = backdrop.querySelector(".crawl-text");
-  const intro = backdrop.querySelector(".crawl-intro");
   const crawlEl = backdrop.querySelector(".crawl-body");
   const btnToggle = backdrop.querySelector('[data-act="toggle"]');
 
@@ -365,8 +398,10 @@ export function renderFilmModal(film, ctx = {}) {
   function sumir() {
     planetasVivos.forEach((v) => v.destroy?.());
     planetasVivos.length = 0;
+    pararCrawl();
     document.removeEventListener("keydown", onKey);
     document.removeEventListener("fullscreenchange", aoMudarTelaCheia);
+    window.removeEventListener("resize", aoRedimensionar);
     if (document.fullscreenElement === palco) document.exitFullscreen?.();
     backdrop.remove();
   }
@@ -411,39 +446,128 @@ export function renderFilmModal(film, ctx = {}) {
   backdrop.querySelector(".modal-nav--next")?.addEventListener("click", () => pular(1));
   document.addEventListener("keydown", onKey);
 
+  /* ---------- A subida do crawl ----------
+     Quem move o bloco é este rAF, escrevendo `top` em pixel — não uma
+     @keyframes.
+
+     Por quê: o bloco tem `rotateX` estático dentro de um contêiner com
+     `perspective`, e basta existir uma animação CSS viva sobre ele para o
+     Chrome promovê-lo a camada de composição que nunca é pintada. O texto
+     continua no DOM, com a geometria certa e clicável, e mesmo assim
+     invisível. Medido nas duas pontas: com `animation: none` e o mesmo `top`
+     aplicado inline, o crawl aparece; com a animação rodando (mesmo pausada),
+     a tela fica preta. É um elemento só, então o custo de layout por quadro
+     é aceitável.
+
+     A frase azul e o flash do título continuam em CSS: são 2D e pintam. */
+  const CRAWL_DUR = 70000;      /* ~70s de subida, velocidade constante */
+  const CRAWL_ATRASO = 3700;    /* frase azul (2s) + flash do título (1,5s) */
+
+  const blocoCrawl = backdrop.querySelector(".film-crawl");
+  let rafCrawl = 0;
+  let inicioCrawl = 0;   /* instante em que a subida começa (pode ser futuro) */
+  let paradoEm = 0;      /* ms decorridos guardados na pausa */
+  let deCrawl = 0;
+  let ateCrawl = 0;
+
+  /* De onde e até onde o `top` do texto anda, em coordenadas do chão.
+     Começa em `palcoH` (a linha de baixo do palco, escala 1:1) e precisa ir
+     até a última linha sumir acima do topo.
+
+     "Sumir" não é simplesmente sair do palco: o chão é projetado, então um
+     ponto a `u` pixels acima da base aparece na tela em
+
+         y = palcoH - cos(a)·u · d / (d + sen(a)·u)
+
+     Igualando a zero sai o `u` a partir do qual a linha está acima do topo:
+
+         u = palcoH · d / (cos(a)·d - sen(a)·palcoH)
+
+     Um percurso fixo em porcentagem erraria isso para mais (segundos de tela
+     preta no fim) ou para menos (texto ainda visível quando o laço reinicia),
+     porque o valor depende do tamanho do palco e do tamanho do texto, e os
+     dois mudam por filme e por viewport.
+
+     O denominador zera num palco muito alto (o horizonte cairia dentro dele);
+     aí não existe ponto de sumiço e o fallback é um percurso generoso. */
+  function medirPercursoDoCrawl() {
+    const altura = blocoCrawl.offsetHeight || 800;
+    const palcoH = palco.clientHeight || 600;
+    const estilo = getComputedStyle(palco);
+    const graus = parseFloat(estilo.getPropertyValue("--crawl-tilt")) || 24;
+    const d = parseFloat(estilo.perspective) || 380;
+    const a = (graus * Math.PI) / 180;
+
+    const den = Math.cos(a) * d - Math.sin(a) * palcoH;
+    const some = den > 1 ? (palcoH * d) / den : palcoH * 4;
+
+    deCrawl = palcoH;
+    ateCrawl = palcoH - some - altura - 40;
+  }
+
+  function posicionarCrawl(ms) {
+    const t = (Math.max(0, ms) % CRAWL_DUR) / CRAWL_DUR;
+    blocoCrawl.style.top = `${deCrawl + (ateCrawl - deCrawl) * t}px`;
+  }
+
+  function passoCrawl(agora) {
+    posicionarCrawl(agora - inicioCrawl);
+    rafCrawl = requestAnimationFrame(passoCrawl);
+  }
+
+  function pararCrawl() {
+    if (rafCrawl) cancelAnimationFrame(rafCrawl);
+    rafCrawl = 0;
+  }
+
   /* ---------- Controles do crawl ---------- */
   function alternarCrawl() {
     if (REDUCE) return;
     const pausado = palco.classList.toggle("is-paused");
     btnToggle.textContent = pausado ? "Retomar" : "Pausar";
     btnToggle.setAttribute("aria-pressed", String(pausado));
-  }
-
-  /* Onde o crawl termina de subir: a altura real do bloco mais uma folga.
-     Medida com a animação desligada, senão o offsetHeight sai do estado
-     corrente em vez do repouso. */
-  function medirFimDoCrawl() {
-    const bloco = backdrop.querySelector(".film-crawl");
-    const altura = bloco.offsetHeight || 800;
-    palco.style.setProperty("--crawl-fim", `${-(altura + 60)}px`);
+    if (pausado) {
+      paradoEm = performance.now() - inicioCrawl;
+      pararCrawl();
+    } else {
+      inicioCrawl = performance.now() - paradoEm;
+      if (!rafCrawl) rafCrawl = requestAnimationFrame(passoCrawl);
+    }
   }
 
   function reiniciarCrawl() {
     palco.classList.remove("is-paused");
     btnToggle.textContent = "Pausar";
+    btnToggle.setAttribute("aria-pressed", "false");
     palco.classList.remove("is-rolling");
-    /* forçar reflow reinicia as animações CSS do zero */
+    /* forçar reflow reinicia as animações CSS da frase azul e do flash */
     void palco.offsetWidth;
-    medirFimDoCrawl();
-    if (!REDUCE) palco.classList.add("is-rolling");
+    pararCrawl();
+    medirPercursoDoCrawl();
+    posicionarCrawl(0);
+    if (REDUCE) return;
+    palco.classList.add("is-rolling");
+    /* o início fica no futuro: até lá o bloco espera na borda de baixo */
+    inicioCrawl = performance.now() + CRAWL_ATRASO;
+    paradoEm = -CRAWL_ATRASO;
+    rafCrawl = requestAnimationFrame(passoCrawl);
   }
 
   const btnFull = backdrop.querySelector('[data-act="full"]');
+
+  /* O percurso depende da altura do palco e da altura do texto — as duas
+     mudam ao entrar em tela cheia e ao redimensionar a janela. Remede sem
+     reiniciar: a subida continua de onde está. */
+  function aoRedimensionar() {
+    medirPercursoDoCrawl();
+  }
+  window.addEventListener("resize", aoRedimensionar);
 
   function aoMudarTelaCheia() {
     const cheio = document.fullscreenElement === palco;
     btnFull.textContent = cheio ? "Sair da tela cheia" : "Tela cheia";
     palco.classList.toggle("is-full", cheio);
+    medirPercursoDoCrawl();
   }
   document.addEventListener("fullscreenchange", aoMudarTelaCheia);
 
@@ -608,8 +732,27 @@ export function renderFilmModal(film, ctx = {}) {
       .map((t) => `<span class="pill">${escapar(t)}</span>`)
       .join("");
 
-    backdrop.querySelector(".crawl-ep").textContent = `Episódio ${romanoTxt}`;
+    /* Fundo do cabeçalho: o pôster oficial via TMDB, quando houver.
+       É puro enfeite — até responder (e se não responder) o cabeçalho fica
+       com o visual de sempre. O `pedido` evita que uma resposta atrasada
+       pinte o pôster do filme anterior depois de navegar com as setas. */
+    const meuPedido = pedido;
+    cabecalho.classList.remove("tem-poster");
+    fundoCabecalho.style.backgroundImage = "";
+    posterDoTmdb(f.title, String(f.release_date || "").slice(0, 4)).then((url) => {
+      if (!url || meuPedido !== pedido) return;
+      fundoCabecalho.style.backgroundImage = `url("${url}")`;
+      cabecalho.classList.add("tem-poster");
+    });
+
+    /* O card do crawl reproduz o do filme, e por isso fica em inglês inteiro:
+       "Episode IV" + o título como a API devolve. Colar "Episódio" num título
+       inglês misturava as duas línguas na mesma linha. O resto da tela (abas,
+       botões, pílulas) segue em português. */
+    backdrop.querySelector(".crawl-ep").textContent = `Episode ${romanoTxt}`;
     backdrop.querySelector(".crawl-name").textContent = f.title;
+    backdrop.querySelector(".crawl-flash-ep").textContent = `Episode ${romanoTxt}`;
+    backdrop.querySelector(".crawl-flash-name").textContent = f.title;
     /* O texto integral, sempre. Ele fica dentro de .film-crawl (que é o
        bloco animado) num parágrafo próprio, para o título do episódio subir
        junto sem se misturar ao conteúdo do crawl. */
@@ -621,12 +764,7 @@ export function renderFilmModal(film, ctx = {}) {
     reiniciarCrawl();
   }
 
-  mostrar(film);
+  mostrar(film);           /* já chama reiniciarCrawl(), que arma a sequência */
 
-  const ms = voar(false);
-  if (!REDUCE) {
-    intro.style.animationDelay = "0ms";
-    palco.classList.add("is-rolling");
-  }
-  return ms;
+  return voar(false);
 }
