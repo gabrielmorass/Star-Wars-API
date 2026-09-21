@@ -302,6 +302,44 @@ Aceita: a IA levantou a contagem total e renomeou os cenários Gherkin e request
 
 Aceita: a IA esclareceu que os relatórios são páginas HTML geradas localmente a cada execução (Cypress/mochawesome, Newman/htmlextra, k6-reporter), não um deploy on-line, e explicou como abri-los.
 
+**Eduardo Bertozzi**
+
+*Os prompts abaixo são trechos literais das conversas no Claude Code (cortados com [...] onde eram longos). Fui responsável pelas views Sistema Planetário, Personagens, Filmes, Naves e Veículos e Espécies, pela intro de hiperespaço e pelos casos TC-021 a TC-038, TC-056 a TC-067 (interface) e TC-068 (API).*
+
+**Prompt 1: Direção visual com os seletores dos testes como regra fixa**
+> "O redesign anterior ficou limpo demais, parece dashboard corporativo. Quero o OPOSTO: o Codex Estelar tem que dar sensação de 'uau', cinematográfico [...] REGRAS OBRIGATÓRIAS (tem suíte Cypress dependendo disso): [...] NUNCA remove nem renomeia id, classe, data-nav/data-tab, nem muda texto de mensagem. Lista antes os seletores usados em cypress-project/cypress/pages/*.js e trata como intocáveis. [...] Ao final de cada etapa roda os testes [...] Quebrou, corrige o CSS, não o teste."
+
+Aceita: a IA levantou os seletores e mensagens que os Page Objects usam e tratou a lista como contrato durante todo o redesign (fundo de estrelas, hiperespaço, tema Lado da Luz / Lado Sombrio). A regra "quebrou, corrige o CSS, não o teste" foi mantida em todas as etapas seguintes.
+
+**Prompt 2: Verificação antes de seguir e documentação de dado inferido**
+> "Antes de continuar: 1. Roda npm run test:bdd e me mostra o resultado completo. 2. Me diz de onde vieram as coordenadas e regiões do mapa (arquivo e fonte). Se foi hardcoded, adiciona uma seção no README explicando que é inferência da equipe, não dado da SWAPI. 3. O painel de detalhe do planeta (#planet-card com h3 nome, clima, população, espécies, filmes) continua existindo e atualiza ao navegar com as setas [...]? Se não, restaura ele [...] sem mudar os ids."
+
+Aceita: a suíte foi executada e o resultado mostrado; as coordenadas e regiões do mapa da galáxia eram inferência, e a IA documentou isso na seção "Decisões de dados" deste README; o painel `#planet-card` foi mantido com os mesmos ids.
+
+**Prompt 3: View Personagens com os pontos de teste definidos no pedido**
+> "Melhorar a view Personagens. Regras de sempre: mantém .person-card, .modal-person, #modal-species, #modal-homeworld, .modal-close, #people-search e a mensagem 'Nenhum personagem encontrado.' intocáveis; testes ao final. [...] Barra superior da view: busca (mesmo #people-search) + filtros em pills: 'Todos', 'Humanos', 'Droides', 'Outras espécies', e um select de filme [...] Filtros combinam com a busca. Contador '82 personagens' que atualiza."
+
+Aceita com ajustes: a IA implementou grade, filtros, linha do tempo e modal. Os filtros e o contador descritos aqui viraram depois os casos TC-021 a TC-028 (linha do tempo, ordenação e modal) e serviram de base para os TC-046 a TC-051 de filtros, escritos por outra integrante.
+
+**Prompt 4: View Filmes com um invariante que o teste verifica**
+> "Refazer a view Filmes. Regras de sempre: #films-search, #films-grid .info-card, .modal-film, .film-crawl e a mensagem 'Nenhum filme encontrado.' intocáveis; o texto completo do opening_crawl deve estar sempre presente no DOM dentro de .film-crawl (teste verifica conteúdo); testes ao final. [...] Barra de cronologia galáctica acima da grade [...] (anos: I 32BBY, II 22BBY, III 19BBY, IV 0, V 3ABY, VI 4ABY; documentar como inferência)."
+
+Aceita: o texto de abertura fica sempre no DOM, independente da aba ou da animação, e isso virou os casos TC-029 a TC-031. Os anos da cronologia foram documentados como inferência da equipe na seção "Decisões de dados".
+
+**Prompt 5: Testes das views novas em PR separado**
+> "o PR q c abriu ta sem os testes novos seus / abre um pr com eles / explica"
+
+Aceita: a IA separou os cenários escritos durante o desenvolvimento das views (TC-021 a TC-038: linha do tempo, ordenação e modal de Personagens; modal, abas, crawl, pôsteres e cronologia de Filmes) em um PR próprio, com explicação do que cada arquivo `.feature`, step e Page Object fazia.
+
+**Prompt 6: Levantamento de lacunas e casos novos**
+> "preciso agr entenfer os testes q eu fiz e se falta algum" e, depois da análise, "vamos por vamos vamos, vamos."
+
+Aceita com ajustes: a IA listou os casos existentes por tela e apontou o que não estava coberto na minha parte (fechar o modal por botão e por Esc, setas do teclado, atalho para o planeta natal, abas Naves e Espécies do filme, o vínculo Filmes → Personagens e o caso de API do humano sem espécie). Aprovei a lista e ela virou os TC-056 a TC-068. Um dos casos (TC-066) apareceu intermitente na primeira execução e foi corrigido no Page Object antes do commit.
+
+**Autoria do código:** o código das views, dos efeitos visuais, dos cenários Gherkin, dos steps, dos Page Objects e da requisição de API foi escrito com apoio da IA (Claude) a partir das especificações acima; a direção visual, a regra dos seletores intocáveis, a escolha de quais lacunas cobrir e a revisão de cada tela no navegador foram feitas por mim.
+
+**Como foi a validação:** a suíte BDD (`npm run test:bdd`, com o site servido em `localhost:8080`) rodou ao final de cada etapa de desenvolvimento e antes de cada commit; a coleção de API rodou com `npm test` em `api-testing/`. Nenhum teste foi alterado para passar: quando algo quebrou, a correção foi no CSS ou no código da view.
+
 **Daniele Letícia**
 
 *As perguntas abaixo são reconstruídas a partir do que foi perguntado à IA (Claude, via Claude Code e via chat) e refletem o conteúdo e a intenção, não a redação literal.*
