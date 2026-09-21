@@ -81,8 +81,8 @@ docs-local/                 # notas internas do grupo (não versionadas — ver 
 Este projeto tem três suítes de teste independentes, cada uma com seu
 próprio README:
 
-- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 43 cenários
-- **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 12 requisições
+- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 61 cenários
+- **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 13 requisições
 - **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
 
 Resumo rápido:
