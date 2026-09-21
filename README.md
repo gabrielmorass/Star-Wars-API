@@ -3,7 +3,8 @@
 > **"Que a Força esteja com o seu código."**
 
 Front-end estático (HTML + CSS + JavaScript puro, sem build) conectado à [SWAPI](https://swapi.info) — base do projeto de Qualidade de Software do **Inatel**.
-## Acess o site em:
+
+**Acesse o site:**
 [Codex Estelar](https://swapi.info)
 
 ---
@@ -379,14 +380,14 @@ Aceita: após a correção, reexecutei o teste até passar.
 **Matheus Rangel**
 
 **Prompt 1: Inferência Inicial**
-> Given the context in the file above and the tests already generated, act as a Product Owner and give me a roadmap analysing which criteria wasn't already satisfied and which surface wasn't already tested and what could be developed in order to further develop the project if needed.
+> Given the context in the file above and the tests already generated, act as a Product Owner and give me a roadmap analysing which criteria weren't already satisfied and which surface wasn't already tested and what could be developed in order to further develop the project if needed.
 
 **Aceita:** após a análise e leitura do estado atual do projeto iniciei os testes.
 
 **Prompt 2: Revisão**
 > Given the new tests generated analyse it against the old ones, analysing the full project scope and tests coverage compliance.
 
-**Aceita:** após analise e sugestão de melhoria, o código foi modificado a fim de melhorar o fit.
+**Aceita:** após análise e sugestão de melhoria, o código foi modificado a fim de melhorar a aderência ao escopo.
 
 **Prompt 3: Deploy**
 > Given the current state of the project help me plan it in order to deploy it on a public URL
