@@ -377,11 +377,10 @@ Aceita: após a correção, reexecutei o teste até passar.
 **Autoria do código:** o código dos cenários, dos steps e dos requests foi escrito com apoio da IA (Claude), a partir das sugestões e exemplos descritos acima; a execução, a revisão e a integração ao repositório foram feitas por mim.
 
 **Como foi a validação:** todos os casos foram executados tanto no terminal (`npm test`) quanto na interface do Cypress, e só foram enviados após passarem.
+
 **Samile**
 
-*Os prompts abaixo são reconstruídos a partir de uma conversa longa (chat), refletindo o conteúdo técnico exato de cada pedido*
-
-
+*Os prompts abaixo são reconstruídos a partir de uma conversa longa (chat), refletindo o conteúdo técnico exato de cada pedido.*
 
 **Prompt 1: Cobertura de navegação do Hub**
 > "Cria um caso de teste pra navegação do Hub: os 5 cards (`data-nav="planets/people/films/vehicles/species"`) precisam levar cada um pra view certa. Usa uma verificação que não dependa de seletor específico de cada tela, já que são 5 views diferentes — valida pelo título da página."
@@ -411,6 +410,7 @@ Aceita: a IA localizou as tabelas nos dois READMEs e propôs a atualização man
 **Autoria do código:** o código dos cenários, steps, Page Objects, requests e do script k6 foi escrito com apoio da IA a partir das instruções técnicas acima; a execução, depuração final e integração ao repositório foram feitas por mim.
 
 **Como foi a validação:** todos os casos foram rodados localmente (`npm test` no Cypress e no Newman, `k6 run` no script de performance) e só commitados depois de passar.
+
 ### O que não foi feito por IA
 
 - Definição do escopo e das views do site (Hub, Planetas, Personagens, Filmes, Naves e Veículos, Espécies).
