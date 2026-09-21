@@ -336,6 +336,23 @@ Durante a escrita dos cenários de filtros de Personagens (TC-046 a TC-051), um 
 
 Aceita: após a correção, reexecutei o teste até passar.
 
+**Matheus Rangel**
+
+**Prompt 1: Inferência Inicial**
+> Given the context in the file above and the tests already generated, act as a Product Owner and give me a roadmap analysing which criteria wasn't already satisfied and which surface wasn't already tested and what could be developed in order to further develop the project if needed.
+
+**Aceita:** após a análise e leitura do estado atual do projeto iniciei os testes.
+
+**Prompt 2: Revisão**
+> Given the new tests generated analyse it against the old ones, analysing the full project scope and tests coverage compliance.
+
+**Aceita:** após analise e sugestão de melhoria, o código foi modificado a fim de melhorar o fit.
+
+**Prompt 3: Deploy**
+> Given the current state of the project help me plan it in order to deploy it on a public URL
+
+**Aceita:** Depois da sugestão, o projeto foi preparado para o deploy em URL pública.
+
 **Autoria do código:** o código dos cenários, dos steps e dos requests foi escrito com apoio da IA (Claude), a partir das sugestões e exemplos descritos acima; a execução, a revisão e a integração ao repositório foram feitas por mim.
 
 **Como foi a validação:** todos os casos foram executados tanto no terminal (`npm test`) quanto na interface do Cypress, e só foram enviados após passarem.
