@@ -8,13 +8,17 @@ import { getFilms } from "./features/films/api.js";
 import { renderFilmsView } from "./features/films/view.js";
 import { getStarships, getVehicles } from "./features/vehicles/api.js";
 import { renderVehiclesView } from "./features/vehicles/view.js";
+import { renderTrunfoView } from "./features/trunfo/view.js";
 import { getSpecies } from "./features/species/api.js";
 import { renderSpeciesView } from "./features/species/view.js";
 
 const app = document.getElementById("app");
 const navButtons = document.querySelectorAll(".topnav [data-nav]");
 
-const cache = { planets: null, people: null, films: null, vehiclesData: null, species: null };
+/* `starships` fica fora de um par "vehiclesData" porque duas telas usam a
+   mesma lista: Naves e Veículos e o Super Trunfo. Assim abrir uma depois da
+   outra não refaz o GET /starships. */
+const cache = { planets: null, people: null, films: null, starships: null, vehicles: null, species: null };
 
 const TITLES = {
   hub: "Codex Estelar | Enciclopédia da saga",
@@ -22,6 +26,7 @@ const TITLES = {
   people: "Personagens | Codex Estelar",
   films: "Filmes | Codex Estelar",
   vehicles: "Naves e Veículos | Codex Estelar",
+  trunfo: "Super Trunfo | Codex Estelar",
   species: "Espécies | Codex Estelar",
 };
 
@@ -70,13 +75,26 @@ async function navigate(view) {
   if (view === "vehicles") {
     renderLoading(app, "Buscando naves e veículos na SWAPI…");
     try {
-      if (!cache.vehiclesData) {
-        const [starships, vehicles] = await Promise.all([getStarships(), getVehicles()]);
-        cache.vehiclesData = { starships, vehicles };
-      }
-      renderVehiclesView(app, cache.vehiclesData, navigate);
+      const [starships, vehicles] = await Promise.all([
+        cache.starships || getStarships(),
+        cache.vehicles || getVehicles(),
+      ]);
+      cache.starships = starships;
+      cache.vehicles = vehicles;
+      renderVehiclesView(app, { starships, vehicles }, navigate);
     } catch (err) {
       renderError(app, `Não foi possível carregar naves e veículos. (${err.message})`);
+    }
+    return;
+  }
+
+  if (view === "trunfo") {
+    renderLoading(app, "Buscando naves na SWAPI…");
+    try {
+      if (!cache.starships) cache.starships = await getStarships();
+      renderTrunfoView(app, cache.starships);
+    } catch (err) {
+      renderError(app, `Não foi possível carregar as naves. (${err.message})`);
     }
     return;
   }

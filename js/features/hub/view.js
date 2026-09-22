@@ -79,7 +79,24 @@ export function renderHub(container, navigate) {
         <span class="hub-card-arrow" aria-hidden="true">Explorar →</span>
       </button>
     </div>
+    <button class="hub-trunfo" data-nav="trunfo" type="button">
+      <span class="hub-trunfo-selo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="2" width="12" height="17" rx="2"></rect>
+          <rect x="9" y="5" width="12" height="17" rx="2"></rect>
+          <path d="M13 11h4M13 15h4"></path>
+        </svg>
+      </span>
+      <span class="hub-trunfo-texto">
+        <strong>Super Trunfo</strong>
+        <span>As 36 naves como um baralho de 5 atributos. Jogue contra o computador ou com alguém no mesmo aparelho.</span>
+      </span>
+      <span class="hub-trunfo-arrow" aria-hidden="true">Jogar →</span>
+    </button>
   `;
+  /* O banner do Super Trunfo NÃO é um `.hub-card`: a suíte de interface
+     afirma que o Hub tem exatamente 5 cards (TC-039 a TC-043). Classe
+     própria, e a ligação de clique abaixo já pega todo `[data-nav]`. */
   container.querySelectorAll("[data-nav]").forEach((el) => {
     el.addEventListener("click", () => navigate(el.dataset.nav));
   });
