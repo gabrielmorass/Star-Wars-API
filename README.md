@@ -5,7 +5,7 @@
 Front-end estático (HTML + CSS + JavaScript puro, sem build) conectado à [SWAPI](https://swapi.info) — base do projeto de Qualidade de Software do **Inatel**.
 
 **Acesse o site:**
-[Codex Estelar](https://swapi.info)
+[Codex Estelar](https://codexestelar.netlify.app/)
 
 ---
 
