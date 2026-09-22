@@ -32,6 +32,7 @@ Depois acesse `http://localhost:8080`.
 - **Filmes** — os 6 episódios como pôsteres 2:3 com arte procedural em SVG por episódio (desenhada no projeto, sem imagem externa), numeral romano, rodapé com contagem de personagens/planetas/naves e as duas primeiras linhas da abertura no hover. Ordenação por lançamento ou cronológica (com animação FLIP) e barra de cronologia galáctica clicável. O modal traz abas: **Abertura** (o crawl em perspectiva, com pausar/reiniciar/tela cheia), **Elenco**, **Planetas**, **Naves e Veículos** e **Espécies**, todas resolvidas sob demanda e com atalho para as outras telas
 - **Naves e Veículos** — abas Naves/Veículos, busca, filtro por classe (pills geradas do dado) e ordenação com FLIP; cada card tem a silhueta SVG da classe. O painel traz um **hangar 3D** (Three.js carregado sob demanda, modelo montado com primitivas por classe, arraste para girar; sem WebGL cai na silhueta), medidores em arco normalizados pelo teto da categoria (escala log nas métricas de cauda longa), régua de tamanho, radar de 5 eixos, pilotos e aparições. **Comparar** põe duas naves lado a lado, com painel de **escala real** (as duas silhuetas no mesmo fator de metros, lupa quando a razão passa de 500:1) e tabela de quem vence em cada métrica
 - **Espécies** — grade com o glifo da classificação (8 desenhos: mamífero, réptil, anfíbio, insectoide, gastrópode, artificial, senciente, sem classificação) e uma faixa com as cores de pele, cabelo e olhos de cada espécie; busca, filtro por classificação e ordenação por nome, altura ou longevidade. O painel traz réguas de **altura** (linear até 3 m) e **longevidade** (log, de 50 a 1.000 anos) sempre com a marca do humano como referência, as cores como amostras, o planeta natal, os membros conhecidos e as aparições — os três últimos levam à tela correspondente
+- **Super Trunfo** — as 36 naves viram um baralho de 5 atributos (comprimento, tripulação, velocidade atmosférica, custo e hiperpropulsor), com 18 cartas para cada lado e a Death Star como Super Trunfo. Dois modos: **contra o computador** e **dois jogadores no mesmo aparelho** (com tela de "passe o aparelho", que esconde as duas cartas na troca de vez). O jogo é uma máquina de estados pura e serializável — o computador, o segundo jogador local e (numa fase seguinte) um jogador remoto são apenas fontes diferentes das mesmas duas ações
 
 ---
 
@@ -65,6 +66,10 @@ js/
     vehicles/hangar.js     # hangar 3D (Three.js r128 sob demanda, modelos por primitivas)
     species/{api,view}.js
     species/glifos.js      # glifo por classificação + nome de cor → valor CSS
+    trunfo/regras.js       # máquina de estados PURA do jogo: baralho, disputa, ações, replay
+    trunfo/controlador.js  # guarda o estado e é o único caminho para mudá-lo (despachar/assinar)
+    trunfo/jogadores.js    # fontes de ação: humano e computador (a fase 2 acrescenta "remoto" aqui)
+    trunfo/view.js         # telas do jogo, cartas e eventos de DOM — nenhuma regra mora aqui
   fx/
     loop.js                # laço de animação único — todo efeito se inscreve aqui
     decor.js               # fundo decorativo + parallax
@@ -84,8 +89,8 @@ docs-local/                # notas internas do grupo (não versionadas — ver .
 Este projeto tem três suítes de teste independentes, cada uma com seu
 próprio README:
 
-- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 61 cenários
-- **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 29 requisições
+- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 85 cenários
+- **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 30 requisições
 - **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
 
 Resumo rápido:
@@ -158,6 +163,37 @@ A SWAPI (`https://swapi.info/api`) cobre apenas os Episódios I–VI e tem limit
    ela é derivada da lista de personagens (todo mundo cujo `species` aponta para a espécie, mais os
    de `species` vazio quando a espécie é Human), unida à lista da API. As referências das réguas
    (humano com 1,80 m e 120 anos) vêm do próprio registro `species/1`.
+
+7. **As regras do Super Trunfo são decisões da equipe, não dado da SWAPI.** A API não tem jogo,
+   nem noção de "quem vence": o baralho é uma leitura nossa dos campos de `starships`. Nada do que
+   está nesta lista deve ser usado como asserção de teste *sobre a SWAPI* — são regras do nosso
+   jogo, e podem mudar sem que a API tenha mudado:
+
+   - **Leitura dos números** (`paraNumero`, em `js/features/trunfo/regras.js`): a vírgula é
+     separador de milhar (`"1,600"` → `1600`); unidade colada é ignorada (`"1000km"` → `1000`);
+     faixa fica com o **maior** número (`"30-165"` → `165`); e qualquer valor do conjunto `VAZIO`
+     (`unknown`, `n/a`, `none`, vazio) vira `null`. Com essa leitura, **22 das 36 naves** têm os
+     cinco atributos conhecidos — as outras 14 têm pelo menos um `null`.
+   - **Valor desconhecido**: atributo `null` na carta de quem escolhe aparece como "Desconhecido" e
+     **não pode ser escolhido**; `null` na carta do adversário faz quem escolheu **vencer** a rodada.
+   - **Hiperpropulsor ao contrário**: é o único atributo em que ganha o **menor** valor, porque
+     classe 0,5 é mais rápida que classe 4,0. A SWAPI não diz isso em lugar nenhum.
+   - **Super Trunfo**: a **Death Star** vence qualquer carta, **menos** as de `starship_class` que
+     contenha "starfighter" — foi um caça que a destruiu. É referência ao filme, não dado da API.
+     (O teste TC-115, no Newman, só confirma que as duas coisas continuam existindo na listagem.)
+   - **Teto de 40 rodadas**: sem ele, duas mãos equilibradas giram para sempre. Ao estourar o teto,
+     vence quem tiver mais cartas; empatado em cartas, a partida termina empatada.
+   - **Ordenação do baralho pelo id**: antes de embaralhar, as cartas são ordenadas pelo id numérico
+     da `url`. Assim a ordem do baralho não depende da ordem em que a API respondeu, e a mesma
+     semente sempre dá a mesma distribuição.
+
+   **Três parâmetros de URL, só para teste e depuração** (o jogo normal não usa nenhum):
+
+   | Parâmetro | Efeito |
+   |---|---|
+   | `?seed=<n>` | fixa a semente do embaralhamento (sem ele, a semente vem de `Date.now()`, lido na view — nunca em `regras.js`) |
+   | `?cpuDelay=0` | zera a espera de 800 ms do computador |
+   | `?maos=<ids-j1>\|<ids-j2>` | força as duas mãos (ex.: `?maos=9,10\|12,13`), para cenários como "Death Star contra caça estelar" não dependerem de uma semente sortuda. Vale só para a **primeira** partida da sessão, como o uso único de `core/nav-intent.js` |
 
 Esses pontos constam explicitamente no Plano de Testes (seção de Riscos e Limitações), já que são inferências e limitações conhecidas, não falhas da aplicação.
 

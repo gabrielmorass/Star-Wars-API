@@ -43,7 +43,7 @@ Abra esse arquivo no navegador para ver o resultado detalhado.
 
 ## O que a suíte cobre
 
-São **61 cenários** em 13 arquivos `.feature`, organizados por funcionalidade:
+São **85 cenários** em 19 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
@@ -60,11 +60,17 @@ São **61 cenários** em 13 arquivos `.feature`, organizados por funcionalidade:
 | `planetas/navegacao-por-setas.feature` | 4 | avançar/retroceder no carrossel e o "dar a volta" nas duas pontas (valor limite) |
 | `naves-e-veiculos/busca.feature` | 2 | busca por nome |
 | `especies/busca-e-detalhe.feature` | 2 | busca por nome e detalhe do planeta natal |
+| `trunfo/navegacao.feature` | 2 | o botão da barra de navegação abre o jogo e o Hub continua com 5 cards |
+| `trunfo/contra-o-computador.feature` | 5 | distribuição 18 × 18, carta do computador virada, primeira carta com semente fixa, revelação e soma das 36 cartas |
+| `trunfo/regras-de-rodada.feature` | 6 | atributo desconhecido nos dois lados, hiperpropulsor ao contrário, Death Star contra caça estelar e monte de empate |
+| `trunfo/dois-jogadores.feature` | 4 | tela de "passe o aparelho", cartas escondidas atrás dela, visibilidade por vez e nomes digitados |
+| `trunfo/partida.feature` | 2 | "Jogar de novo" redistribui 18 × 18 e a partida inteira pelo teclado |
+| `trunfo/regras.feature` | 5 | funções puras do jogo, sem abrir o site (ver abaixo) |
 
 Convenção de nomes: cada arquivo `.feature` leva o nome da **capacidade**
 que testa (`busca`, `linha-do-tempo`, `modal-abertura`...), não da view —
 a pasta já diz qual view é. Um mesmo view pode ter vários arquivos
-(como Personagens e Filmes, que têm 3 cada).
+(Personagens e Filmes têm 3 cada; o Super Trunfo, 6).
 
 ### Três invariantes que vale destacar
 
@@ -78,6 +84,19 @@ um de três lugares — desenhado no eixo, dobrado num agrupador `+N`, ou atrás
 chip dos que nasceram antes do trecho em foco. `verificarCoerenciaDoContador()`
 soma os três e compara com o número anunciado pelo contador. Foi esse cenário
 que pegou uma diferença de 3 entre o contador (43) e o que estava desenhado (40).
+
+**O Super Trunfo é testado nos dois níveis.** Cinco features passam pela interface, e
+`trunfo/regras.feature` não abre página nenhuma: os step definitions **importam**
+`js/features/trunfo/regras.js` (o preprocessor esbuild empacota o módulo junto) e chamam as funções
+puras direto — é o mesmo código que roda no navegador, sem cópia e sem mock. São esses cenários que
+fixam o que a interface não consegue mostrar: que `aplicarAcao` devolve um estado novo sem alterar o
+que recebeu, que o estado sobrevive a um `JSON.stringify`/`parse` sem perder nada, e que a mesma
+semente com as mesmas ações reconstrói a partida idêntica (`reproduzir`). É essa garantia que faz o
+multiplayer online da fase seguinte ser possível sem reescrever as regras.
+
+Nos cenários de interface, nada depende de sorte: `?seed=`, `?cpuDelay=0` e `?maos=` (documentados no
+README da raiz, seção "Decisões de dados") fixam a distribuição, tiram a espera do computador e forçam
+as duas mãos, de modo que cada regra apareça já na primeira rodada.
 
 **O carrossel de planetas nunca trava numa ponta.** `navegacao-por-setas.feature`
 cobre o caso de valor limite do índice: `index = (newIndex + planets.length) %

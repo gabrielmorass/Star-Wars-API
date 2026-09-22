@@ -50,9 +50,10 @@ api-testing/
 | **Listagens** | `GET /api` (catálogo de recursos), `GET /planets`, `GET /people`, `GET /films` (6 episódios), `GET /species`, `GET /starships` (contrato de cabeçalho, tempo de resposta e campos), `GET /vehicles` |
 | **Recurso específico** | `GET /planets/1` (Tatooine), `GET /films/1` (Episódio IV), `GET /species/1` (referências das réguas), `GET /people/1` (humano vem com `species` vazio), `GET /starships/10` (Millennium Falcon), `GET /vehicles/4` (Sand Crawler) |
 | **Integridade referencial** | `GET /planets/1` → segue `residents[0]` e confirma que o personagem aponta de volta para o planeta |
+| **Pré-condição de regra do jogo** | `GET /starships` → confirma que a **Death Star** continua na listagem e que ainda existe pelo menos um `starship_class` com "starfighter". A regra de Super Trunfo do site (decisão da equipe: a Death Star vence tudo, menos um caça) depende das duas coisas |
 | **Dados Inválidos/Inoportunos** | IDs inexistentes: `GET /planets/9999`, `/vehicles/9999`, `/species/9999`, `/films/9999`, `/people/9999`, `/starships/9999` (404). IDs malformados e valores limite: `GET /planets/abc`, `/people/0`, `/people/-1`, `/people/1abc`. Caminho em caixa alta: `GET /PLANETS` (404). Parâmetros ignorados: `GET /people?search=Luke` e `GET /planets?page=2` (a SWAPI não tem busca nem paginação server-side). Escrita rejeitada: `POST /planets` (API somente leitura) |
 
-São **29 requisições** ao todo (TC-011 a TC-020, TC-044, TC-045, TC-068 e TC-075 a TC-090).
+São **30 requisições** ao todo (TC-011 a TC-020, TC-044, TC-045, TC-068, TC-075 a TC-090 e TC-115).
 
 ## Importar no Postman (interface visual)
 
