@@ -340,6 +340,323 @@
               }
             }
           ]
+        },
+        {
+          "name": "TC-081 — GET /api retorna o catálogo de recursos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": [
+                "{{baseUrl}}"
+              ]
+            },
+            "description": "Raiz da API — lista os seis recursos disponíveis; é o contrato que garante que os endpoints usados pelo site existem."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deve listar os seis recursos consumidos pelo site', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(Object.keys(resposta).sort()).to.eql([",
+                  "        'films', 'people', 'planets', 'species', 'starships', 'vehicles',",
+                  "    ]);",
+                  "});",
+                  "",
+                  "pm.test('Cada recurso deve apontar para uma URL absoluta', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    Object.values(resposta).forEach(function (url) {",
+                  "        pm.expect(url).to.be.a('string').that.match(/^https?:\\/\\//);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-082 — GET /vehicles retorna lista válida",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/vehicles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehicles"
+              ]
+            },
+            "description": "Lista todos os veículos — usada pela aba Veículos da tela Naves e Veículos."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta deve ser uma lista não vazia', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.be.an('array').that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('Cada veículo deve ter os campos usados no card e nos filtros', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    resposta.forEach(function (veiculo) {",
+                  "        pm.expect(veiculo).to.have.property('name');",
+                  "        pm.expect(veiculo).to.have.property('vehicle_class');",
+                  "        pm.expect(veiculo).to.have.property('cost_in_credits');",
+                  "        pm.expect(veiculo).to.have.property('crew');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-083 — GET /planets/1 retorna o planeta específico",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/planets/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "planets",
+                "1"
+              ]
+            },
+            "description": "Busca um planeta específico — os campos terrain e climate alimentam o planeta procedural em canvas (planet-art.js)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deve retornar o planeta Tatooine', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.name).to.eql('Tatooine');",
+                  "});",
+                  "",
+                  "pm.test('terrain e climate devem vir preenchidos (entram na arte do planeta)', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.terrain).to.eql('desert');",
+                  "    pm.expect(resposta.climate).to.eql('arid');",
+                  "});",
+                  "",
+                  "pm.test('residents e films devem ser listas de URLs absolutas', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.residents).to.be.an('array').that.is.not.empty;",
+                  "    pm.expect(resposta.films).to.be.an('array').that.is.not.empty;",
+                  "    resposta.residents.concat(resposta.films).forEach(function (url) {",
+                  "        pm.expect(url).to.match(/^https?:\\/\\//);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-084 — GET /films/1 retorna o filme específico",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/films/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "films",
+                "1"
+              ]
+            },
+            "description": "Busca um filme específico — cobre o opening_crawl e as coleções que abastecem as abas do modal de Filmes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deve retornar o Episódio IV — A New Hope', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.title).to.eql('A New Hope');",
+                  "    pm.expect(resposta.episode_id).to.eql(4);",
+                  "});",
+                  "",
+                  "pm.test('opening_crawl deve vir preenchido (o site exige o texto integral no DOM)', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.opening_crawl).to.be.a('string');",
+                  "    pm.expect(resposta.opening_crawl.trim()).to.not.be.empty;",
+                  "});",
+                  "",
+                  "pm.test('Deve trazer as coleções das abas do modal', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    ['characters', 'planets', 'starships', 'vehicles', 'species'].forEach(function (campo) {",
+                  "        pm.expect(resposta[campo], campo).to.be.an('array').that.is.not.empty;",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-085 — GET /species/1 traz as referências das réguas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/species/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "species",
+                "1"
+              ]
+            },
+            "description": "Human é a marca de referência das réguas de altura e longevidade da tela Espécies — os valores vêm deste registro."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deve retornar a espécie Human', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.name).to.eql('Human');",
+                  "});",
+                  "",
+                  "pm.test('average_height e average_lifespan devem ser os valores usados nas réguas', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.average_height).to.eql('180');",
+                  "    pm.expect(resposta.average_lifespan).to.eql('120');",
+                  "});",
+                  "",
+                  "pm.test('classification e designation devem existir (passam por traduzir())', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta.classification).to.eql('mammal');",
+                  "    pm.expect(resposta.designation).to.eql('sentient');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-086 — GET /starships — contrato de cabeçalho e de campos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/starships",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "starships"
+              ]
+            },
+            "description": "Verifica o contrato da listagem de naves: Content-Type JSON, tempo de resposta aceitável e os campos que alimentam as pills de classe e os medidores do HUD."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Content-Type deve ser application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta deve ficar abaixo de 5s', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});",
+                  "",
+                  "pm.test('Toda nave deve ter starship_class e hyperdrive_rating', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.be.an('array').that.is.not.empty;",
+                  "    resposta.forEach(function (nave) {",
+                  "        pm.expect(nave, nave.name).to.have.property('starship_class');",
+                  "        pm.expect(nave, nave.name).to.have.property('hyperdrive_rating');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-087 — Integridade referencial entre planeta e residente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/planets/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "planets",
+                "1"
+              ]
+            },
+            "description": "Segue o primeiro link de residents de planets/1 e confirma que o personagem aponta de volta para o mesmo planeta — é o vínculo que o site usa para derivar as espécies do planeta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const planeta = pm.response.json();",
+                  "",
+                  "pm.test('O primeiro residente deve responder 200 e apontar de volta para o planeta', function (done) {",
+                  "    pm.sendRequest(planeta.residents[0], function (erro, resposta) {",
+                  "        if (erro) { return done(erro); }",
+                  "        pm.expect(resposta.code).to.eql(200);",
+                  "        pm.expect(resposta.json().homeworld).to.eql(planeta.url);",
+                  "        done();",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -681,6 +998,129 @@
                 "exec": [
                   "pm.test('Status não deve ser 200 OK', function () {",
                   "    pm.expect(pm.response.code).to.not.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-088 — GET /planets?page=2 — paginação não suportada",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/planets?page=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "planets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "A SWAPI (swapi.info) devolve a coleção inteira e ignora ?page= — o parâmetro não pagina nem quebra a resposta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK mesmo com parâmetro ignorado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Parâmetro page é ignorado — retorna a coleção completa', function () {",
+                  "    const resposta = pm.response.json();",
+                  "    pm.expect(resposta).to.be.an('array');",
+                  "    pm.expect(resposta.length).to.be.above(1);",
+                  "    pm.expect(resposta[0].name).to.eql('Tatooine');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-089 — GET /PLANETS — caminho em caixa alta",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/PLANETS",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "PLANETS"
+              ]
+            },
+            "description": "O caminho da SWAPI é sensível à caixa: /PLANETS não é o mesmo recurso que /planets."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Não deve devolver uma coleção de planetas', function () {",
+                  "    pm.expect(function () { pm.response.json(); }).to.throw();",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-090 — POST /planets — API somente leitura",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/planets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "planets"
+              ]
+            },
+            "description": "A SWAPI é somente leitura: uma tentativa de escrita deve ser rejeitada, sem criar recurso.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Alderaan II\",\n    \"climate\": \"temperate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Escrita deve ser rejeitada com erro de cliente (4xx)', function () {",
+                  "    pm.expect(pm.response.code).to.be.within(400, 499);",
+                  "});",
+                  "",
+                  "pm.test('Não deve responder como criação bem-sucedida', function () {",
+                  "    pm.expect([200, 201]).to.not.include(pm.response.code);",
                   "});"
                 ]
               }

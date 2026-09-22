@@ -72,9 +72,9 @@ js/
 src/data/planets-map.json  # região + coordenadas x/y de cada planeta (dado da equipe, não da SWAPI)
 public/favicon.svg
 cypress-project/           # testes de interface (Cypress + BDD/Gherkin) — ver README próprio
-api-testing/                # testes de API (Postman + Newman) — ver README próprio
-performance-testing/        # testes de carga, bônus (k6) — ver README próprio
-docs-local/                 # notas internas do grupo (não versionadas — ver .gitignore)
+api-testing/               # testes de API (Postman + Newman) — ver README próprio
+performance-testing/       # testes de carga, bônus (k6) — ver README próprio
+docs-local/                # notas internas do grupo (não versionadas — ver .gitignore)
 ```
 
 ---
@@ -85,7 +85,7 @@ Este projeto tem três suítes de teste independentes, cada uma com seu
 próprio README:
 
 - **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 61 cenários
-- **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 13 requisições
+- **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 29 requisições
 - **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
 
 Resumo rápido:
@@ -152,9 +152,9 @@ A SWAPI (`https://swapi.info/api`) cobre apenas os Episódios I–VI e tem limit
    Como nos demais itens: **isso é inferência da equipe**, não deve embasar asserção de teste
    sobre a SWAPI.
 
-6. **A lista `people` de cada espécie é parcial.** `species/1` (Human) traz 4 personagens, mas 35
-   dos 82 personagens são humanos — a SWAPI deixa o campo `species` deles **vazio** (ver item sobre
-   Personagens). Por isso a seção "Membros conhecidos" da tela Espécies não usa `species.people`:
+6. **A lista `people` de cada espécie é parcial.** `species/1` (Human) traz 4 personagens, mas 36
+   dos 82 personagens são humanos — a SWAPI deixa o campo `species` de 32 deles **vazio** (ver item
+   sobre Personagens). Por isso a seção "Membros conhecidos" da tela Espécies não usa `species.people`:
    ela é derivada da lista de personagens (todo mundo cujo `species` aponta para a espécie, mais os
    de `species` vazio quando a espécie é Human), unida à lista da API. As referências das réguas
    (humano com 1,80 m e 120 anos) vêm do próprio registro `species/1`.
