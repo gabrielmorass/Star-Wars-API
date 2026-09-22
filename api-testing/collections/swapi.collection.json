@@ -657,6 +657,50 @@
               }
             }
           ]
+        },
+        {
+          "name": "TC-115 — GET /starships — as duas naves que a regra do Super Trunfo exige",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/starships",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "starships"
+              ]
+            },
+            "description": "A regra de Super Trunfo do Codex Estelar (decisão da EQUIPE, não dado da SWAPI) diz que a Death Star vence qualquer carta, menos um caça estelar. A regra só faz sentido se as duas coisas existirem no baralho: esta requisição confirma que a Death Star continua na listagem e que ainda há pelo menos uma nave com \"starfighter\" no starship_class."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status deve ser 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('A listagem deve conter a Death Star', function () {",
+                  "    const naves = pm.response.json();",
+                  "    const deathStar = naves.find((nave) => nave.name === 'Death Star');",
+                  "    pm.expect(deathStar, 'Death Star na listagem').to.not.be.undefined;",
+                  "    pm.expect(deathStar.starship_class.toLowerCase()).to.not.include('starfighter');",
+                  "});",
+                  "",
+                  "pm.test('A listagem deve conter ao menos um caça estelar', function () {",
+                  "    const naves = pm.response.json();",
+                  "    const cacas = naves.filter((nave) =>",
+                  "        String(nave.starship_class).toLowerCase().includes('starfighter')",
+                  "    );",
+                  "    pm.expect(cacas.length, 'naves com starfighter no starship_class').to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
