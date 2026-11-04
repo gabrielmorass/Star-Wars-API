@@ -11,15 +11,27 @@
 # instalado à mão dentro do container depois que ele sobe — se fosse, a
 # imagem deixaria de ser reproduzível.
 
-FROM jenkins/jenkins:lts-jdk17
+# Versão FIXA, não a tag móvel "lts-jdk17".
+#
+# O critério 2 pede "imagem correta e reproduzível". A tag lts-jdk17 aponta
+# para a LTS mais recente e muda sozinha: construir hoje e construir no dia
+# da defesa daria Jenkins diferentes, com risco de um deles quebrar o
+# pipeline sem ninguém ter mexido em nada.
+#
+# 2.541.3 é a versão com que validamos tudo em 04/11/2026. jdk17 porque o
+# Jenkins moderno exige Java 17 ou superior.
+FROM jenkins/jenkins:2.541.3-jdk17
 
 # ---------------------------------------------------------------------------
 # Etapa com privilégio: instalação de pacotes
 # ---------------------------------------------------------------------------
 USER root
 
-# Node 20: é a versão que o BFF (api/) usa. Manter alinhado com api/Dockerfile.
+# Node: versão exata, não só a linha 20.x. Mesma razão da imagem base —
+# "setup_20.x" instalaria qualquer 20.x, e a imagem deixaria de ser
+# reproduzível. Manter alinhado com o api/Dockerfile do Bloco B.
 ARG NODE_MAJOR=20
+ARG NODE_VERSION=20.20.2
 # Só o CLI do Docker — o daemon é o do host, acessado pelo socket montado.
 ARG DOCKER_CLI_VERSION=27.3.1
 # buildx: o construtor moderno (BuildKit). Sem ele o Docker cai no builder
@@ -36,9 +48,11 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends ca-certificates curl gnupg; \
     \
-    # --- Node + npm ---
+    # --- Node + npm (versão exata, travada) ---
     curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash -; \
-    apt-get install -y --no-install-recommends nodejs; \
+    apt-get install -y --no-install-recommends "nodejs=${NODE_VERSION}-1nodesource1"; \
+    # impede que um apt-get upgrade futuro troque a versão por baixo
+    apt-mark hold nodejs; \
     \
     # --- cliente Docker (binário estático, sem precisar de repositório apt) ---
     curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz" \
