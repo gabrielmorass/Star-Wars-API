@@ -1,0 +1,25 @@
+# Normalização de fim de linha — Codex Estelar
+#
+# POR QUE ESTE ARQUIVO EXISTE
+# O time trabalha no Windows, onde o Git converte LF para CRLF no checkout.
+# Só que estes arquivos são executados DENTRO de containers Linux, e ali o
+# CRLF quebra de um jeito difícil de diagnosticar:
+#
+#   bash: scripts/ci/deps.sh: /usr/bin/env: bad interpreter
+#   $'\r': command not found
+#
+# As regras abaixo forçam LF nesses arquivos, em qualquer sistema.
+
+# Scripts de CI — executados no container do Jenkins
+*.sh            text eol=lf
+
+# Infraestrutura — lidos por Docker, Compose e Jenkins
+Dockerfile      text eol=lf
+*.Dockerfile    text eol=lf
+Jenkinsfile     text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.conf          text eol=lf
+
+# Contrato de configuração — copiado para .env e lido pelo Compose
+.env.example    text eol=lf

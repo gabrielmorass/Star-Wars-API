@@ -1,0 +1,72 @@
+# ARQUIVO TEMPORÁRIO — ambiente só do Jenkins
+# ============================================================================
+# Existe para o Bloco A (Gabriel) poder trabalhar antes do compose definitivo.
+#
+# O docker-compose.yml de verdade, com os quatro containers, é do Bloco D
+# (Samile). Quando ele existir, o serviço `jenkins` abaixo é copiado para lá e
+# ESTE ARQUIVO É APAGADO. Não acumular dois composes até a entrega: o professor
+# vai ler o docker-compose.yml, e dois arquivos concorrentes confundem.
+#
+# Subir:     docker compose -f docker-compose.jenkins.yml up -d --build
+# Logs:      docker compose -f docker-compose.jenkins.yml logs -f jenkins
+# Derrubar:  docker compose -f docker-compose.jenkins.yml down
+# Zerar:     docker compose -f docker-compose.jenkins.yml down -v   (apaga o volume!)
+
+services:
+  jenkins:
+    build:
+      context: ./jenkins
+      args:
+        # GID do grupo dono de /var/run/docker.sock no host.
+        # Ver jenkins/README.md → "O Jenkins não consegue rodar docker".
+        DOCKER_GID: ${DOCKER_GID:-999}
+    image: codex-estelar/jenkins:np2
+    container_name: codex-jenkins
+    restart: unless-stopped
+
+    ports:
+      # 8081 no host para não brigar com o site (8080) no compose final.
+      - "8081:8080"
+      # Porta de agentes. Não usamos agente remoto, mas o Jenkins reclama sem ela.
+      - "50000:50000"
+
+    environment:
+      # --- acesso ---
+      JENKINS_ADMIN_ID: ${JENKINS_ADMIN_ID:-admin}
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:-admin}
+      JENKINS_URL: ${JENKINS_URL:-http://localhost:8081/}
+
+      # --- repositório que o job vai clonar ---
+      REPO_URL: ${REPO_URL:-https://github.com/gabrielmorass/Star-Wars-API.git}
+      REPO_BRANCH: ${REPO_BRANCH:-main}
+
+      # --- notificação (critério 5): nunca hardcoded, sempre daqui ---
+      EMAIL_DESTINATARIO: ${EMAIL_DESTINATARIO:-}
+      EMAIL_REMETENTE: ${EMAIL_REMETENTE:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+
+      # --- Docker Hub (critério 6) ---
+      DOCKERHUB_USER: ${DOCKERHUB_USER:-}
+      DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN:-}
+
+    volumes:
+      # Volume nomeado: preserva jobs, histórico e artefatos entre reinícios.
+      # É a demonstração do critério 9 — derruba e sobe, o histórico continua.
+      - jenkins_home:/var/jenkins_home
+      # Socket do daemon do host: é como o Jenkins constrói e publica imagens.
+      # Sem isso, os estágios "Construir imagem" e "Publicar" não funcionam.
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/login >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+
+volumes:
+  jenkins_home:
+    name: codex_jenkins_home
