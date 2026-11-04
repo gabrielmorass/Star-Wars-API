@@ -112,8 +112,18 @@ echo "DOCKER_GID=988" >> .env
 docker compose -f docker-compose.jenkins.yml up -d --build
 ```
 
-**Docker Desktop (Windows/macOS)** — o socket costuma ser do grupo `root` (GID
-`0`). Tente `DOCKER_GID=0`. Se ainda assim falhar, rode o container como root
+**Docker Desktop (Windows/macOS)** — use `DOCKER_GID=0`. Verificado em
+03/11/2026 na máquina do Gabriel (Docker Desktop 29.5.2): o socket é
+`root:root`, modo `660`, ou seja GID `0`. Com esse valor o Dockerfile coloca o
+usuário `jenkins` no *grupo* root — o que dá acesso ao socket sem rodar o
+container como usuário root. Para conferir na sua máquina:
+
+```bash
+MSYS_NO_PATHCONV=1 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+  alpine sh -c 'stat -c "GID=%g %U:%G modo=%a" /var/run/docker.sock'
+```
+
+Se ainda assim falhar, rode o container como root
 acrescentando `user: root` ao serviço `jenkins` no compose. É aceitável para
 um projeto de disciplina, mas registre como decisão consciente: em produção
 não se faz isso, porque dá ao Jenkins controle total do daemon do host.
@@ -125,6 +135,27 @@ docker exec -it codex-jenkins docker ps
 ```
 
 Se listar containers, está resolvido.
+
+### `docker run -v /var/run/docker.sock...` falha no Git Bash
+
+Sintoma, rodando comandos Docker à mão no Git Bash (Windows):
+
+```
+docker: Error response from daemon: mkdir C:\Program Files\Git\var: Acesso negado.
+```
+
+O Git Bash converte caminhos no estilo Unix para caminhos Windows antes de
+entregá-los ao `docker.exe`, e `/var/run/docker.sock` vira
+`C:\Program Files\Git\var\run\docker.sock`. Desligue a conversão só naquele
+comando:
+
+```bash
+MSYS_NO_PATHCONV=1 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock alpine sh -c 'stat -c "%g %U %G" /var/run/docker.sock'
+```
+
+Isso **não** afeta o `docker compose`: ali o caminho está dentro do YAML, que o
+Git Bash não toca. Só atrapalha comandos digitados no terminal. Usando
+PowerShell ou CMD, o problema não existe.
 
 ### O job não aparece na interface
 

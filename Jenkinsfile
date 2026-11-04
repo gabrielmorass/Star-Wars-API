@@ -64,29 +64,29 @@ pipeline {
     }
 
     stage('Dependências') {
-      steps { etapa('Dependências', 'Gabriel', 'scripts/ci/deps.sh') }
+      steps { script { etapa('Dependências', 'Gabriel', 'scripts/ci/deps.sh') } }
     }
 
     // ---- ETAPA OBRIGATÓRIA 1: execução dos testes ----
     stage('Testes') {
-      steps { etapa('Testes', 'Daniele', 'scripts/ci/testes.sh') }
+      steps { script { etapa('Testes', 'Daniele', 'scripts/ci/testes.sh') } }
     }
 
     // ---- ETAPA OBRIGATÓRIA 2: build / empacotamento ----
     stage('Empacotar') {
-      steps { etapa('Empacotar', 'Eduardo', 'scripts/ci/empacotar.sh') }
+      steps { script { etapa('Empacotar', 'Eduardo', 'scripts/ci/empacotar.sh') } }
     }
 
     stage('Construir imagem') {
-      steps { etapa('Construir imagem', 'Eduardo', 'scripts/ci/imagem.sh') }
+      steps { script { etapa('Construir imagem', 'Eduardo', 'scripts/ci/imagem.sh') } }
     }
 
     stage('Smoke test') {
-      steps { etapa('Smoke test', 'Samile', 'scripts/ci/smoke.sh') }
+      steps { script { etapa('Smoke test', 'Samile', 'scripts/ci/smoke.sh') } }
     }
 
     stage('Publicar no Docker Hub') {
-      steps { etapa('Publicar no Docker Hub', 'Lima', 'scripts/ci/publicar.sh') }
+      steps { script { etapa('Publicar no Docker Hub', 'Lima', 'scripts/ci/publicar.sh') } }
     }
   }
 
