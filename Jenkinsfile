@@ -42,9 +42,13 @@ pipeline {
     IMAGE_REPO = "${env.DOCKERHUB_USER ?: 'codexestelar'}/codex-estelar-api"
     IMAGE_TAG  = "${env.BUILD_NUMBER}"
 
-    // Artefatos (critério 4) — caminhos combinados com a Daniele (Bloco C).
+    // Artefatos (critério 4).
+    // JUNIT_GLOB cobre os dois estágios de teste de uma vez: o relatório do
+    // Newman (contratos da SWAPI) e o dos testes unitários do BFF, quando a
+    // Daniele entregar. Padrões separados por vírgula; ausentes são ignorados.
     COBERTURA_DIR  = 'api/coverage/lcov-report'
-    JUNIT_XML      = 'api/relatorios/junit.xml'
+    JUNIT_GLOB     = 'api/relatorios/junit.xml,api-testing/relatorios/newman-junit.xml'
+    RELATORIO_API  = 'api-testing/relatorios/newman.html'
     PACOTE_GLOB    = 'dist/*.tgz'
   }
 
@@ -84,8 +88,20 @@ pipeline {
     }
 
     // ---- ETAPA OBRIGATÓRIA 1: execução dos testes ----
-    stage('Testes') {
-      steps { script { etapa('Testes', 'Daniele', 'scripts/ci/testes.sh') } }
+    //
+    // São DOIS estágios, com propósitos diferentes — e saber distinguir os
+    // dois é resposta de defesa:
+    //
+    //   Testes de API    valida os contratos da SWAPI, a API externa que a
+    //                    aplicação consome. Não executa código nosso.
+    //   Testes unitários cobre o NOSSO código (o BFF), com o portão de 90%
+    //                    que o critério 1 exige.
+    stage('Testes de API') {
+      steps { script { etapa('Testes de API', 'Gabriel', 'scripts/ci/testes-api.sh') } }
+    }
+
+    stage('Testes unitários') {
+      steps { script { etapa('Testes unitários', 'Daniele', 'scripts/ci/testes.sh') } }
     }
 
     // ---- ETAPA OBRIGATÓRIA 2: build / empacotamento ----
@@ -113,12 +129,13 @@ pipeline {
     always {
       script {
         arquivarSeExistir(env.PACOTE_GLOB, 'pacote')
+        arquivarSeExistir(env.RELATORIO_API, 'relatório de API')
 
-        if (fileExists(env.JUNIT_XML)) {
-          junit allowEmptyResults: true, testResults: env.JUNIT_XML
-        } else {
-          echo "[artefatos] ${env.JUNIT_XML} ainda não existe (Daniele · Bloco C)."
-        }
+        // allowEmptyResults deixa a build seguir quando nenhum dos relatórios
+        // existe ainda. Quando existe, um caso falhando marca a build como
+        // UNSTABLE — amarelo, que é o correto: os passos rodaram, mas um
+        // teste reprovou.
+        junit allowEmptyResults: true, testResults: env.JUNIT_GLOB
 
         if (fileExists(env.COBERTURA_DIR)) {
           publishHTML(target: [
