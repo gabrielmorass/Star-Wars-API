@@ -1,35 +1,45 @@
 # Plugins do Jenkins — Codex Estelar · Projeto S07 NP2
 #
 # Instalados no build da imagem (ver Dockerfile), nunca pela interface.
-# Cada plugin abaixo existe por um motivo; não adicionar "por garantia".
 #
-# Formato: um artifactId por linha. Comentário só em linha própria —
+# POR QUE AS VERSÕES ESTÃO FIXADAS
+# O critério 2 do enunciado pede "imagem correta e REPRODUZÍVEL". Sem a
+# versão, o jenkins-plugin-cli instala a mais recente compatível — então a
+# imagem construída hoje e a construída no dia da defesa seriam diferentes,
+# e um plugin novo poderia quebrar o pipeline sem ninguém ter mudado nada.
+# Com a versão fixada, qualquer pessoa constrói exatamente a mesma imagem.
+#
+# Formato: artifactId:versão, um por linha. Comentário SÓ em linha própria —
 # comentário no fim da linha do plugin faz o jenkins-plugin-cli falhar.
+#
+# As versões abaixo são as que validamos em 04/11/2026, com Jenkins 2.541.3.
+# Para atualizar: subir, conferir em Manage Jenkins > Plugins, e só então
+# mudar aqui — nunca atualizar às cegas em cima da entrega.
 
 # --- configuração como código ---
 # configuration-as-code: lê o casc.yaml e configura o Jenkins no boot
-configuration-as-code
+configuration-as-code:2146.v9c97c4612b_99
 # job-dsl: permite que o casc.yaml crie o job do pipeline
-job-dsl
+job-dsl:3732.v9a_c49a_61a_313
 
 # --- pipeline ---
 # workflow-aggregator: a suíte "Pipeline", é quem entende o Jenkinsfile
-workflow-aggregator
+workflow-aggregator:608.v67378e9d3db_1
 # git: checkout do repositório
-git
+git:5.11.0
 
 # --- etapas do nosso pipeline ---
 # docker-workflow: construir e publicar a imagem da api
-docker-workflow
+docker-workflow:653.v2f2c08eff0ec
 # junit: publica o relatório de testes (critério 4)
-junit
+junit:1446.veeff2ec8581c
 # htmlpublisher: publica o relatório HTML de cobertura (critério 4)
-htmlpublisher
+htmlpublisher:429
 
 # --- apoio ---
 # credentials-binding: injeta Docker Hub e SMTP sem expor no log
-credentials-binding
+credentials-binding:728.v902a_273b_8947
 # timestamper: carimba hora em cada linha do console
-timestamper
+timestamper:1.30
 # ws-cleanup: limpa o workspace entre execuções
-ws-cleanup
+ws-cleanup:0.49
