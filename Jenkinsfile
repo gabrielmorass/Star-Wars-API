@@ -58,7 +58,12 @@ pipeline {
           env.GIT_SHA_CURTO = sh(
             script: 'git rev-parse --short HEAD', returnStdout: true
           ).trim()
-          echo "Commit: ${env.GIT_SHA_CURTO} · Branch: ${env.BRANCH_NAME ?: 'main'}"
+          // GIT_BRANCH é preenchido pelo plugin git; BRANCH_NAME só existe em
+          // pipeline multibranch, por isso não serve aqui.
+          env.BRANCH_ATUAL = sh(
+            script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true
+          ).trim()
+          echo "Commit: ${env.GIT_SHA_CURTO} · Ref: ${env.GIT_BRANCH ?: env.BRANCH_ATUAL}"
         }
       }
     }
