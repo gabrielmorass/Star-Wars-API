@@ -42,3 +42,6 @@ debug-planets.html
 # entregue, que é a BDD em cypress/bdd/
 cypress-project/cypress/diag/
 cypress-project/cypress.diag.config.js
+
+# Relatorios gerados pelo estagio de Testes de API no pipeline
+api-testing/relatorios/
