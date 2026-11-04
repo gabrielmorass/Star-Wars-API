@@ -17,6 +17,17 @@ O `Jenkinsfile` fica na raiz do repositório, não aqui — é ele que o job apo
 
 ---
 
+## Antes de tudo: verifique o ambiente
+
+```bash
+bash scripts/ci/verificar-ambiente.sh
+```
+
+Confere Docker, Compose, Node, `.env`, o `DOCKER_GID` desta máquina, fins de
+linha e portas — e, quando algo está errado, imprime o comando para corrigir.
+Rode isso primeiro; economiza a hora que cada um perderia descobrindo sozinho
+as armadilhas do Docker no Windows.
+
 ## Subir
 
 ```bash
@@ -156,6 +167,31 @@ MSYS_NO_PATHCONV=1 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock 
 Isso **não** afeta o `docker compose`: ali o caminho está dentro do YAML, que o
 Git Bash não toca. Só atrapalha comandos digitados no terminal. Usando
 PowerShell ou CMD, o problema não existe.
+
+### Mudei o REPO_BRANCH e o build pegou a branch antiga
+
+Acontece de verdade — aconteceu conosco em 04/11. A causa é uma corrida: o
+Jenkins começa a responder na porta **antes** de o JCasC terminar de reaplicar
+a configuração do job. Se você reiniciar e disparar o build imediatamente, ele
+usa a configuração antiga, que veio do volume.
+
+Confira sempre a primeira linha do console, que diz o que foi realmente
+baixado:
+
+```
+Commit: 6e2e362 · Ref: origin/test/artefatos
+```
+
+Se o `Ref` não for o que você esperava, espere o JCasC assentar e dispare de
+novo. Para confirmar que a configuração já foi aplicada:
+
+```bash
+docker exec codex-jenkins \
+  grep -A1 BranchSpec /var/jenkins_home/jobs/codex-estelar-np2/config.xml
+```
+
+É também por isso que o `Jenkinsfile` imprime o commit e o ref logo no começo:
+sem isso, uma build do código errado passa despercebida.
 
 ### O job não aparece na interface
 
