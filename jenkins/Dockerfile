@@ -22,6 +22,12 @@ USER root
 ARG NODE_MAJOR=20
 # Só o CLI do Docker — o daemon é o do host, acessado pelo socket montado.
 ARG DOCKER_CLI_VERSION=27.3.1
+# buildx: o construtor moderno (BuildKit). Sem ele o Docker cai no builder
+# legado, que além de estar marcado como obsoleto não faz cache das camadas
+# intermediárias de um Dockerfile multi-stage — justamente o formato do
+# api/Dockerfile. Com dezenas de execuções do pipeline até a entrega, a
+# diferença de tempo é relevante.
+ARG BUILDX_VERSION=0.17.1
 # GID do grupo dono de /var/run/docker.sock NO HOST. Ver jenkins/README.md,
 # seção "O Jenkins não consegue rodar docker".
 ARG DOCKER_GID=999
@@ -38,6 +44,12 @@ RUN set -eux; \
     curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz" \
       | tar -xz -C /usr/local/bin --strip-components=1 docker/docker; \
     \
+    # --- buildx, como plugin do CLI ---
+    mkdir -p /usr/local/lib/docker/cli-plugins; \
+    curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-buildx \
+      "https://github.com/docker/buildx/releases/download/v${BUILDX_VERSION}/buildx-v${BUILDX_VERSION}.linux-amd64"; \
+    chmod 0755 /usr/local/lib/docker/cli-plugins/docker-buildx; \
+    \
     # --- o usuário jenkins precisa pertencer ao grupo dono do socket ---
     if getent group "${DOCKER_GID}" >/dev/null; then \
         grupo="$(getent group "${DOCKER_GID}" | cut -d: -f1)"; \
@@ -53,7 +65,8 @@ RUN set -eux; \
     # --- prova, no build, de que tudo ficou disponível ---
     node --version; \
     npm --version; \
-    docker --version
+    docker --version; \
+    docker buildx version
 
 # ---------------------------------------------------------------------------
 # Plugins — instalados no build, nunca pela interface
