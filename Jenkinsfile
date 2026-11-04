@@ -52,6 +52,17 @@ pipeline {
 
     stage('Checkout') {
       steps {
+        // Limpa o workspace ANTES de qualquer coisa.
+        //
+        // Sem isso, o Jenkins reaproveita o diretório da execução anterior e
+        // sobras de um build passam a contaminar o seguinte: já aconteceu
+        // aqui, no build #7, que arquivou um dist/codex-estelar-5.tgz gerado
+        // no build #5 e ficou UNSTABLE por causa de um junit.xml velho.
+        //
+        // Limpamos no início, e não no fim, porque um build abortado no meio
+        // não executaria o bloco post — e deixaria a sujeira para o próximo.
+        cleanWs()
+
         // O SCM vem do job criado por JCasC (jenkins/casc.yaml).
         checkout scm
         script {
