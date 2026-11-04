@@ -1,0 +1,35 @@
+# Plugins do Jenkins — Codex Estelar · Projeto S07 NP2
+#
+# Instalados no build da imagem (ver Dockerfile), nunca pela interface.
+# Cada plugin abaixo existe por um motivo; não adicionar "por garantia".
+#
+# Formato: um artifactId por linha. Comentário só em linha própria —
+# comentário no fim da linha do plugin faz o jenkins-plugin-cli falhar.
+
+# --- configuração como código ---
+# configuration-as-code: lê o casc.yaml e configura o Jenkins no boot
+configuration-as-code
+# job-dsl: permite que o casc.yaml crie o job do pipeline
+job-dsl
+
+# --- pipeline ---
+# workflow-aggregator: a suíte "Pipeline", é quem entende o Jenkinsfile
+workflow-aggregator
+# git: checkout do repositório
+git
+
+# --- etapas do nosso pipeline ---
+# docker-workflow: construir e publicar a imagem da api
+docker-workflow
+# junit: publica o relatório de testes (critério 4)
+junit
+# htmlpublisher: publica o relatório HTML de cobertura (critério 4)
+htmlpublisher
+
+# --- apoio ---
+# credentials-binding: injeta Docker Hub e SMTP sem expor no log
+credentials-binding
+# timestamper: carimba hora em cada linha do console
+timestamper
+# ws-cleanup: limpa o workspace entre execuções
+ws-cleanup

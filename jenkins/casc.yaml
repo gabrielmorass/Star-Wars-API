@@ -1,0 +1,110 @@
+# Jenkins Configuration as Code — Codex Estelar · Projeto S07 NP2
+#
+# ESTE ARQUIVO É A PROVA DO CRITÉRIO ELIMINATÓRIO.
+# O enunciado proíbe "usar a interface gráfica do Jenkins para criar etapas do
+# pipeline". Aqui o Jenkins inteiro nasce configurado: usuário, credenciais,
+# variáveis de ambiente e o próprio job. Ninguém clica em nada.
+#
+# Sintaxe ${VAR:-padrão}: o valor vem do ambiente do container (ver .env).
+# É assim que segredos e o e-mail de destino entram sem ficar escritos aqui.
+
+jenkins:
+  systemMessage: |
+    Codex Estelar — Projeto S07 NP2.
+    Esta instância foi configurada por JCasC (jenkins/casc.yaml).
+    Nenhuma etapa do pipeline foi criada pela interface gráfica.
+  numExecutors: 2
+  mode: NORMAL
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID:-admin}"
+          password: "${JENKINS_ADMIN_PASSWORD:-admin}"
+
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+  # Variáveis visíveis para todo build.
+  #
+  # É AQUI QUE O CRITÉRIO 5 SE RESOLVE: o endereço de destino do e-mail entra
+  # como variável de ambiente e segue até o script de notificação. Em nenhum
+  # ponto da cadeia existe endereço escrito no código:
+  #
+  #   .env  →  docker compose  →  casc.yaml  →  pipeline  →  scripts/ci/notificar.js
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "EMAIL_DESTINATARIO"
+            value: "${EMAIL_DESTINATARIO:-}"
+          - key: "EMAIL_REMETENTE"
+            value: "${EMAIL_REMETENTE:-}"
+          - key: "SMTP_HOST"
+            value: "${SMTP_HOST:-}"
+          - key: "SMTP_PORT"
+            value: "${SMTP_PORT:-587}"
+          - key: "DOCKERHUB_USER"
+            value: "${DOCKERHUB_USER:-}"
+
+unclassified:
+  location:
+    url: "${JENKINS_URL:-http://localhost:8081/}"
+    adminAddress: "${EMAIL_REMETENTE:-nao-responda@codex-estelar.local}"
+
+# ---------------------------------------------------------------------------
+# Credenciais
+# ---------------------------------------------------------------------------
+# Os valores NÃO ficam neste arquivo: vêm do ambiente. O arquivo versionado
+# guarda só os identificadores que o Jenkinsfile usa (dockerhub, smtp).
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: "dockerhub"
+              username: "${DOCKERHUB_USER:-}"
+              password: "${DOCKERHUB_TOKEN:-}"
+              description: "Docker Hub — push da imagem da api (Bloco E / Lima)"
+          - usernamePassword:
+              scope: GLOBAL
+              id: "smtp"
+              username: "${SMTP_USER:-}"
+              password: "${SMTP_PASS:-}"
+              description: "SMTP — notificação do pipeline (Bloco E / Lima)"
+
+# ---------------------------------------------------------------------------
+# O job do pipeline
+# ---------------------------------------------------------------------------
+# Criado por código. O enunciado permite usar a interface apenas para o
+# checkout — nós nem isso usamos: o SCM está declarado abaixo.
+jobs:
+  - script: >
+      pipelineJob('codex-estelar-np2') {
+        description('''Pipeline CI/CD do Codex Estelar — Projeto S07 NP2.
+        Job criado por JCasC (jenkins/casc.yaml). As etapas estão no Jenkinsfile,
+        na raiz do repositório. Não editar este job pela interface: qualquer
+        mudança feita aqui é perdida no próximo boot do container.''')
+
+        logRotator {
+          numToKeep(20)
+          artifactNumToKeep(10)
+        }
+
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('${REPO_URL:-https://github.com/gabrielmorass/Star-Wars-API.git}')
+                }
+                branch('*/${REPO_BRANCH:-main}')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(true)
+          }
+        }
+      }
