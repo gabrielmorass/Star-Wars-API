@@ -14,12 +14,27 @@
      .trunfo-atributo[data-attr], .trunfo-super,
      #trunfo-placar-j1, #trunfo-placar-j2, #trunfo-empate,
      #trunfo-vez, #trunfo-resultado, #trunfo-proxima,
-     #trunfo-passe, #trunfo-pronto, #trunfo-jogar-novamente. */
+     #trunfo-passe, #trunfo-pronto, #trunfo-jogar-novamente,
+   e, no modo online:
+     #trunfo-modo-online, #trunfo-criar-sala, #trunfo-entrar-sala,
+     #trunfo-codigo-input, #trunfo-codigo-sala, #trunfo-conexao,
+     #trunfo-erro-online, #trunfo-sair-sala, #trunfo-aguardando,
+     #trunfo-pausa, #trunfo-encerrar. */
 
 import { classeDeNave } from "../../core/vocabulario.js";
 import { silhuetaDe, svgSilhueta } from "../vehicles/silhuetas.js";
 import { criarControlador } from "./controlador.js";
 import { ATRASO_CPU, ligarCpu } from "./jogadores.js";
+import {
+  codigoValido,
+  criarSessaoOnline,
+  gerarClienteId,
+  gerarCodigo,
+  lerSessaoSalva,
+  limparSessao,
+  normalizarCodigo,
+  salvarSessao,
+} from "./online.js";
 import {
   ATRIBUTOS,
   LIMITE_RODADAS,
@@ -28,9 +43,16 @@ import {
   criarPartida,
   formatarValor,
   montarBaralho,
+  proximoAEscolher,
 } from "./regras.js";
+import { transporteEscolhido } from "./transporte.js";
 
 const LADOS = ["j1", "j2"];
+
+/* A sessão online da view anterior. Trocar de tela não destrói a view
+   antiga, então, ao montar uma nova, a sessão que sobrou sai da sala —
+   senão o mesmo clienteId ficaria na sala duas vezes. */
+let sessaoAnterior = null;
 
 function escapar(texto) {
   return String(texto).replace(/[&<>"]/g, (c) =>
@@ -39,8 +61,8 @@ function escapar(texto) {
 }
 
 /* ---------------- parâmetros de teste e depuração ----------------
-   Os três existem só para os testes e para depurar à mão; o jogo normal
-   não depende de nenhum deles (ver README, "Decisões de dados"). */
+   Existem só para os testes e para depurar à mão; o jogo normal não
+   depende de nenhum deles (ver README, "Decisões de dados"). */
 
 function numeroDoParametro(params, nome, padrao) {
   const bruto = params.get(nome);
@@ -70,6 +92,9 @@ function lerParametros() {
     seed: numeroDoParametro(params, "seed", null),
     atrasoCpu: numeroDoParametro(params, "cpuDelay", ATRASO_CPU),
     maos: lerMaos(params.get("maos")),
+    /* Modo online: "supabase" quando configurado, ou o de `?transporte=`.
+       null esconde o modo. */
+    transporte: transporteEscolhido(window.location.search),
   };
 }
 
@@ -88,6 +113,13 @@ export function renderTrunfoView(container, starships) {
   let controlador = null;
   let fonteCpu = null;
   let desinscrever = null;
+
+  /* Modo online: a sessão, o papel deste aparelho e o que mostrar. */
+  let sessao = null;
+  let papelOnline = null;
+  let nomeOnline = "";
+  let statusOnline = "";
+  let pausaOnline = null; /* { nome, podeEncerrar } enquanto o oponente está fora */
 
   /* Modo "dois jogadores": quem está com o aparelho na mão agora. */
   let comOAparelho = "j1";
@@ -119,6 +151,12 @@ export function renderTrunfoView(container, starships) {
      preventDefault) para o jogo ser inteiramente operável pelo teclado,
      sem depender do clique sintético do navegador. */
   raiz.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter" && evento.target.id === "trunfo-codigo-input") {
+      evento.preventDefault();
+      interagiu = true;
+      entrarNaSala();
+      return;
+    }
     if (evento.key !== "Enter" && evento.key !== " ") return;
     const alvo = evento.target.closest("[data-acao]");
     if (!alvo || alvo.disabled) return;
@@ -135,12 +173,24 @@ export function renderTrunfoView(container, starships) {
     const acao = alvo.dataset.acao;
     if (acao === "modo-cpu") return iniciar("cpu");
     if (acao === "modo-local") return iniciar("local");
+    if (acao === "modo-online") return telaOnline();
+    if (acao === "criar-sala") return criarSala();
+    if (acao === "entrar-sala") return entrarNaSala();
+    if (acao === "copiar-codigo") return copiarCodigo(alvo);
+    if (acao === "sair-sala" || acao === "encerrar") return telaInicial();
+    if (acao === "voltar") return telaInicial();
     if (acao === "escolher") {
       const estado = controlador.estado();
-      if (!escolheNesteAparelho(estado)) return;
+      if (!escolheNesteAparelho(estado) || emPausa()) return;
       return despachar({ tipo: "escolher", jogador: estado.vez, atributo: alvo.dataset.attr });
     }
-    if (acao === "proxima") return despachar({ tipo: "proxima", jogador: controlador.estado().vez });
+    if (acao === "proxima") {
+      const estado = controlador.estado();
+      if (!humanoPassaARodada(estado)) return;
+      /* Online, quem passa é este aparelho (o vencedor); nos outros modos,
+         quem escolheu. */
+      return despachar({ tipo: "proxima", jogador: sessao ? papelOnline : estado.vez });
+    }
     if (acao === "pronto") return descobrir();
     if (acao === "novamente") return telaInicial();
   }
@@ -165,9 +215,27 @@ export function renderTrunfoView(container, starships) {
     controlador = null;
   }
 
+  /** Sai da sala online (se houver) e esquece a sessão guardada. */
+  function sairDaSala() {
+    if (sessao) {
+      const saindo = sessao;
+      sessao = null;
+      saindo.sair();
+    }
+    limparSessao();
+    papelOnline = null;
+    statusOnline = "";
+    pausaOnline = null;
+  }
+
+  function emPausa() {
+    return Boolean(sessao && pausaOnline);
+  }
+
   /* ---------------- tela inicial ---------------- */
 
   function telaInicial() {
+    sairDaSala();
     encerrarPartida();
     coberto = false;
     comOAparelho = "j1";
@@ -191,6 +259,7 @@ export function renderTrunfoView(container, starships) {
         <div class="trunfo-modos">
           <button type="button" id="trunfo-modo-cpu" class="trunfo-botao" data-acao="modo-cpu">Contra o computador</button>
           <button type="button" id="trunfo-modo-local" class="trunfo-botao" data-acao="modo-local">Dois jogadores (mesmo aparelho)</button>
+          ${config.transporte ? `<button type="button" id="trunfo-modo-online" class="trunfo-botao" data-acao="modo-online">Online (dois aparelhos)</button>` : ""}
         </div>
         <ul class="trunfo-regras">
           <li>No <strong>Hiperpropulsor</strong> ganha o <strong>menor</strong> valor: classe 0,5 é mais rápida que classe 4,0.</li>
@@ -202,6 +271,143 @@ export function renderTrunfoView(container, starships) {
       </div>
     `;
     focar("#trunfo-modo-cpu");
+  }
+
+  /* ---------------- modo online: criar ou entrar numa sala ---------------- */
+
+  function telaOnline(erro = "") {
+    sairDaSala();
+    encerrarPartida();
+    /* Na tela inicial, o primeiro campo de nome é o deste aparelho. */
+    const campo = raiz.querySelector("#trunfo-nome-j1");
+    if (campo) nomeOnline = campo.value.trim();
+
+    raiz.innerHTML = `
+      <div class="trunfo-inicio trunfo-online">
+        <h2>Online (dois aparelhos)</h2>
+        <p class="trunfo-intro">
+          Um aparelho cria a sala e passa o código; o outro digita o código e entra.
+          ${nomeOnline ? `Você joga como <strong>${escapar(nomeOnline)}</strong>.` : ""}
+        </p>
+        <div class="trunfo-online-opcoes">
+          <button type="button" id="trunfo-criar-sala" class="trunfo-botao" data-acao="criar-sala">Criar sala</button>
+          <div class="trunfo-online-entrar">
+            <label for="trunfo-codigo-input">Código da sala</label>
+            <input type="text" id="trunfo-codigo-input" maxlength="12" autocomplete="off"
+                   autocapitalize="characters" spellcheck="false" placeholder="ABC23" />
+            <button type="button" id="trunfo-entrar-sala" class="trunfo-botao" data-acao="entrar-sala">Entrar na sala</button>
+          </div>
+        </div>
+        <p id="trunfo-erro-online" class="trunfo-erro-online" role="alert" ${erro ? "" : "hidden"}>${escapar(erro)}</p>
+        <button type="button" class="trunfo-botao trunfo-botao--discreto" data-acao="voltar">Voltar</button>
+      </div>
+    `;
+    focar("#trunfo-criar-sala");
+  }
+
+  function criarSala() {
+    conectarSessao({ papel: "j1", codigoSala: gerarCodigo(), clienteId: gerarClienteId() });
+  }
+
+  function entrarNaSala() {
+    const campo = raiz.querySelector("#trunfo-codigo-input");
+    const codigo = normalizarCodigo(campo ? campo.value : "");
+    if (!codigoValido(codigo)) {
+      const erro = raiz.querySelector("#trunfo-erro-online");
+      if (erro) {
+        erro.hidden = false;
+        erro.textContent = "Código inválido: são 5 letras ou números (sem 0, O, 1, I e L).";
+      }
+      return;
+    }
+    conectarSessao({ papel: "j2", codigoSala: codigo, clienteId: gerarClienteId() });
+  }
+
+  function conectarSessao({ papel, codigoSala, clienteId, retomando = false }) {
+    if (sessaoAnterior) sessaoAnterior.sair();
+    encerrarPartida();
+    salvarSessao({ codigoSala, clienteId, papel });
+    papelOnline = papel;
+    pausaOnline = null;
+
+    const esta = criarSessaoOnline({
+      transporte: config.transporte,
+      papel,
+      codigoSala,
+      clienteId,
+      nome: nomeOnline,
+      baralho,
+      seed: config.seed === null ? undefined : config.seed,
+      retomando,
+      aoEvento: (evento) => {
+        if (sessao === esta) aoEventoOnline(evento);
+      },
+    });
+    sessao = esta;
+    sessaoAnterior = esta;
+    telaSala();
+    esta.conectar();
+  }
+
+  /** Enquanto o oponente não chega: o código grande e o status da conexão. */
+  function telaSala() {
+    raiz.innerHTML = `
+      <div class="trunfo-inicio trunfo-online">
+        <h2>Sala online</h2>
+        <p class="trunfo-codigo-rotulo">Código da sala</p>
+        <p id="trunfo-codigo-sala" class="trunfo-codigo">${escapar(sessao.codigoSala)}</p>
+        <button type="button" id="trunfo-copiar-codigo" class="trunfo-botao trunfo-botao--discreto" data-acao="copiar-codigo">Copiar código</button>
+        <p id="trunfo-conexao" class="trunfo-conexao" role="status" aria-live="polite">${escapar(statusOnline)}</p>
+        <button type="button" id="trunfo-sair-sala" class="trunfo-botao trunfo-botao--discreto" data-acao="sair-sala">Sair da partida</button>
+      </div>
+    `;
+    focar("#trunfo-copiar-codigo");
+  }
+
+  function copiarCodigo(botao) {
+    const codigo = sessao ? sessao.codigoSala : "";
+    const avisar = (texto) => {
+      botao.textContent = texto;
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(codigo).then(
+        () => avisar("Copiado!"),
+        () => avisar("Não deu para copiar — anote o código")
+      );
+    } else {
+      avisar("Não deu para copiar — anote o código");
+    }
+  }
+
+  function aoEventoOnline(evento) {
+    if (evento.tipo === "status") {
+      statusOnline = evento.texto;
+      const linha = raiz.querySelector("#trunfo-conexao");
+      if (linha) linha.textContent = statusOnline;
+      return;
+    }
+    if (evento.tipo === "partida") {
+      encerrarPartida();
+      controlador = evento.controlador;
+      desinscrever = controlador.assinar(aoMudarEstado);
+      if (controlador.estado().fase === "fim") telaFim(controlador.estado());
+      else montarMesa();
+      return;
+    }
+    if (evento.tipo === "erro") {
+      /* A sessão já está saindo da sala; aqui só se esquece dela. */
+      sessao = null;
+      telaOnline(evento.mensagem);
+      return;
+    }
+    if (evento.tipo === "pausa") {
+      pausaOnline = { nome: evento.nome, podeEncerrar: false };
+    } else if (evento.tipo === "retomada") {
+      pausaOnline = null;
+    } else if (evento.tipo === "podeEncerrar" && pausaOnline) {
+      pausaOnline.podeEncerrar = true;
+    }
+    if (controlador && controlador.estado().fase !== "fim") atualizar(controlador.estado());
   }
 
   /* ---------------- começar uma partida ---------------- */
@@ -247,8 +453,9 @@ export function renderTrunfoView(container, starships) {
       return;
     }
     /* Modo "dois jogadores": se quem escolhe agora não é quem está com o
-       aparelho, cobre a tela antes de qualquer coisa aparecer. */
-    if (estado.modo === "local" && estado.fase === "escolhendo" && estado.vez !== comOAparelho) {
+       aparelho, cobre a tela antes de qualquer coisa aparecer. Online cada
+       um tem o próprio aparelho, então não há cobertura. */
+    if (!sessao && estado.modo === "local" && estado.fase === "escolhendo" && estado.vez !== comOAparelho) {
       coberto = true;
     }
     atualizar(estado);
@@ -265,7 +472,13 @@ export function renderTrunfoView(container, starships) {
   function montarMesa() {
     const estado = controlador.estado();
     raiz.innerHTML = `
-      <div class="trunfo-mesa" data-modo="${estado.modo}">
+      <div class="trunfo-mesa" data-modo="${sessao ? "online" : estado.modo}">
+        ${sessao ? htmlBarraOnline() : ""}
+        ${sessao ? `
+        <div id="trunfo-pausa" class="trunfo-pausa" role="alert" hidden>
+          <p class="trunfo-pausa-texto"></p>
+          <button type="button" id="trunfo-encerrar" class="trunfo-botao" data-acao="encerrar" hidden>Encerrar partida</button>
+        </div>` : ""}
         ${htmlPlacar(estado)}
         <p id="trunfo-vez" class="trunfo-vez"></p>
         <div class="trunfo-cartas">
@@ -276,6 +489,7 @@ export function renderTrunfoView(container, starships) {
         <p id="trunfo-resultado" class="trunfo-resultado" role="status" aria-live="polite"></p>
         <div class="trunfo-acoes">
           <button type="button" id="trunfo-proxima" class="trunfo-botao" data-acao="proxima" hidden>Próxima rodada</button>
+          ${sessao ? `<p id="trunfo-aguardando" class="trunfo-aguardando" hidden></p>` : ""}
         </div>
         <div id="trunfo-passe" class="trunfo-passe" hidden>
           <p class="trunfo-passe-texto"></p>
@@ -284,6 +498,15 @@ export function renderTrunfoView(container, starships) {
       </div>
     `;
     atualizar(estado);
+  }
+
+  function htmlBarraOnline() {
+    return `
+      <div class="trunfo-online-barra">
+        <span>Sala <strong id="trunfo-codigo-sala">${escapar(sessao.codigoSala)}</strong></span>
+        <span id="trunfo-conexao" class="trunfo-conexao" role="status">${escapar(statusOnline)}</span>
+        <button type="button" id="trunfo-sair-sala" class="trunfo-botao trunfo-botao--discreto" data-acao="sair-sala">Sair da partida</button>
+      </div>`;
   }
 
   function htmlPlacar(estado) {
@@ -337,7 +560,9 @@ export function renderTrunfoView(container, starships) {
     raiz.querySelector("#trunfo-atributos").innerHTML = coberto ? "" : htmlAtributos(estado);
 
     const proxima = raiz.querySelector("#trunfo-proxima");
-    proxima.hidden = coberto || !humanoPassaARodada(estado);
+    proxima.hidden = coberto || emPausa() || !humanoPassaARodada(estado);
+
+    if (sessao) atualizarOnline(estado);
 
     const passe = raiz.querySelector("#trunfo-passe");
     passe.hidden = !coberto;
@@ -355,25 +580,50 @@ export function renderTrunfoView(container, starships) {
     );
   }
 
+  /** Online: "Aguardando {nome}…" e o aviso de desconexão. */
+  function atualizarOnline(estado) {
+    const mesa = raiz.querySelector(".trunfo-mesa");
+    mesa.classList.toggle("is-pausado", emPausa());
+
+    const quemAge = estado.fase === "revelado" ? proximoAEscolher(estado) : estado.vez;
+    const aguardando = raiz.querySelector("#trunfo-aguardando");
+    aguardando.hidden = emPausa() || quemAge === papelOnline;
+    aguardando.textContent = aguardando.hidden ? "" : `Aguardando ${estado.jogadores[quemAge].nome}…`;
+
+    const pausa = raiz.querySelector("#trunfo-pausa");
+    pausa.hidden = !emPausa();
+    pausa.querySelector(".trunfo-pausa-texto").textContent = emPausa()
+      ? `${pausaOnline.nome} desconectou. Aguardando reconexão…`
+      : "";
+    pausa.querySelector("#trunfo-encerrar").hidden = !(pausaOnline && pausaOnline.podeEncerrar);
+  }
+
   /**
    * Quem escolhe agora está com o aparelho? Contra o computador, só quando a
    * vez é do jogador 1: na vez do computador os botões de atributo não podem
    * nem existir — eles mostrariam os valores da carta dele, que está virada,
-   * e um clique escolheria por ele.
+   * e um clique escolheria por ele. Online, só na vez deste aparelho.
    */
   function escolheNesteAparelho(estado) {
+    if (sessao) return estado.vez === papelOnline;
     if (estado.modo === "cpu") return estado.vez === "j1";
     return true;
   }
 
-  /** No modo contra o computador, ele mesmo passa a rodada que escolheu. */
+  /**
+   * No modo contra o computador, ele mesmo passa a rodada que escolheu.
+   * Online, passa a rodada só quem escolhe a seguinte (o vencedor, ou o
+   * mesmo escolhedor depois de um empate).
+   */
   function humanoPassaARodada(estado) {
     if (estado.fase !== "revelado") return false;
+    if (sessao) return proximoAEscolher(estado) === papelOnline;
     return estado.modo === "local" || estado.vez === "j1";
   }
 
   function cartaVisivel(estado, jogador) {
     if (estado.fase === "revelado") return true;
+    if (sessao) return jogador === papelOnline;
     if (estado.modo === "cpu") return jogador === "j1";
     return jogador === estado.vez;
   }
@@ -458,7 +708,7 @@ export function renderTrunfoView(container, starships) {
       if (desconhecido) classes.push("is-desconhecido");
       return `
         <button type="button" class="${classes.join(" ")}" data-acao="escolher"
-          data-attr="${regra.chave}" ${desconhecido || revelado ? "disabled" : ""}
+          data-attr="${regra.chave}" ${desconhecido || revelado || emPausa() ? "disabled" : ""}
           aria-label="${regra.rotulo}: ${desconhecido ? "Desconhecido" : formatarValor(valor, regra.chave)}">
           <span class="trunfo-atributo-rotulo">${regra.rotulo}</span>
           <span class="trunfo-atributo-valor">${desconhecido ? "Desconhecido" : formatarValor(valor, regra.chave)}</span>
@@ -494,5 +744,13 @@ export function renderTrunfoView(container, starships) {
     if (alvo) alvo.focus();
   }
 
-  telaInicial();
+  /* Recarregou a página no meio de uma partida online: volta para a mesma
+     sala, como o mesmo jogador, e pede o histórico. */
+  const salvo = lerSessaoSalva();
+  if (salvo && config.transporte) {
+    conectarSessao({ ...salvo, retomando: true });
+  } else {
+    if (salvo) limparSessao();
+    telaInicial();
+  }
 }

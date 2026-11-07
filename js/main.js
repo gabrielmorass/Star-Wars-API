@@ -9,6 +9,7 @@ import { renderFilmsView } from "./features/films/view.js";
 import { getStarships, getVehicles } from "./features/vehicles/api.js";
 import { renderVehiclesView } from "./features/vehicles/view.js";
 import { renderTrunfoView } from "./features/trunfo/view.js";
+import { lerSessaoSalva } from "./features/trunfo/online.js";
 import { getSpecies } from "./features/species/api.js";
 import { renderSpeciesView } from "./features/species/view.js";
 
@@ -113,4 +114,6 @@ async function navigate(view) {
 navButtons.forEach((b) => b.addEventListener("click", () => navigate(b.dataset.nav)));
 document.querySelector(".brand").addEventListener("click", () => navigate("hub"));
 
-navigate("hub");
+/* Recarregou a página no meio de uma partida online do Super Trunfo: volta
+   direto para ela, que a view reentra na mesma sala. */
+navigate(lerSessaoSalva() ? "trunfo" : "hub");

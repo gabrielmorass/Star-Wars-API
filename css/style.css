@@ -5025,6 +5025,124 @@ html[data-theme="dark-side"] .modal-film.is-cinema { background: #000000; }
 
 .trunfo-fim .trunfo-placar { width: min(560px, 100%); }
 
+/* ---------- modo online ---------- */
+
+.trunfo-online-opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1rem 1.5rem;
+}
+
+.trunfo-online-entrar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.trunfo-online-entrar label {
+  width: 100%;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.trunfo-online-entrar input {
+  width: 9ch;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--surface-line);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  font: inherit;
+  font-family: "Orbitron", "Inter", sans-serif;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.trunfo-codigo-rotulo {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.trunfo-codigo {
+  margin: 0;
+  font-family: "Orbitron", "Inter", sans-serif;
+  font-size: clamp(2.4rem, 12vw, 4rem);
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+.trunfo-conexao {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.trunfo-erro-online {
+  margin: 0;
+  max-width: 52ch;
+  padding: 0.6rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(255, 90, 70, 0.16);
+  color: #ffd9d2;
+}
+
+.trunfo-erro-online[hidden],
+.trunfo-aguardando[hidden],
+.trunfo-pausa[hidden] { display: none; }
+
+.trunfo-botao--discreto {
+  background: transparent;
+  font-weight: 500;
+}
+
+.trunfo-online-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.trunfo-online-barra strong {
+  font-family: "Orbitron", "Inter", sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.trunfo-aguardando {
+  margin: 0;
+  color: var(--text-soft);
+  font-style: italic;
+}
+
+.trunfo-pausa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--surface-line);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.trunfo-pausa-texto { margin: 0; }
+
+.trunfo-mesa.is-pausado .trunfo-cartas { opacity: 0.55; }
+
 /* ---------- banner do Hub (não é um .hub-card) ---------- */
 
 .hub-trunfo {
