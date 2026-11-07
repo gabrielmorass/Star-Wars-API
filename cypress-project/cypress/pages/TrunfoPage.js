@@ -6,6 +6,10 @@
  * Os parâmetros de URL (`?seed=`, `?cpuDelay=0`, `?maos=`) existem só para
  * teste e depuração: são eles que tornam cada cenário determinístico, em vez
  * de depender de uma semente sortuda. Ver README da raiz.
+ *
+ * O modo online é testado com `?transporte=fake`: o "oponente" é um roteiro
+ * injetado em `window.__trunfoFake` antes de a página carregar, e tudo o
+ * que o cliente envia fica gravado em `window.__trunfoFake.enviadas`.
  */
 class TrunfoPage {
   // Seletores
@@ -69,6 +73,51 @@ class TrunfoPage {
     return cy.get(`.trunfo-atributo[data-attr="${chave}"]`)
   }
 
+  // Seletores — modo online
+  get botaoOnline() {
+    return cy.get('#trunfo-modo-online')
+  }
+
+  get botaoCriarSala() {
+    return cy.get('#trunfo-criar-sala')
+  }
+
+  get botaoEntrarSala() {
+    return cy.get('#trunfo-entrar-sala')
+  }
+
+  get campoCodigo() {
+    return cy.get('#trunfo-codigo-input')
+  }
+
+  get codigoSala() {
+    return cy.get('#trunfo-codigo-sala')
+  }
+
+  get conexao() {
+    return cy.get('#trunfo-conexao')
+  }
+
+  get erroOnline() {
+    return cy.get('#trunfo-erro-online')
+  }
+
+  get botaoSairSala() {
+    return cy.get('#trunfo-sair-sala')
+  }
+
+  get aguardando() {
+    return cy.get('#trunfo-aguardando')
+  }
+
+  get pausa() {
+    return cy.get('#trunfo-pausa')
+  }
+
+  get atributos() {
+    return cy.get('.trunfo-atributo')
+  }
+
   // Ações
   /**
    * Abre a view pelo botão da barra de navegação (não pelo Hub: o Super
@@ -112,6 +161,76 @@ class TrunfoPage {
 
   jogarDeNovo() {
     this.botaoJogarDeNovo.click()
+  }
+
+  // Ações — modo online
+  /**
+   * Abre o Super Trunfo com o transporte fake e o roteiro do oponente já
+   * no lugar: o objeto precisa existir ANTES de o app carregar.
+   */
+  acessarComOponenteFake(parametros, fake) {
+    cy.visit(`/${parametros}`, {
+      onBeforeLoad(win) {
+        win.__trunfoFake = fake
+        cy.spy(win.console, 'warn').as('avisosDoConsole')
+      },
+    })
+    cy.get('.topnav [data-nav="trunfo"]').click()
+    this.botaoContraComputador.should('be.visible')
+  }
+
+  /**
+   * Recarrega a página no meio da partida. Com a sessão online guardada, o
+   * app abre o Super Trunfo sozinho — por isso aqui não há clique na barra.
+   */
+  recarregarComOponenteFake(fake) {
+    cy.location('search').then((search) => {
+      cy.visit(`/${search}`, {
+        onBeforeLoad(win) {
+          win.__trunfoFake = fake
+        },
+      })
+    })
+  }
+
+  informarMeuNome(nome) {
+    this.campoNomeJ1.clear().type(nome)
+  }
+
+  criarSala() {
+    this.botaoOnline.click()
+    this.botaoCriarSala.click()
+    this.codigoSala.should('be.visible')
+  }
+
+  entrarNaSala(codigo) {
+    this.botaoOnline.click()
+    this.campoCodigo.clear().type(codigo)
+    this.botaoEntrarSala.click()
+  }
+
+  esperarPartidaOnline() {
+    this.carta('j1').should('exist')
+    this.placar('j1').should('have.text', '18')
+  }
+
+  /** O "oponente" envia uma mensagem agora. */
+  oponenteEnvia(mensagem) {
+    cy.window().its('__trunfoFake.injetar').should('be.a', 'function')
+    cy.window().then((win) => win.__trunfoFake.injetar(mensagem))
+  }
+
+  /** O "oponente" entra ("entrar") ou sai ("sair") da sala. */
+  presencaDoOponente(acao) {
+    cy.window().then((win) => win.__trunfoFake.presenca(acao))
+  }
+
+  /** Cópia das mensagens que o cliente enviou até agora. */
+  mensagensEnviadas() {
+    return cy
+      .window()
+      .its('__trunfoFake.enviadas')
+      .then((lista) => JSON.parse(JSON.stringify(lista)))
   }
 
   // Ações por teclado — sem mouse em nenhum passo
@@ -228,6 +347,90 @@ class TrunfoPage {
 
   verificarFocoEmJogarDeNovo() {
     cy.focused().should('have.id', 'trunfo-jogar-novamente')
+  }
+
+  verificarSemBotoesDeAtributo() {
+    this.atributos.should('not.exist')
+  }
+
+  // Verificações — modo online
+  verificarBotaoOnlineAusente() {
+    this.botaoContraComputador.should('be.visible')
+    this.botaoOnline.should('not.exist')
+  }
+
+  verificarCodigoDaSala(alfabeto, tamanho) {
+    this.codigoSala
+      .invoke('text')
+      .should('match', new RegExp(`^[${alfabeto}]{${tamanho}}$`))
+  }
+
+  verificarConexao(texto) {
+    this.conexao.should('have.text', texto)
+  }
+
+  verificarErroOnline(texto) {
+    this.erroOnline.should('be.visible').and('have.text', texto)
+  }
+
+  verificarSemPartida() {
+    cy.get('#trunfo-carta-j1').should('not.exist')
+    cy.get('#trunfo-carta-j2').should('not.exist')
+  }
+
+  verificarPausa(texto) {
+    this.pausa.should('be.visible').and('contain.text', texto)
+  }
+
+  verificarAtributosTravados() {
+    this.atributos.should('have.length.greaterThan', 0).each(($botao) => {
+      cy.wrap($botao).should('be.disabled')
+    })
+  }
+
+  verificarProximaVisivel() {
+    this.botaoProximaRodada.should('be.visible')
+    this.aguardando.should('not.be.visible')
+  }
+
+  verificarAguardando(texto) {
+    this.botaoProximaRodada.should('not.be.visible')
+    this.aguardando.should('be.visible').and('have.text', texto)
+  }
+
+  /** Alguma mensagem enviada contém estes campos? (comparação por subconjunto) */
+  verificarMensagemEnviada(parcial) {
+    this.mensagensEnviadas().should((lista) => {
+      const contem = (inteiro, parte) =>
+        parte !== null && typeof parte === 'object'
+          ? inteiro !== null &&
+            typeof inteiro === 'object' &&
+            Object.keys(parte).every((k) => contem(inteiro[k], parte[k]))
+          : inteiro === parte
+      expect(
+        lista.some((m) => contem(m, parcial)),
+        `mensagem enviada contendo ${JSON.stringify(parcial)}`
+      ).to.eq(true)
+    })
+  }
+
+  /**
+   * Uma jogada repetida tem que parar no `seq`, antes de chegar às regras:
+   * se chegasse, as regras a recusariam e o console registraria isso.
+   */
+  verificarNenhumaJogadaRecusadaPelasRegras() {
+    cy.get('@avisosDoConsole').should((spy) => {
+      const recusas = spy.getCalls().filter((chamada) =>
+        String(chamada.args[0]).includes('recusada pelas regras')
+      )
+      expect(recusas, 'ações remotas recusadas pelas regras').to.have.length(0)
+    })
+  }
+
+  verificarNenhumaMensagemDoTipo(tipo) {
+    this.mensagensEnviadas().should((lista) => {
+      expect(lista.filter((m) => m.tipo === tipo)).to.have.length(0)
+    })
   }
 }
 

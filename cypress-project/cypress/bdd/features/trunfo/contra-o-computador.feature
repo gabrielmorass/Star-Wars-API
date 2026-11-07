@@ -38,3 +38,15 @@ Funcionalidade: Super Trunfo contra o computador
     Então o placar deve ser 19 a 17
     E o monte de empate deve ter 0 cartas
     E as cartas em jogo devem somar 36
+
+  # `cpuDelay=4000` abre uma janela larga em que a vez é do computador e ele
+  # ainda não escolheu: X-wing (12) contra Millennium Falcon (10) no
+  # hiperpropulsor dá a rodada ao computador.
+  Cenário: TC-130 — Na vez do computador, os atributos da carta dele não aparecem
+    Dado que abro o Super Trunfo com "?maos=12,5|10,3&cpuDelay=4000"
+    Quando começo uma partida contra o computador
+    E escolho o atributo "hyperdrive_rating"
+    E passo para a próxima rodada
+    Então a indicação da vez deve conter "Vez de Computador"
+    E a carta de "j2" deve estar virada
+    E não deve haver botões de atributo

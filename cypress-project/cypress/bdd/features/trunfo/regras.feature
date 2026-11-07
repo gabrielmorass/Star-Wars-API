@@ -38,3 +38,11 @@ Funcionalidade: Regras puras do Super Trunfo
     Então uma ação do jogador errado deve ser recusada
     E escolher um atributo desconhecido na própria carta deve ser recusado
     E uma ação de tipo desconhecido deve ser recusada
+
+  # No modo online quem passa a rodada é quem joga a seguinte (o vencedor);
+  # nos outros modos continua sendo quem escolheu.
+  Cenário: TC-131 — A rodada pode ser passada por quem escolheu ou por quem a venceu, por mais ninguém
+    Dado que uso as regras puras do Super Trunfo
+    Então quem escolheu e perdeu ainda pode passar a rodada
+    E o vencedor da rodada também pode passá-la, e escolhe a seguinte
+    E depois de um empate, só quem escolheu pode passar a rodada

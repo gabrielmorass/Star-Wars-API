@@ -195,3 +195,44 @@ Then('uma ação de tipo desconhecido deve ser recusada', () => {
     'Tipo de ação desconhecido'
   )
 })
+
+/* Millennium Falcon (10, 34,37 m) contra CR90 corvette (2, 150 m): j1 escolhe
+   comprimento e perde. */
+function rodadaPerdidaPorJ1() {
+  return aplicarAcao(criarPartida(configuracao()), {
+    tipo: 'escolher',
+    jogador: 'j1',
+    atributo: 'length',
+  })
+}
+
+Then('quem escolheu e perdeu ainda pode passar a rodada', () => {
+  const depois = aplicarAcao(rodadaPerdidaPorJ1(), { tipo: 'proxima', jogador: 'j1' })
+  expect(depois.vez).to.eq('j2')
+  expect(depois.jogadores.j2.mao).to.have.length(4)
+})
+
+Then('o vencedor da rodada também pode passá-la, e escolhe a seguinte', () => {
+  const revelado = rodadaPerdidaPorJ1()
+  const depois = aplicarAcao(revelado, { tipo: 'proxima', jogador: 'j2' })
+  expect(depois.vez).to.eq('j2')
+  expect(depois.jogadores.j2.mao).to.have.length(4)
+  /* Mesma partida, passada por quem escolheu: o estado só difere no histórico. */
+  const pelaOutraMao = aplicarAcao(revelado, { tipo: 'proxima', jogador: 'j1' })
+  expect({ ...depois, historico: [] }).to.deep.equal({ ...pelaOutraMao, historico: [] })
+})
+
+Then('depois de um empate, só quem escolheu pode passar a rodada', () => {
+  /* Y-wing (11) e TIE Advanced x1 (13): os dois têm hiperpropulsor 1.0. */
+  const config = configuracao()
+  const empate = aplicarAcao(criarPartida({ ...config, maos: { j1: [11, 10], j2: [13, 2] } }), {
+    tipo: 'escolher',
+    jogador: 'j1',
+    atributo: 'hyperdrive_rating',
+  })
+  expect(empate.ultimaRodada.vencedor).to.eq(null)
+  expect(() => aplicarAcao(empate, { tipo: 'proxima', jogador: 'j2' })).to.throw(
+    'Não é j2 quem passa a rodada'
+  )
+  expect(aplicarAcao(empate, { tipo: 'proxima', jogador: 'j1' }).empate).to.have.length(2)
+})
