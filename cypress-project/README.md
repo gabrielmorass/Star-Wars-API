@@ -43,7 +43,7 @@ Abra esse arquivo no navegador para ver o resultado detalhado.
 
 ## O que a suíte cobre
 
-São **85 cenários** em 19 arquivos `.feature`, organizados por funcionalidade:
+São **101 cenários** em 20 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
@@ -61,16 +61,17 @@ São **85 cenários** em 19 arquivos `.feature`, organizados por funcionalidade:
 | `naves-e-veiculos/busca.feature` | 2 | busca por nome |
 | `especies/busca-e-detalhe.feature` | 2 | busca por nome e detalhe do planeta natal |
 | `trunfo/navegacao.feature` | 2 | o botão da barra de navegação abre o jogo e o Hub continua com 5 cards |
-| `trunfo/contra-o-computador.feature` | 5 | distribuição 18 × 18, carta do computador virada, primeira carta com semente fixa, revelação e soma das 36 cartas |
+| `trunfo/contra-o-computador.feature` | 6 | distribuição 18 × 18, carta do computador virada, primeira carta com semente fixa, revelação, soma das 36 cartas e atributos escondidos na vez do computador |
 | `trunfo/regras-de-rodada.feature` | 6 | atributo desconhecido nos dois lados, hiperpropulsor ao contrário, Death Star contra caça estelar e monte de empate |
 | `trunfo/dois-jogadores.feature` | 4 | tela de "passe o aparelho", cartas escondidas atrás dela, visibilidade por vez e nomes digitados |
 | `trunfo/partida.feature` | 2 | "Jogar de novo" redistribui 18 × 18 e a partida inteira pelo teclado |
-| `trunfo/regras.feature` | 5 | funções puras do jogo, sem abrir o site (ver abaixo) |
+| `trunfo/regras.feature` | 6 | funções puras do jogo, sem abrir o site (ver abaixo) |
+| `trunfo/online.feature` | 14 | modo online com o transporte fake: sala, mesma distribuição online e offline, `seq`, repetidas, lacunas e sincronia, baralhos diferentes, sala cheia, desconexão, "Próxima" e recarregar a página (TC-128 é um esquema com 2 exemplos) |
 
 Convenção de nomes: cada arquivo `.feature` leva o nome da **capacidade**
 que testa (`busca`, `linha-do-tempo`, `modal-abertura`...), não da view —
 a pasta já diz qual view é. Um mesmo view pode ter vários arquivos
-(Personagens e Filmes têm 3 cada; o Super Trunfo, 6).
+(Personagens e Filmes têm 3 cada; o Super Trunfo, 7).
 
 ### Três invariantes que vale destacar
 
@@ -98,12 +99,44 @@ Nos cenários de interface, nada depende de sorte: `?seed=`, `?cpuDelay=0` e `?m
 README da raiz, seção "Decisões de dados") fixam a distribuição, tiram a espera do computador e forçam
 as duas mãos, de modo que cada regra apareça já na primeira rodada.
 
+**O modo online é testado sem rede.** O Cypress não dirige dois navegadores, então
+`trunfo/online.feature` roda com `?transporte=fake`: o "outro aparelho" é um roteiro injetado em
+`window.__trunfoFake` no `onBeforeLoad` do `cy.visit`, antes de o app carregar. Cada passo do roteiro
+dispara uma vez, por tempo (`apos: ms`) ou por gatilho (`quando: { tipo: "acao", seq: 0 }` — quando o
+cliente enviar uma mensagem que contenha esses campos), e envia uma `mensagem` ou muda a `presenca`
+(`"entrar"`, `"sair"` ou a lista exata). Tudo o que o cliente envia fica em `__trunfoFake.enviadas`, e
+`injetar(mensagem)` / `presenca(acao)` deixam o passo agir no meio do cenário. O objeto só é lido
+com `?transporte=fake` na URL. Nenhum teste toca o Supabase — e não há teste de carga contra ele: é
+o plano gratuito de um terceiro.
+
 **O carrossel de planetas nunca trava numa ponta.** `navegacao-por-setas.feature`
 cobre o caso de valor limite do índice: `index = (newIndex + planets.length) %
 planets.length` em `js/features/planets/view.js` faz a seta "anterior" dar a
 volta do primeiro para o último planeta, e a seta "próxima" do último de volta
 para o primeiro, em vez de travar ou lançar um índice inválido. TC-054 e
 TC-055 fixam exatamente essas duas pontas.
+
+## Teste manual — modo online
+
+O Supabase de verdade não roda no CI. Com `SUPABASE_URL` e `SUPABASE_ANON_KEY` preenchidos em
+`js/config.js`, confira em **dois aparelhos reais** (ex.: celular e notebook):
+
+- [ ] **Criar e entrar:** no aparelho A, "Online (dois aparelhos)" → "Criar sala"; no B, digitar o
+      código (em minúsculas e com espaço no meio também tem que funcionar) → "Entrar na sala". Os dois
+      veem 18 × 18, a própria carta aberta e a do outro virada, e o status "Conectado".
+- [ ] **Algumas rodadas:** jogar 3 ou 4 rodadas. Só o vencedor de cada rodada vê "Próxima rodada"; o
+      outro vê "Aguardando {nome}…". Placar e monte de empate iguais nos dois aparelhos.
+- [ ] **Wi-Fi caindo:** desligar o Wi-Fi de B no meio de uma rodada. Em alguns segundos (o tempo
+      de o Realtime notar a queda), A mostra "{nome} desconectou. Aguardando reconexão…" e trava os
+      atributos; depois de 60 s aparece "Encerrar partida". Religar antes disso: o jogo continua de
+      onde parou, com o mesmo placar.
+- [ ] **Recarregar:** recarregar a página em A no meio da partida. A volta direto para o Super Trunfo,
+      na mesma sala e como o mesmo jogador, com o mesmo placar.
+- [ ] **Terceiro aparelho:** abrir o mesmo código num terceiro aparelho (ou aba). Ele vê "Esta sala já
+      está cheia." e a partida dos outros dois não é afetada.
+- [ ] **Sair:** "Sair da partida" volta à tela inicial; recarregar depois disso não reentra na sala.
+- [ ] **Versão rápida, sem Supabase:** abrir `/?transporte=aba` em **duas abas** do mesmo navegador,
+      criar a sala numa e entrar com o código na outra. Fechar uma das abas pausa a outra.
 
 ## Estrutura
 

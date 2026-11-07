@@ -32,7 +32,7 @@ Depois acesse `http://localhost:8080`.
 - **Filmes** — os 6 episódios como pôsteres 2:3 com arte procedural em SVG por episódio (desenhada no projeto, sem imagem externa), numeral romano, rodapé com contagem de personagens/planetas/naves e as duas primeiras linhas da abertura no hover. Ordenação por lançamento ou cronológica (com animação FLIP) e barra de cronologia galáctica clicável. O modal traz abas: **Abertura** (o crawl em perspectiva, com pausar/reiniciar/tela cheia), **Elenco**, **Planetas**, **Naves e Veículos** e **Espécies**, todas resolvidas sob demanda e com atalho para as outras telas
 - **Naves e Veículos** — abas Naves/Veículos, busca, filtro por classe (pills geradas do dado) e ordenação com FLIP; cada card tem a silhueta SVG da classe. O painel traz um **hangar 3D** (Three.js carregado sob demanda, modelo montado com primitivas por classe, arraste para girar; sem WebGL cai na silhueta), medidores em arco normalizados pelo teto da categoria (escala log nas métricas de cauda longa), régua de tamanho, radar de 5 eixos, pilotos e aparições. **Comparar** põe duas naves lado a lado, com painel de **escala real** (as duas silhuetas no mesmo fator de metros, lupa quando a razão passa de 500:1) e tabela de quem vence em cada métrica
 - **Espécies** — grade com o glifo da classificação (8 desenhos: mamífero, réptil, anfíbio, insectoide, gastrópode, artificial, senciente, sem classificação) e uma faixa com as cores de pele, cabelo e olhos de cada espécie; busca, filtro por classificação e ordenação por nome, altura ou longevidade. O painel traz réguas de **altura** (linear até 3 m) e **longevidade** (log, de 50 a 1.000 anos) sempre com a marca do humano como referência, as cores como amostras, o planeta natal, os membros conhecidos e as aparições — os três últimos levam à tela correspondente
-- **Super Trunfo** — as 36 naves viram um baralho de 5 atributos (comprimento, tripulação, velocidade atmosférica, custo e hiperpropulsor), com 18 cartas para cada lado e a Death Star como Super Trunfo. Dois modos: **contra o computador** e **dois jogadores no mesmo aparelho** (com tela de "passe o aparelho", que esconde as duas cartas na troca de vez). O jogo é uma máquina de estados pura e serializável — o computador, o segundo jogador local e (numa fase seguinte) um jogador remoto são apenas fontes diferentes das mesmas duas ações
+- **Super Trunfo** — as 36 naves viram um baralho de 5 atributos (comprimento, tripulação, velocidade atmosférica, custo e hiperpropulsor), com 18 cartas para cada lado e a Death Star como Super Trunfo. Dois modos: **contra o computador** e **dois jogadores no mesmo aparelho** (com tela de "passe o aparelho", que esconde as duas cartas na troca de vez). O jogo é uma máquina de estados pura e serializável — o computador, o segundo jogador local e (numa fase seguinte) um jogador remoto são apenas fontes diferentes das mesmas duas ações. Um terceiro modo, **Online (dois aparelhos)**, deixa duas pessoas em aparelhos diferentes jogarem a mesma partida por um **código de sala** de 5 caracteres: as jogadas passam pelo Realtime do Supabase, sem servidor de jogo, e cada aparelho vê só a própria carta até a revelação. O modo só aparece com o Supabase configurado (ver "Modo online (Supabase)")
 
 ---
 
@@ -43,7 +43,7 @@ index.html
 css/style.css              # tokens de design e estilos
 js/
   main.js                  # roteamento entre views e inicialização
-  config.js                # chave pública do TMDB (ver "Pôster oficial via TMDB")
+  config.js                # chave pública do TMDB (ver "Pôster oficial via TMDB") e do Supabase (ver "Modo online (Supabase)")
   core/
     api.js                 # fetchJSON/BASE_URL + utilitários usados por mais de uma feature (getPlanetName)
     dom.js                 # estados genéricos de UI (carregando / erro)
@@ -68,7 +68,9 @@ js/
     species/glifos.js      # glifo por classificação + nome de cor → valor CSS
     trunfo/regras.js       # máquina de estados PURA do jogo: baralho, disputa, ações, replay
     trunfo/controlador.js  # guarda o estado e é o único caminho para mudá-lo (despachar/assinar)
-    trunfo/jogadores.js    # fontes de ação: humano e computador (a fase 2 acrescenta "remoto" aqui)
+    trunfo/jogadores.js    # fontes de ação: humano, computador e remoto (o jogador do outro aparelho, no modo online)
+    trunfo/transporte.js   # modo online: transportes supabase (Realtime), aba (BroadcastChannel) e fake (testes)
+    trunfo/online.js       # modo online: sala, entrada, presença, pausa e sincronia — nada de regra de jogo
     trunfo/view.js         # telas do jogo, cartas e eventos de DOM — nenhuma regra mora aqui
   fx/
     loop.js                # laço de animação único — todo efeito se inscreve aqui
@@ -89,7 +91,7 @@ docs-local/                # notas internas do grupo (não versionadas — ver .
 Este projeto tem três suítes de teste independentes, cada uma com seu
 próprio README:
 
-- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 85 cenários
+- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 101 cenários
 - **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 30 requisições
 - **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
 
@@ -187,13 +189,23 @@ A SWAPI (`https://swapi.info/api`) cobre apenas os Episódios I–VI e tem limit
      da `url`. Assim a ordem do baralho não depende da ordem em que a API respondeu, e a mesma
      semente sempre dá a mesma distribuição.
 
-   **Três parâmetros de URL, só para teste e depuração** (o jogo normal não usa nenhum):
+   **Quatro parâmetros de URL, só para teste e depuração** (o jogo normal não usa nenhum):
 
    | Parâmetro | Efeito |
    |---|---|
    | `?seed=<n>` | fixa a semente do embaralhamento (sem ele, a semente vem de `Date.now()`, lido na view — nunca em `regras.js`) |
    | `?cpuDelay=0` | zera a espera de 800 ms do computador |
    | `?maos=<ids-j1>\|<ids-j2>` | força as duas mãos (ex.: `?maos=9,10\|12,13`), para cenários como "Death Star contra caça estelar" não dependerem de uma semente sortuda. Vale só para a **primeira** partida da sessão, como o uso único de `core/nav-intent.js` |
+   | `?transporte=aba` \| `?transporte=fake` | modo online sem Supabase: `aba` liga duas abas do mesmo navegador por `BroadcastChannel` (desenvolvimento e demonstração); `fake` troca o outro aparelho por um oponente roteirizado (testes automatizados — ver `js/features/trunfo/transporte.js`). Qualquer um dos dois faz o botão do modo online aparecer. No modo online, `?seed=` fixa a semente de quem cria a sala |
+
+8. **O modo online do Super Trunfo é ponto a ponto, por um repasse, e não tem servidor com
+   autoridade.** O Supabase só repassa mensagens (broadcast) e diz quem está na sala (presença):
+   não há tabela, não há servidor de jogo e ninguém confere as jogadas além dos dois aparelhos. Os
+   dois conhecem a semente e montam a mesma distribuição; dali em diante só as **ações** viajam, e
+   cada lado roda a mesma máquina de estados (`regras.js`). Consequência conhecida e aceita: como a
+   semente está nos dois aparelhos, um jogador com o DevTools aberto consegue calcular as cartas do
+   oponente. Para um projeto acadêmico é uma limitação aceitável; impedir isso exigiria um servidor
+   que distribuísse as cartas e só revelasse cada uma na hora.
 
 Esses pontos constam explicitamente no Plano de Testes (seção de Riscos e Limitações), já que são inferências e limitações conhecidas, não falhas da aplicação.
 
@@ -270,6 +282,35 @@ A grade continua com a arte procedural em SVG (`films/poster-art.js`) —
 o TMDB só entra no fundo do cabeçalho. O resultado é guardado em
 `sessionStorage` (`codex-estelar:tmdb-poster`), então reabrir o mesmo filme na
 mesma sessão não gasta requisição.
+
+---
+
+## 🛰️ Modo online (Supabase)
+
+O modo **Online (dois aparelhos)** do Super Trunfo usa o **Realtime** do
+[Supabase](https://supabase.com/) para levar as jogadas de um aparelho para o
+outro. Os dois valores ficam em `js/config.js`:
+
+```js
+export const SUPABASE_URL = "";        // URL do projeto (https://<id>.supabase.co)
+export const SUPABASE_ANON_KEY = "";   // anon key do projeto
+```
+
+- **São valores públicos.** A anon key é a chave que o Supabase entrega
+  justamente para uso em navegador, e o arquivo é servido como qualquer outro
+  `.js`. Nada de segredo de servidor entra aqui.
+- **Só o Realtime é usado, sem tabelas.** Cada sala é um canal
+  `trunfo:<CÓDIGO>` com broadcast (as jogadas) e presença (quem está na
+  sala). O projeto não tem tabela nenhuma, então a chave não dá acesso a dado
+  algum.
+- **É opcional.** Com qualquer um dos dois vazio, o botão do modo online
+  simplesmente não aparece e nada tenta se conectar; o resto do site e todos os
+  testes funcionam igual. O `supabase-js` (2.118.0, build UMD do jsDelivr) só
+  é baixado quando alguém escolhe jogar online.
+
+Para desenvolver ou demonstrar sem Supabase, `?transporte=aba` liga duas abas do
+mesmo navegador; `?transporte=fake` é só para os testes automatizados (ver
+"Decisões de dados", item 7).
 
 ---
 
