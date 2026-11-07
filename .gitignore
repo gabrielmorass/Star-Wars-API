@@ -3,8 +3,24 @@
 # entregue separadamente em PDF) e não devem ser versionados.
 docs-local/
 
-# Dependências instaladas (cypress-project/ e api-testing/)
+# Dependências instaladas (cypress-project/, api-testing/ e api/)
 node_modules/
+
+# --- NP2 / DevOps ---------------------------------------------------------
+# Segredos: senha do Jenkins, token do Docker Hub, credenciais SMTP.
+# O contrato de configuração fica em .env.example, que É versionado.
+.env
+.env.local
+.env.*.local
+
+# Cobertura e relatórios de teste do BFF: artefatos de execução, publicados
+# como artefato no Jenkins (critério 4), não código-fonte.
+api/coverage/
+api/relatorios/
+
+# Pacotes gerados pelo estágio de empacotamento do pipeline.
+dist/
+*.tgz
 
 # Cache/artefatos de execução do Cypress
 cypress-project/cypress/videos/
@@ -26,3 +42,6 @@ debug-planets.html
 # entregue, que é a BDD em cypress/bdd/
 cypress-project/cypress/diag/
 cypress-project/cypress.diag.config.js
+
+# Relatorios gerados pelo estagio de Testes de API no pipeline
+api-testing/relatorios/
