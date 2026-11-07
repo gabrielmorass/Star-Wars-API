@@ -311,12 +311,27 @@ export function formatarValor(valor, atributo) {
 
 /* ---------------- ações ---------------- */
 
+/**
+ * Quem escolhe o atributo da próxima rodada: na fase "revelado", o vencedor
+ * da rodada (ou o mesmo escolhedor, depois de um empate); fora dela, quem
+ * já está na vez.
+ */
+export function proximoAEscolher(estado) {
+  if (estado.fase === "revelado" && estado.ultimaRodada && estado.ultimaRodada.vencedor) {
+    return estado.ultimaRodada.vencedor;
+  }
+  return estado.vez;
+}
+
 /** As ações permitidas agora, na forma exata em que devem ser despachadas. */
 export function acoesValidas(estado) {
   if (estado.fase === "fim") return [];
 
   if (estado.fase === "revelado") {
-    return [{ tipo: "proxima", jogador: estado.vez }];
+    const quemEscolhe = proximoAEscolher(estado);
+    const acoes = [{ tipo: "proxima", jogador: estado.vez }];
+    if (quemEscolhe !== estado.vez) acoes.push({ tipo: "proxima", jogador: quemEscolhe });
+    return acoes;
   }
 
   const carta = cartaDeTopo(estado, estado.vez);
@@ -413,8 +428,17 @@ function proxima(estado, acao) {
   if (estado.fase !== "revelado") {
     throw new Error(`"proxima" só vale na fase "revelado" (fase atual: "${estado.fase}").`);
   }
-  if (acao.jogador !== estado.vez) {
-    throw new Error(`Não é ${acao.jogador} quem passa a rodada: a vez é de ${estado.vez}.`);
+  /* Passa a rodada quem escolheu nela OU quem vai escolher a seguinte (o
+     vencedor). No mesmo aparelho e contra o computador, quem escolheu é
+     quem passa; no modo online, quem passa é o vencedor, porque é ele que
+     joga em seguida — essa restrição mora na camada online, não aqui. */
+  const quemEscolhe = proximoAEscolher(estado);
+  if (acao.jogador !== estado.vez && acao.jogador !== quemEscolhe) {
+    throw new Error(
+      quemEscolhe === estado.vez
+        ? `Não é ${acao.jogador} quem passa a rodada: a vez é de ${estado.vez}.`
+        : `Não é ${acao.jogador} quem passa a rodada: passa ${estado.vez}, que escolheu, ou ${quemEscolhe}, que escolhe a seguir.`
+    );
   }
 
   const novo = clonar(estado);
