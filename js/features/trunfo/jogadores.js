@@ -1,22 +1,24 @@
 /* Super Trunfo — fontes de ação.
    ------------------------------------------------------------------
    Uma "fonte de ação" é qualquer coisa que despache `escolher` e `proxima`
-   no controlador. Hoje existem duas:
+   no controlador. Existem três:
 
      humano  — a view despacha a partir de clique e teclado (`ligarHumano`
                só embrulha isso num objeto com a mesma forma das outras,
                para a view não ter um caminho especial);
      cpu     — se inscreve no controlador e, quando a vez é dele, despacha
-               depois de uma espera.
+               depois de uma espera;
+     remoto  — o jogador do outro aparelho, no modo online: transforma as
+               mensagens `acao` recebidas em `despachar`, e envia as ações
+               locais com o número de sequência.
 
-   A fase 2 acrescenta `remoto` AQUI, com a mesma forma: recebe o
-   controlador, se inscreve, despacha. Nada em `regras.js`, em
-   `controlador.js` ou na lógica de jogo da view muda por causa disso —
-   é o motivo de o estado ser JSON puro e de as ações serem só duas.
+   As três têm a mesma forma: recebem o controlador, se inscrevem,
+   despacham. É o motivo de o estado ser JSON puro e de as ações serem só
+   duas.
 
-   Toda a impureza do jogo (o setTimeout) está confinada neste arquivo. */
+   Toda a impureza do jogo (o setTimeout, a rede) está fora de regras.js. */
 
-import { escolhaCpu } from "./regras.js";
+import { escolhaCpu, proximoAEscolher } from "./regras.js";
 
 /** Espera padrão do computador, em ms. `?cpuDelay=0` zera nos testes. */
 export const ATRASO_CPU = 800;
@@ -103,6 +105,112 @@ export function ligarCpu(controlador, opcoes = {}) {
     desligar() {
       ativo = false;
       cancelar();
+      desinscrever();
+    },
+  };
+}
+
+/** Versão do protocolo online. Vai em toda mensagem como `v`. */
+export const PROTOCOLO = 1;
+
+/**
+ * Fonte "remoto": o jogador do outro aparelho.
+ *
+ * Nos dois sentidos, a ordem é dada por `seq` — o tamanho do `historico`
+ * ANTES de aplicar a ação:
+ *
+ *   - toda ação despachada AQUI (pelo humano deste aparelho) sai como
+ *     `{ tipo: "acao", v, seq, acao }`;
+ *   - uma `acao` recebida com `seq` igual ao histórico é despachada; menor
+ *     é repetida e fica de fora; maior é uma lacuna, e `aoLacuna()` pede
+ *     uma sincronização.
+ *
+ * Só vale ação cujo `jogador` é o do outro aparelho, e `proxima` só de quem
+ * escolhe a rodada seguinte — essa regra é do modo online, não de
+ * regras.js. Por cima disso, o controlador ainda valida tudo.
+ *
+ * @param {object}   controlador
+ * @param {object}   opcoes
+ * @param {string}   opcoes.jogador   id do jogador REMOTO ("j1" | "j2")
+ * @param {function} opcoes.enviar    enviar(mensagem) pelo transporte
+ * @param {function} [opcoes.aoLacuna] chamada quando chega um `seq` à frente
+ */
+export function ligarRemoto(controlador, { jogador, enviar, aoLacuna = () => {} }) {
+  let ativo = true;
+  /* Verdadeiro enquanto esta fonte despacha algo que veio da rede: essas
+     ações não voltam para a rede. */
+  let aplicandoDeFora = false;
+
+  function aplicarDeFora(acao) {
+    aplicandoDeFora = true;
+    try {
+      controlador.despachar(acao);
+    } finally {
+      aplicandoDeFora = false;
+    }
+  }
+
+  const desinscrever = controlador.assinar((estado, acao) => {
+    if (!ativo || aplicandoDeFora) return;
+    enviar({ tipo: "acao", v: PROTOCOLO, seq: estado.historico.length - 1, acao });
+  });
+
+  return {
+    jogador,
+
+    /** Trata uma mensagem `acao` vinda do outro aparelho. */
+    receber(mensagem) {
+      if (!ativo || !mensagem || mensagem.tipo !== "acao") return;
+      if (mensagem.v !== PROTOCOLO) {
+        console.warn("[trunfo] ação de outra versão do protocolo ignorada:", mensagem);
+        return;
+      }
+
+      const estado = controlador.estado();
+      const tamanho = estado.historico.length;
+      if (mensagem.seq < tamanho) return; /* repetida */
+      if (mensagem.seq > tamanho) {
+        aoLacuna();
+        return;
+      }
+
+      const acao = mensagem.acao || {};
+      if (acao.jogador !== jogador) {
+        console.warn(`[trunfo] ação remota ignorada: veio como "${acao.jogador}", mas o jogador remoto é "${jogador}".`, mensagem);
+        return;
+      }
+      if (acao.tipo === "proxima" && proximoAEscolher(estado) !== jogador) {
+        console.warn("[trunfo] ação remota ignorada: só quem escolhe a próxima rodada pode passá-la.", mensagem);
+        return;
+      }
+
+      try {
+        aplicarDeFora(acao);
+      } catch (erro) {
+        console.warn(`[trunfo] ação remota recusada pelas regras: ${erro.message}`, mensagem);
+      }
+    },
+
+    /**
+     * Aplica, sem reenviar, as ações de um histórico completo que estão
+     * além do nosso. Devolve false quando o nosso histórico não é começo do
+     * recebido — aí quem chamou precisa reconstruir a partida do zero.
+     */
+    sincronizar(acoes) {
+      const nosso = controlador.estado().historico;
+      const prefixo = nosso.every((acao, i) => JSON.stringify(acao) === JSON.stringify(acoes[i]));
+      if (!prefixo || acoes.length < nosso.length) return false;
+      try {
+        acoes.slice(nosso.length).forEach(aplicarDeFora);
+      } catch (erro) {
+        console.warn(`[trunfo] sincronização recusada pelas regras: ${erro.message}`);
+        return false;
+      }
+      return true;
+    },
+
+    desligar() {
+      ativo = false;
       desinscrever();
     },
   };

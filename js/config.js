@@ -15,3 +15,17 @@ export const TMDB_API_KEY = "";
 
 export const TMDB_BASE = "https://api.themoviedb.org/3";
 export const TMDB_IMG = "https://image.tmdb.org/t/p/w500";
+
+/* SUPABASE_URL / SUPABASE_ANON_KEY: projeto do Supabase usado SÓ pelo modo
+   online do Super Trunfo ("Online (dois aparelhos)"). O projeto não tem
+   tabela nenhuma: só o Realtime (broadcast + presença) repassa as jogadas
+   entre os dois aparelhos.
+
+   A anon key é pública por definição — é a chave que o Supabase entrega
+   para uso em navegador. Com o projeto sem tabelas, ela não dá acesso a
+   dado nenhum; só deixa entrar num canal do Realtime.
+
+   Com qualquer um dos dois vazio, o botão do modo online nem aparece e
+   nada tenta se conectar. */
+export const SUPABASE_URL = "";
+export const SUPABASE_ANON_KEY = "";
