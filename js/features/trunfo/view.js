@@ -135,7 +135,11 @@ export function renderTrunfoView(container, starships) {
     const acao = alvo.dataset.acao;
     if (acao === "modo-cpu") return iniciar("cpu");
     if (acao === "modo-local") return iniciar("local");
-    if (acao === "escolher") return despachar({ tipo: "escolher", jogador: controlador.estado().vez, atributo: alvo.dataset.attr });
+    if (acao === "escolher") {
+      const estado = controlador.estado();
+      if (!escolheNesteAparelho(estado)) return;
+      return despachar({ tipo: "escolher", jogador: estado.vez, atributo: alvo.dataset.attr });
+    }
     if (acao === "proxima") return despachar({ tipo: "proxima", jogador: controlador.estado().vez });
     if (acao === "pronto") return descobrir();
     if (acao === "novamente") return telaInicial();
@@ -351,6 +355,17 @@ export function renderTrunfoView(container, starships) {
     );
   }
 
+  /**
+   * Quem escolhe agora está com o aparelho? Contra o computador, só quando a
+   * vez é do jogador 1: na vez do computador os botões de atributo não podem
+   * nem existir — eles mostrariam os valores da carta dele, que está virada,
+   * e um clique escolheria por ele.
+   */
+  function escolheNesteAparelho(estado) {
+    if (estado.modo === "cpu") return estado.vez === "j1";
+    return true;
+  }
+
   /** No modo contra o computador, ele mesmo passa a rodada que escolheu. */
   function humanoPassaARodada(estado) {
     if (estado.fase !== "revelado") return false;
@@ -432,6 +447,7 @@ export function renderTrunfoView(container, starships) {
     const carta = cartaDeTopo(estado, estado.vez);
     if (!carta) return "";
     const revelado = estado.fase === "revelado";
+    if (!revelado && !escolheNesteAparelho(estado)) return "";
 
     return ATRIBUTOS.map((regra) => {
       const valor = carta.valores[regra.chave];
