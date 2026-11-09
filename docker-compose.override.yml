@@ -1,0 +1,8 @@
+# Desenvolvimento: a api e construida localmente em vez de puxada do Hub.
+# O docker compose le este arquivo automaticamente junto com o principal.
+# Para testar so o arquivo principal: docker compose -f docker-compose.yml up -d
+
+services:
+  api:
+    build: ./api
+    image: codex-api:dev
