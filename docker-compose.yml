@@ -1,5 +1,6 @@
 # Codex Estelar - NP2 - Orquestracao (Bloco D)
-# Commit 2: adiciona api (imagem do Docker Hub) e web (nginx).
+# Commit 3: adiciona o servico jenkins, copiado do docker-compose.jenkins.yml
+# (Bloco A) e ligado a rede codex-net.
 
 services:
   redis:
@@ -52,10 +53,67 @@ services:
       retries: 5
     restart: unless-stopped
 
+  jenkins:
+    build:
+      context: ./jenkins
+      args:
+        # GID do grupo dono de /var/run/docker.sock no host.
+        # Ver jenkins/README.md -> "O Jenkins nao consegue rodar docker".
+        DOCKER_GID: ${DOCKER_GID:-999}
+    image: codex-estelar/jenkins:np2
+    container_name: codex-jenkins
+    restart: unless-stopped
+    networks:
+      - codex-net
+
+    ports:
+      # 8081 no host para nao brigar com o site (8080).
+      - "8081:8080"
+      # Porta de agentes. Nao usamos agente remoto, mas o Jenkins reclama sem ela.
+      - "50000:50000"
+
+    environment:
+      # --- acesso ---
+      JENKINS_ADMIN_ID: ${JENKINS_ADMIN_ID:-admin}
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:-admin}
+      JENKINS_URL: ${JENKINS_URL:-http://localhost:8081/}
+
+      # --- repositorio que o job vai clonar ---
+      REPO_URL: ${REPO_URL:-https://github.com/gabrielmorass/Star-Wars-API.git}
+      REPO_BRANCH: ${REPO_BRANCH:-main}
+
+      # --- notificacao (criterio 5): nunca hardcoded, sempre daqui ---
+      EMAIL_DESTINATARIO: ${EMAIL_DESTINATARIO:-}
+      EMAIL_REMETENTE: ${EMAIL_REMETENTE:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+
+      # --- Docker Hub (criterio 6) ---
+      DOCKERHUB_USER: ${DOCKERHUB_USER:-}
+      DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN:-}
+
+    volumes:
+      # Volume nomeado: preserva jobs, historico e artefatos entre reinicios.
+      # E a demonstracao do criterio 9 - derruba e sobe, o historico continua.
+      - jenkins_home:/var/jenkins_home
+      # Socket do daemon do host: e como o Jenkins constroi e publica imagens.
+      # Sem isso, os estagios "Construir imagem" e "Publicar" nao funcionam.
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/login >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+
 networks:
   codex-net:
     driver: bridge
 
 volumes:
   jenkins_home:
+    name: codex_jenkins_home
   redis_data:
