@@ -1,3 +1,6 @@
+# Codex Estelar - NP2 - Orquestracao (Bloco D)
+# Commit 2: adiciona api (imagem do Docker Hub) e web (nginx).
+
 services:
   redis:
     image: redis:7-alpine
@@ -12,12 +15,47 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
- 
+
+  api:
+    image: ${DOCKERHUB_USER:-codex-estelar}/codex-estelar-api:${API_TAG:-latest}
+    environment:
+      PORT: "3000"
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - codex-net
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - codex-net
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
 networks:
   codex-net:
     driver: bridge
- 
+
 volumes:
   jenkins_home:
   redis_data:
- 
