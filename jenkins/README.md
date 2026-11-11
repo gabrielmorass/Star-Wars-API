@@ -59,12 +59,19 @@ O job **`codex-estelar-np2`** já deve estar lá. Se estiver, o JCasC funcionou.
 ## Derrubar
 
 ```bash
-docker compose down      # mantém o histórico
-docker compose down -v   # APAGA o volume
+docker compose stop jenkins   # para SÓ o Jenkins
+docker compose down           # derruba os QUATRO serviços, mantém os volumes
+docker compose down -v        # derruba e APAGA os volumes
 ```
 
-A diferença entre os dois é a demonstração do critério 9 (volumes): depois de
-`down` sem `-v`, suba de novo e o histórico de builds continua lá.
+Atenção à diferença, que mudou quando passamos a usar o compose único: `down`
+não é mais "derrubar o Jenkins", é derrubar o ambiente inteiro. Para mexer só
+no Jenkins, use `stop jenkins` ou `restart jenkins`.
+
+A diferença entre `down` e `down -v` é a demonstração do critério 9 (volumes):
+depois de `down` sem `-v`, suba de novo e o histórico de builds continua lá.
+Com `-v`, o volume `codex_jenkins_home` é apagado e o Jenkins volta zerado —
+mas **ainda com o job criado**, porque o job vem do `casc.yaml` e não do volume.
 
 ---
 
