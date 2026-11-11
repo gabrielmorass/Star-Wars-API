@@ -113,8 +113,31 @@ pipeline {
       steps { script { etapa('Construir imagem', 'Eduardo', 'scripts/ci/imagem.sh') } }
     }
 
+    // TEMPORÁRIO — REMOVER O catchError ATÉ 13/11 (Portão 3).
+    //
+    // O smoke test sobe web + api + redis. Enquanto o Bloco B não publicar a
+    // imagem da api e o Bloco E não entregar a pasta web/, ele falha por
+    // dependência ausente, não por regressão — e deixaria a main vermelha
+    // durante dias, o que faz o time parar de olhar para a cor da build.
+    //
+    // Com o catchError, a falha vira UNSTABLE (amarelo) em vez de FAILURE:
+    // continua visível e continua incomodando, mas não confunde "ambiente
+    // incompleto" com "alguém quebrou alguma coisa".
+    //
+    // AMARELO E NÃO VERDE DE PROPÓSITO. Engolir para verde esconderia uma
+    // etapa que o enunciado exige funcionando (critério 3).
+    //
+    // Combinado com a Samile, dona do script, em 10/11. O script dela não foi
+    // alterado: a tolerância vive aqui, num único lugar, e sai com uma linha.
     stage('Smoke test') {
-      steps { script { etapa('Smoke test', 'Samile', 'scripts/ci/smoke.sh') } }
+      steps {
+        script {
+          catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE',
+                     message: 'Smoke test falhou — esperado enquanto a imagem da api e a pasta web/ não existirem') {
+            etapa('Smoke test', 'Samile', 'scripts/ci/smoke.sh')
+          }
+        }
+      }
     }
 
     stage('Publicar no Docker Hub') {

@@ -32,14 +32,14 @@ as armadilhas do Docker no Windows.
 
 ```bash
 cp .env.example .env        # na raiz; preencher ao menos JENKINS_ADMIN_PASSWORD
-docker compose -f docker-compose.jenkins.yml up -d --build
+docker compose up -d --build jenkins
 ```
 
 A primeira subida leva alguns minutos (baixa a imagem base e os plugins).
 Acompanhe:
 
 ```bash
-docker compose -f docker-compose.jenkins.yml logs -f jenkins
+docker compose logs -f jenkins
 ```
 
 Quando aparecer `Jenkins is fully up and running`, abra **http://localhost:8081**
@@ -47,19 +47,31 @@ e entre com `JENKINS_ADMIN_ID` / `JENKINS_ADMIN_PASSWORD` do `.env`.
 
 O job **`codex-estelar-np2`** já deve estar lá. Se estiver, o JCasC funcionou.
 
-> `docker-compose.jenkins.yml` é temporário. Quando o `docker-compose.yml` da
-> Samile (Bloco D) existir, o serviço `jenkins` migra para lá e este arquivo é
-> apagado.
+> **Por que `up -d --build jenkins` e não só `up -d`.** O `docker-compose.yml`
+> é único e traz os quatro serviços. Nomeando o serviço, sobe só o Jenkins —
+> útil quando se quer trabalhar no pipeline sem levantar o ambiente inteiro.
+> Para subir tudo, `docker compose up -d` sem argumento.
+>
+> O antigo `docker-compose.jenkins.yml` foi apagado em 10/11, quando o compose
+> definitivo chegou. O volume continua sendo o mesmo (`codex_jenkins_home`),
+> então o histórico de builds atravessou a migração intacto.
 
 ## Derrubar
 
 ```bash
-docker compose -f docker-compose.jenkins.yml down      # mantém o histórico
-docker compose -f docker-compose.jenkins.yml down -v   # APAGA o volume
+docker compose stop jenkins   # para SÓ o Jenkins
+docker compose down           # derruba os QUATRO serviços, mantém os volumes
+docker compose down -v        # derruba e APAGA os volumes
 ```
 
-A diferença entre os dois é a demonstração do critério 9 (volumes): depois de
-`down` sem `-v`, suba de novo e o histórico de builds continua lá.
+Atenção à diferença, que mudou quando passamos a usar o compose único: `down`
+não é mais "derrubar o Jenkins", é derrubar o ambiente inteiro. Para mexer só
+no Jenkins, use `stop jenkins` ou `restart jenkins`.
+
+A diferença entre `down` e `down -v` é a demonstração do critério 9 (volumes):
+depois de `down` sem `-v`, suba de novo e o histórico de builds continua lá.
+Com `-v`, o volume `codex_jenkins_home` é apagado e o Jenkins volta zerado —
+mas **ainda com o job criado**, porque o job vem do `casc.yaml` e não do volume.
 
 ---
 
@@ -120,7 +132,7 @@ e o GID desse grupo muda de máquina para máquina.
 ```bash
 stat -c '%g' /var/run/docker.sock     # ex.: 988
 echo "DOCKER_GID=988" >> .env
-docker compose -f docker-compose.jenkins.yml up -d --build
+docker compose up -d --build jenkins
 ```
 
 **Docker Desktop (Windows/macOS)** — use `DOCKER_GID=0`. Verificado em
@@ -198,7 +210,7 @@ sem isso, uma build do código errado passa despercebida.
 O JCasC não foi aplicado. Procure o erro nos logs:
 
 ```bash
-docker compose -f docker-compose.jenkins.yml logs jenkins | grep -i -A5 "casc\|configuration-as-code"
+docker compose logs jenkins | grep -i -A5 "casc\|configuration-as-code"
 ```
 
 Causas comuns: erro de indentação no `casc.yaml`, variável obrigatória vazia no
@@ -218,7 +230,7 @@ docker exec -it codex-jenkins printenv JAVA_OPTS CASC_JENKINS_CONFIG
 A configuração é lida no boot. Reinicie:
 
 ```bash
-docker compose -f docker-compose.jenkins.yml restart jenkins
+docker compose restart jenkins
 ```
 
 Ou, pela interface, *Manage Jenkins → Configuration as Code → Reload existing
