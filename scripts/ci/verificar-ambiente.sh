@@ -115,7 +115,7 @@ done
 echo
 if [ "$PROBLEMAS" -eq 0 ]; then
   ok "Ambiente pronto. Para subir o Jenkins:"
-  printf '     docker compose -f docker-compose.jenkins.yml up -d --build\n'
+  printf '     docker compose up -d --build jenkins\n'
   exit 0
 else
   erro "$PROBLEMAS pendência(s). Corrija o que está acima e rode de novo."
