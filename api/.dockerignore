@@ -1,0 +1,32 @@
+# O que NÃO entra no contexto de build da imagem da api.
+#
+# Dois motivos: build mais rápido (o contexto é enviado inteiro ao daemon
+# antes de começar) e imagem limpa — nada daqui pode vazar para dentro dela
+# nem por um COPY descuidado.
+
+# Dependências são instaladas DENTRO da imagem com npm ci, a partir do lock.
+# Copiar o node_modules da máquina traria binários do sistema errado
+# (macOS/Windows em vez de Linux/musl) e quebraria a reprodutibilidade.
+node_modules/
+npm-debug.log*
+
+# Artefatos de teste (Bloco C): não fazem parte da aplicação em produção.
+coverage/
+relatorios/
+test/
+tests/
+__tests__/
+**/*.test.js
+**/*.spec.js
+jest.config.*
+
+# Segredos: NUNCA dentro de uma imagem — qualquer um que fizer pull lê.
+# A configuração chega ao container por variável de ambiente (compose).
+.env
+.env.*
+
+# Arquivos que só servem ao build ou ao repositório.
+Dockerfile
+.dockerignore
+README.md
+.git
