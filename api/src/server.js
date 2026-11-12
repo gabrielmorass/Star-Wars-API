@@ -5,6 +5,11 @@
 
 const app = require('./app');
 
+const swapi = require('./services/swapi');
+const { ativarCache } = require('./services/cache');
+
+ativarCache(swapi);
+
 // Porta vem do ambiente (.env.example / docker-compose.yml), nunca fixa no
 // código. 3000 é só o padrão para rodar local sem configurar nada.
 const PORT = Number(process.env.PORT) || 3000;
