@@ -265,13 +265,19 @@ mesma sessão não gasta requisição.
 
 ## 🤖 Uso de IA
 
-Este projeto teve apoio de IA (Claude, via **Claude Code**) ao longo de várias etapas: geração do código-base do front-end, reorganização do código por funcionalidade, correção de um problema de performance no Sistema Planetário, criação das três suítes de teste automatizado (Cypress/BDD para interface, Postman/Newman para API, k6 para performance) e apoio na documentação do projeto (relatório interno de progresso e Plano de Testes). O uso foi transparente e supervisionado: todo código e documento gerado foi revisado, testado e ajustado pelo grupo antes de ser integrado ao projeto. Conforme item 11 do enunciado, isso é declarado aqui e o grupo domina o funcionamento de cada arquivo.
+Este projeto teve apoio de IA (Claude, via **Claude Code**) nas duas etapas, e esta seção está dividida por etapa.
+
+Na **NP1 (aplicação e testes)**: geração do código-base do front-end, reorganização do código por funcionalidade, correção de um problema de performance no Sistema Planetário, criação das três suítes de teste automatizado (Cypress/BDD para interface, Postman/Newman para API, k6 para performance) e apoio na documentação do projeto (relatório interno de progresso e Plano de Testes).
+
+Na **NP2 (DevOps)**: containerização da aplicação, pipeline do Jenkins declarado como código, scripts de integração contínua e orquestração dos containers com Docker Compose.
+
+O uso foi transparente e supervisionado nas duas: todo código e documento gerado foi revisado, testado e ajustado pelo grupo antes de ser integrado ao projeto. Conforme o enunciado de cada etapa (item 11 na NP1, item 12 na NP2), isso é declarado aqui e o grupo domina o funcionamento de cada arquivo.
 
 ### Modelo utilizado
 
 - **Claude (Anthropic):** via **Claude Code**, extensão de terminal/CLI.
 
-### Exemplos reais de prompts utilizados
+### Exemplos reais de prompts utilizados — NP1 (aplicação e testes)
 
 **Gabriel Morass**
 
@@ -430,6 +436,44 @@ Aceita: a IA localizou as tabelas nos dois READMEs e propôs a atualização man
 **Autoria do código:** o código dos cenários, steps, Page Objects, requests e do script k6 foi escrito com apoio da IA a partir das instruções técnicas acima; a execução, depuração final e integração ao repositório foram feitas por mim.
 
 **Como foi a validação:** todos os casos foram rodados localmente (`npm test` no Cypress e no Newman, `k6 run` no script de performance) e só commitados depois de passar.
+
+### Exemplos reais de prompts utilizados — NP2 (DevOps)
+
+**Gabriel Morás**
+
+*Os cinco prompts abaixo são trechos literais das conversas no Claude Code, com a grafia original. Fui responsável pelo Bloco A — motor de CI/CD: a imagem do Jenkins (`jenkins/Dockerfile`, `plugins.txt`), a configuração como código (`jenkins/casc.yaml`), o `Jenkinsfile`, os scripts de `scripts/ci/` sob minha responsabilidade (`_comum.sh`, `deps.sh`, `testes-api.sh`, `verificar-ambiente.sh`) e o contrato de configuração (`.env.example`), entregues nos PRs #37 a #42, #45 a #47, #51 e #52.*
+
+**Prompt 1: Recusa da divisão de trabalho proposta pela IA**
+> "a divisao nao ficou legal, pois cada aluno precisa desenvolver coisas de devops."
+
+e, na sequência:
+> "então cada um além de mexer com frontend por exemplo, precisa estar envolvido com o devops"
+
+Recusada e refeita: o primeiro plano que a IA produziu separava os integrantes por camada — alguns só no frontend, outros só na infraestrutura. Isso contraria o enunciado, que exige envolvimento de todos com DevOps. Depois dessas duas correções o plano foi reescrito em **fatias verticais**: cada integrante entrega aplicação, containerização e um estágio do pipeline. É essa divisão que está em vigor no projeto.
+
+**Prompt 2: Explicação completa para conferência**
+> "atualize o repositório de defesa com essas novas adições e me explique 100% tudo o que foi feito em cada parte, pra eu verificar se está certo ou não"
+
+Aceita: a IA documentou, arquivo por arquivo, o que cada um faz e a motivação de cada decisão — incluindo a alternativa descartada e o preço da escolha. A conferência foi minha, com o repositório aberto ao lado. O pedido de explicação acompanhou cada etapa do bloco, porque responder "o Claude fez" na arguição não é resposta.
+
+**Prompt 3: Auditoria da minha entrega contra os critérios do enunciado**
+> "com relação aos critérios estabelecidos pelo professor, a minha parte segue rigorosamente todos esses critérios?"
+
+Aceita com ajustes: a revisão encontrou três lacunas reais no que eu já tinha entregue. (1) A imagem não era reproduzível como o critério 2 exige — a base estava numa tag móvel (`lts-jdk17`), os plugins sem versão declarada e o Node em "qualquer 20.x"; (2) o Jenkins reaproveitava o diretório de trabalho entre builds, e uma build chegou a arquivar o artefato de outra; (3) faltava uma verificação de ambiente para os outros quatro integrantes, que trabalham no Windows. As três viraram os PRs #40, #41 e #39.
+
+**Prompt 4: Lacuna que a IA tinha deixado passar no pipeline**
+> "uma duvida claude, nao deveriamos criar novos testes no jenkins? a jenkinsfile nao teria que ter testes?"
+
+Aceita: a pergunta expôs uma falha que a IA não havia apontado. O `Jenkinsfile` tinha um estágio de testes, mas ele **só imprimia um aviso** — o pipeline não executava teste nenhum, enquanto o critério 3 exige as etapas obrigatórias "presentes e funcionando". Daí saiu o PR #42, que ligou ao pipeline a coleção Postman/Newman escrita na NP1: 68 asserções a cada build, com relatório JUnit na aba *Tests* e relatório HTML arquivado como artefato.
+
+**Prompt 5: Execução e conferência em vez de explicação aceita**
+> "roda a suíte pra confirmar"
+
+Aceita: a suíte Cypress não executava na minha máquina, e a IA deu **três diagnósticos errados em sequência** — versão do Cypress, cache corrompido e tratamento de argumentos do Git Bash. A causa real era a variável de ambiente `ELECTRON_RUN_AS_NODE=1`, que fazia o `Cypress.exe` rodar como Node puro em vez de abrir o navegador. O problema só apareceu porque a ordem foi executar e ler a saída, em vez de aceitar a explicação: depois de limpar a variável, os 61 cenários passaram em 1min39s.
+
+**Autoria do código:** os arquivos do Bloco A foram escritos com apoio da IA a partir das decisões e dos critérios acima. A escolha de cada abordagem — Configuration as Code em vez da interface gráfica, `Jenkinsfile` fino com a lógica em `scripts/ci/` e um dono por script, versões fixadas em tudo, socket do Docker montado em vez de Docker-in-Docker — foi decidida e revisada por mim, e cada uma está documentada com a alternativa descartada e o custo assumido.
+
+**Como foi a validação:** nada foi dado por pronto sem evidência. A imagem foi reconstruída e conferida (Jenkins 2.541.3, Node 20.20.2, dez plugins nas versões declaradas, zero divergência); o job criado pelo JCasC foi verificado no log de boot; o pipeline foi executado até ficar verde, até ficar vermelho de propósito e até arquivar artefato e relatório; o volume sobreviveu a `down`/`up` e à reconstrução da imagem, preservando o histórico de builds; e as três suítes de teste da NP1 foram rodadas localmente antes de qualquer commit.
 
 ### O que não foi feito por IA
 
