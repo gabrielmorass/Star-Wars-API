@@ -40,6 +40,11 @@ ARG DOCKER_CLI_VERSION=27.3.1
 # api/Dockerfile. Com dezenas de execuções do pipeline até a entrega, a
 # diferença de tempo é relevante.
 ARG BUILDX_VERSION=0.17.1
+# compose: o estágio de smoke test (Bloco D) sobe o ambiente com
+# "docker compose up". Sem este plugin, o comando não existe dentro do
+# container e o estágio falha — foi o que aconteceu no build #10.
+# Exigência 3.1 do enunciado: software necessário ao pipeline vem do Dockerfile.
+ARG COMPOSE_VERSION=2.29.7
 # GID do grupo dono de /var/run/docker.sock NO HOST. Ver jenkins/README.md,
 # seção "O Jenkins não consegue rodar docker".
 ARG DOCKER_GID=999
@@ -64,6 +69,11 @@ RUN set -eux; \
       "https://github.com/docker/buildx/releases/download/v${BUILDX_VERSION}/buildx-v${BUILDX_VERSION}.linux-amd64"; \
     chmod 0755 /usr/local/lib/docker/cli-plugins/docker-buildx; \
     \
+    # --- compose, também como plugin do CLI ---
+    curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose \
+      "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64"; \
+    chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose; \
+    \
     # --- o usuário jenkins precisa pertencer ao grupo dono do socket ---
     if getent group "${DOCKER_GID}" >/dev/null; then \
         grupo="$(getent group "${DOCKER_GID}" | cut -d: -f1)"; \
@@ -80,7 +90,8 @@ RUN set -eux; \
     node --version; \
     npm --version; \
     docker --version; \
-    docker buildx version
+    docker buildx version; \
+    docker compose version
 
 # ---------------------------------------------------------------------------
 # Plugins — instalados no build, nunca pela interface
