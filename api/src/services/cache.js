@@ -1,4 +1,4 @@
-use strict';
+'use strict';
  
 // Camada de cache sobre o Redis — Codex Estelar · S07 NP2
 // Dono: Samile (Bloco D)
