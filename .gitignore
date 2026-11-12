@@ -9,9 +9,12 @@ node_modules/
 # --- NP2 / DevOps ---------------------------------------------------------
 # Segredos: senha do Jenkins, token do Docker Hub, credenciais SMTP.
 # O contrato de configuração fica em .env.example, que É versionado.
+# O padrão .env* pega qualquer variante — inclusive cópia de segurança do
+# tipo .env.bak ou ".env copy", que guarda token do Docker Hub e senha de
+# SMTP exatamente como o original.
 .env
-.env.local
-.env.*.local
+.env*
+!.env.example
 
 # Cobertura e relatórios de teste do BFF: artefatos de execução, publicados
 # como artefato no Jenkins (critério 4), não código-fonte.
