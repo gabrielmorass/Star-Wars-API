@@ -39,6 +39,9 @@ pipeline {
 
     // Imagem publicada no Docker Hub. O nome definitivo é o combinado entre
     // Eduardo (Bloco B) e Lima (Bloco E) — ver docs-local/plano-np2-devops.docx.
+    // DOCKERHUB_NS é o dono da imagem no Hub. Sem hífen de propósito: o
+    // Docker Hub não aceita hífen em nome de usuário/organização.
+    DOCKERHUB_NS = "${env.DOCKERHUB_USER ?: 'codexestelar'}"
     IMAGE_REPO = "${env.DOCKERHUB_USER ?: 'codexestelar'}/codex-estelar-api"
     IMAGE_TAG  = "${env.BUILD_NUMBER}"
 
@@ -117,8 +120,22 @@ pipeline {
     // tolerância aqui: o ambiente que não sobe é o critério 3 não cumprido,
     // e a cor da build precisa dizer isso. A tolerância temporária
     // (catchError -> UNSTABLE) do PR #45 saiu em 12/11, dentro do prazo.
+    // O smoke test sobe a api com a imagem que o estágio anterior ACABOU de
+    // construir — e não com uma do Docker Hub. O compose monta o nome como
+    // ${DOCKERHUB_USER}/codex-estelar-api:${API_TAG}; aqui os dois apontam
+    // para o nome e a tag gerados pelo imagem.sh (tag = commit). Como a
+    // imagem já existe no daemon, o compose não tenta baixá-la.
+    //
+    // Assim o smoke testa o código DESTE commit, antes da publicação: imagem
+    // que não sobe não chega ao Hub.
     stage('Smoke test') {
-      steps { script { etapa('Smoke test', 'Samile', 'scripts/ci/smoke.sh') } }
+      steps {
+        script {
+          withEnv(["DOCKERHUB_USER=${env.DOCKERHUB_NS}", "API_TAG=${env.GIT_SHA_CURTO}"]) {
+            etapa('Smoke test', 'Samile', 'scripts/ci/smoke.sh')
+          }
+        }
+      }
     }
 
     stage('Publicar no Docker Hub') {
