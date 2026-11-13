@@ -1,0 +1,48 @@
+[
+  {
+    "name": "Human",
+    "classification": "mammal",
+    "designation": "sentient",
+    "language": "Galactic Basic",
+    "average_height": "180",
+    "average_lifespan": "120",
+    "skin_colors": "brown",
+    "hair_colors": "black",
+    "eye_colors": "blue",
+    "homeworld": "https://swapi.info/api/planets/9",
+    "people": [],
+    "films": [],
+    "url": "https://swapi.info/api/species/1",
+    "ptBR": {
+      "classification": "classificação do servidor",
+      "designation": "designação do servidor",
+      "language": "idioma do servidor",
+      "skin_colors": [{ "valor": "brown", "nome": "pele do servidor" }],
+      "hair_colors": [{ "valor": "black", "nome": "cabelo do servidor" }],
+      "eye_colors": [{ "valor": "blue", "nome": "olhos do servidor" }]
+    }
+  },
+  {
+    "name": "Droid",
+    "classification": "artificial",
+    "designation": "sentient",
+    "language": "n/a",
+    "average_height": "unknown",
+    "average_lifespan": "indefinite",
+    "skin_colors": "n/a",
+    "hair_colors": "none",
+    "eye_colors": "unknown",
+    "homeworld": null,
+    "people": [],
+    "films": [],
+    "url": "https://swapi.info/api/species/2",
+    "ptBR": {
+      "classification": "artificial",
+      "designation": "senciente",
+      "language": "desconhecida",
+      "skin_colors": [{ "valor": "n/a", "nome": "não se aplica" }],
+      "hair_colors": [{ "valor": "none", "nome": "nenhum" }],
+      "eye_colors": [{ "valor": "unknown", "nome": "desconhecido" }]
+    }
+  }
+]

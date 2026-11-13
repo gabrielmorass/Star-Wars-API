@@ -22,6 +22,7 @@ const app = express();
 
 const vehicles = require('./routes/vehicles');
 const starships = require('./routes/starships');
+const species = require('./routes/species');
 
 // Não anuncia "X-Powered-By: Express" a quem fizer a requisição.
 app.disable('x-powered-by');
@@ -32,7 +33,8 @@ app.use('/api/people', people);
 app.use('/api/films', films);
 app.use('/api/vehicles', vehicles);
 app.use('/api/starships', starships);
-// (species, vehicles, starships, planets: entram aqui)
+app.use('/api/species', species);
+// (planets: entra aqui)
 
 // --- rota inexistente -----------------------------------------------------
 // Sem isto o Express responde 404 em HTML; o contrato é JSON sempre.

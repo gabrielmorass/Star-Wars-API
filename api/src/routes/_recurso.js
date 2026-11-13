@@ -19,13 +19,15 @@ const swapi = require('../services/swapi');
 // "0", "-1", "1.5" e "01" antes de gastar uma chamada à SWAPI.
 const ID_VALIDO = /^[1-9]\d*$/;
 
-function criarRotaRecurso(recurso) {
+// A apresentação é opcional: por padrão, os dados continuam pass-through.
+// Ela roda depois da busca/cache e recebe a requisição para escolher idioma.
+function criarRotaRecurso(recurso, apresentar = (dados) => dados) {
   const router = Router();
 
   // Express 5 encaminha ao tratador de erros qualquer rejeição de handler
   // async; por isso não há try/catch aqui.
   router.get('/', async (req, res) => {
-    res.json(await swapi.buscar(recurso));
+    res.json(apresentar(await swapi.buscar(recurso), req));
   });
 
   router.get('/:id', async (req, res) => {
@@ -33,7 +35,7 @@ function criarRotaRecurso(recurso) {
     if (!ID_VALIDO.test(id)) {
       return res.status(400).json({ erro: `id inválido: "${id}" (esperado inteiro positivo)` });
     }
-    res.json(await swapi.buscar(`${recurso}/${id}`));
+    res.json(apresentar(await swapi.buscar(`${recurso}/${id}`), req));
   });
 
   return router;

@@ -74,7 +74,16 @@ const fracaoVida = (anos) =>
 /* Uma cor da API vira { nome traduzido, valor CSS ou null }. O campo vem
    como lista ("blonde, brown, black"); "n/a"/"none"/"unknown" viram só
    texto, sem amostra. */
-function cores(valor) {
+function cores(valor, traduzidas) {
+  // O BFF fornece o rótulo; o valor original continua resolvendo a amostra.
+  // Enquanto a origem compartilhada não migra, dados sem ptBR usam a
+  // tradução local existente.
+  if (Array.isArray(traduzidas)) {
+    return traduzidas.map(({ valor: original, nome }) => ({
+      nome,
+      hex: VAZIO.has(String(original ?? "").trim().toLowerCase()) ? null : corHex(original),
+    }));
+  }
   const bruto = String(valor ?? "").trim();
   if (!bruto || VAZIO.has(bruto.toLowerCase())) {
     return [{ nome: traduzir(bruto, CORES), hex: null }];
@@ -91,7 +100,7 @@ function faixaDeCores(sp) {
   const vistas = new Set();
   const hexes = [];
   for (const campo of ["skin_colors", "hair_colors", "eye_colors"]) {
-    for (const c of cores(sp[campo])) {
+    for (const c of cores(sp[campo], sp.ptBR?.[campo])) {
       if (c.hex && !vistas.has(c.hex)) {
         vistas.add(c.hex);
         hexes.push(c.hex);
@@ -106,14 +115,14 @@ const temLingua = (sp) => !VAZIO.has(String(sp.language ?? "").trim().toLowerCas
 /* "mamífero · Shyriiwook"; sem idioma na base fica só a classificação — a
    pill "desconhecida" solta ao lado do glifo não dizia de quê era. */
 function metaDoCard(sp) {
-  const classe = escapar(traduzir(sp.classification, CLASSIFICACAO));
-  return temLingua(sp) ? `${classe} · ${escapar(normalizarLingua(sp.language))}` : classe;
+  const classe = escapar(sp.ptBR?.classification ?? traduzir(sp.classification, CLASSIFICACAO));
+  return temLingua(sp) ? `${classe} · ${escapar(sp.ptBR?.language ?? normalizarLingua(sp.language))}` : classe;
 }
 
 /* Tom do glifo: a primeira cor de pele com amostra, clareada para não sumir
    no fundo escuro (pele "black" ou "dark" a 100% desapareceria). */
 function tomDoGlifo(sp) {
-  const primeira = cores(sp.skin_colors).find((c) => c.hex);
+  const primeira = cores(sp.skin_colors, sp.ptBR?.skin_colors).find((c) => c.hex);
   return primeira ? `color-mix(in srgb, ${primeira.hex} 72%, #ffffff)` : "var(--accent)";
 }
 
@@ -168,8 +177,8 @@ function reguaVida(sp) {
   });
 }
 
-function linhaDeCores(rotulo, valor) {
-  const itens = cores(valor)
+function linhaDeCores(rotulo, valor, traduzidas) {
+  const itens = cores(valor, traduzidas)
     .map((c) =>
       c.hex
         ? `<span class="sp-cor"><i style="background:${c.hex}"></i>${escapar(c.nome)}</span>`
@@ -363,9 +372,9 @@ export function renderSpeciesView(container, species, navigate) {
         <div class="sp-head-txt">
           <h3>${escapar(sp.name)}</h3>
           <div class="fm-pills sp-head-pills">
-            <span class="pill">${escapar(traduzir(sp.classification, CLASSIFICACAO))}</span>
-            <span class="pill">${escapar(traduzir(sp.designation, DESIGNACAO))}</span>
-            ${temLingua(sp) ? `<span class="pill">${escapar(normalizarLingua(sp.language))}</span>` : ""}
+            <span class="pill">${escapar(sp.ptBR?.classification ?? traduzir(sp.classification, CLASSIFICACAO))}</span>
+            <span class="pill">${escapar(sp.ptBR?.designation ?? traduzir(sp.designation, DESIGNACAO))}</span>
+            ${temLingua(sp) ? `<span class="pill">${escapar(sp.ptBR?.language ?? normalizarLingua(sp.language))}</span>` : ""}
           </div>
         </div>
       </div>
@@ -378,9 +387,9 @@ export function renderSpeciesView(container, species, navigate) {
 
       <div class="sp-secao">
         <h4>Cores</h4>
-        ${linhaDeCores("Pele", sp.skin_colors)}
-        ${linhaDeCores("Cabelo", sp.hair_colors)}
-        ${linhaDeCores("Olhos", sp.eye_colors)}
+        ${linhaDeCores("Pele", sp.skin_colors, sp.ptBR?.skin_colors)}
+        ${linhaDeCores("Cabelo", sp.hair_colors, sp.ptBR?.hair_colors)}
+        ${linhaDeCores("Olhos", sp.eye_colors, sp.ptBR?.eye_colors)}
       </div>
 
       <div class="sp-secao sp-origem">

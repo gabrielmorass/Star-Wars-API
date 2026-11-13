@@ -43,7 +43,7 @@ Abra esse arquivo no navegador para ver o resultado detalhado.
 
 ## O que a suíte cobre
 
-São **61 cenários** em 13 arquivos `.feature`, organizados por funcionalidade:
+São **65 cenários** em 14 arquivos `.feature`, organizados por funcionalidade:
 
 | Feature | Cenários | O que verifica |
 |---|---|---|
@@ -60,11 +60,34 @@ São **61 cenários** em 13 arquivos `.feature`, organizados por funcionalidade:
 | `planetas/navegacao-por-setas.feature` | 4 | avançar/retroceder no carrossel e o "dar a volta" nas duas pontas (valor limite) |
 | `naves-e-veiculos/busca.feature` | 2 | busca por nome |
 | `especies/busca-e-detalhe.feature` | 2 | busca por nome e detalhe do planeta natal |
+| `especies/traducao-do-servidor.feature` | 4 | textos ptBR recebidos, filtro, amostras de cores, compatibilidade sem ptBR e escape de marcação |
 
 Convenção de nomes: cada arquivo `.feature` leva o nome da **capacidade**
 que testa (`busca`, `linha-do-tempo`, `modal-abertura`...), não da view —
 a pasta já diz qual view é. Um mesmo view pode ter vários arquivos
 (como Personagens e Filmes, que têm 3 cada).
+
+### Espécies com dados simulados da NP2
+
+Os casos TC-114 a TC-117 usam `fixtures/especies-ptbr.json` e interceptam
+as requisições de dados. Os rótulos da fixture são diferentes dos
+dicionários locais para comprovar que a interface utiliza `ptBR` quando
+recebido. Também verificam a compatibilidade com dados sem tradução,
+filtros baseados no valor original, amostras CSS e escape dos textos.
+
+Com o servidor local rodando (`npm run servidor`), execute somente esses
+quatro cenários:
+
+```bash
+npm run test:bdd -- --spec cypress/bdd/features/especies/traducao-do-servidor.feature
+```
+
+Esses casos validam a renderização com o contrato do BFF simulado.
+A origem compartilhada do frontend ainda precisa ser configurada pelo
+Bloco E para chamar `/api/species?idioma=pt-BR`. Até essa integração,
+`getSpecies()` mantém a origem atual e a tela usa a tradução local quando
+não recebe `ptBR`. O teste com interceptações não comprova comunicação
+real com os containers.
 
 ### Três invariantes que vale destacar
 
@@ -109,10 +132,12 @@ cypress-project/
   em `compartilhado.steps.js`.
 - Seletores CSS só existem dentro dos Page Objects (`cypress/pages/`) —
   step definitions e specs nunca usam `cy.get()` com um seletor cru.
-- Os testes rodam contra a **SWAPI real**, sem mock. Por isso as asserções
+- Os cenários da NP1 rodam contra a **SWAPI real**, sem mock. Por isso as asserções
   evitam depender de contagens que a API pode mudar: onde o número importa,
   ele é lido da própria tela e comparado com outra parte da tela (ver
   `verificarCoerenciaDoContador`), em vez de ficar fixo no teste.
+- Os quatro cenários de tradução da NP2 usam dados simulados para validar
+  o contrato de apresentação antes da integração compartilhada com o BFF.
 - Nada de `cy.wait(<número>)` para "esperar carregar": a espera é sempre por
   uma condição (`should`), que o Cypress reexecuta até passar ou estourar o
   timeout. É o que mantém a suíte estável.
