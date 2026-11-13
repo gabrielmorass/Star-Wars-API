@@ -96,19 +96,29 @@ JUnit.
 | TC-105 | IDs inválidos em Espécies não consultam a SWAPI | `tests/species.test.js` |
 | TC-106 | Espécie inexistente devolve 404 JSON | `tests/species.test.js` |
 | TC-107 | Falha externa na lista e no detalhe de Espécies devolve 502 | `tests/species.test.js` |
+| TC-108 | Tradução de atributos, valores compostos, aliases e termos desconhecidos | `tests/traduzir.test.js` |
+| TC-109 | Classes de naves e durações com singular, plural e valores ausentes | `tests/traduzir.test.js` |
+| TC-110 | Línguas normalizadas sem traduzir nomes e valores legíveis | `tests/traduzir.test.js` |
+| TC-111 | Paletas e apresentação pt-BR sem alterar o objeto original | `tests/traduzir.test.js` |
+| TC-112 | Tradução HTTP opcional na lista/detalhe, lista vazia e idioma não suportado | `tests/species.test.js` |
+| TC-113 | Estrutura inválida da resposta de Espécies devolve 502 ao solicitar tradução | `tests/species.test.js` |
 
 A expiração do TC-100 é simulada por um dublê do Redis: verifica que a
 aplicação volta à origem após um miss, sem pretender validar o próprio
-servidor Redis. Um JSON sintaticamente inválido é rejeitado; o backend
-atual não impõe um schema aos objetos retornados pela SWAPI.
+servidor Redis. Um JSON sintaticamente inválido é rejeitado. A apresentação
+pt-BR também rejeita estruturas incompatíveis (lista que não é array,
+itens nulos, arrays ou valores primitivos no lugar de objetos). Isso não
+constitui validação de schema completo: campos opcionais ausentes são
+permitidos, e as respostas pass-through dos demais recursos continuam
+sem validação estrutural adicional.
 
 ## Escopo atual e validação integrada
 
 Esta etapa cobre o backend disponível: health, people, films, vehicles,
-starships, species, SWAPI e cache. As rotas de Espécies já têm testes
-próprios de lista, detalhe, preservação de dados e erros. Tradução no
-servidor e integração da tela serão entregues separadamente, com novos
-casos de teste.
+starships, species, SWAPI, cache e domínio de tradução pt-BR. As rotas de
+Espécies têm testes próprios de lista, detalhe, preservação de dados,
+tradução opcional e erros. A integração da tela com o BFF e com os textos
+do servidor será entregue separadamente.
 
 A execução local não comprova publicação dos relatórios em um Jenkins
 real nem funcionamento do Compose. Essas evidências precisam ser

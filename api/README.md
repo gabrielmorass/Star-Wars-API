@@ -24,6 +24,8 @@ npm start          # http://localhost:3000
 api/src/
 ├── app.js              # monta o Express e EXPORTA (sem listen) → usado pelo supertest
 ├── server.js           # bootstrap: app.listen(PORT) + encerramento limpo no SIGTERM
+├── domain/
+│   └── traduzir.js     # vocabulário pt-BR e apresentação de Espécies
 ├── routes/
 │   ├── _recurso.js     # fábrica de rotas pass-through (lista + /:id)
 │   ├── health.js
@@ -43,7 +45,7 @@ Todas as respostas, inclusive as de erro, são `application/json`.
 
 ### Pass-through fiel
 
-As rotas de recurso devolvem o JSON da SWAPI **sem nenhuma alteração**:
+Por padrão, as rotas de recurso devolvem o JSON da SWAPI **sem nenhuma alteração**:
 - as listas são o **array completo**, sem paginação e sem envelope (`{results: ...}`);
 - os campos `url`, `homeworld`, `films`, `species` etc. **continuam apontando para `https://swapi.info/api/...`**.
 
@@ -65,8 +67,53 @@ As rotas de Espécies pertencem ao Bloco C (Daniele) e usam a mesma fábrica
 de rotas e camada SWAPI dos demais recursos. Preservam campos como
 `classification`, `language`, `url`, `homeworld`, `people` e `films`, que a
 interface utiliza em filtros, glifos e cruzamentos. Uma lista vazia é `[]`.
-Os erros seguem o contrato abaixo. A tradução no servidor e o consumo
-dessas rotas pela tela serão integrados nas próximas entregas do bloco.
+Os erros seguem o contrato abaixo. O consumo dessas rotas pela tela será
+integrado na próxima entrega do bloco.
+
+### Tradução de Espécies no servidor
+
+Use `GET /api/species?idioma=pt-BR` ou
+`GET /api/species/:id?idioma=pt-BR` para acrescentar o objeto `ptBR` em cada
+espécie. O array da lista e todos os campos originais são preservados.
+Sem o parâmetro, ou com outro idioma, a resposta continua pass-through.
+O parâmetro não é encaminhado à SWAPI.
+
+Exemplo parcial de uma espécie na resposta traduzida:
+
+```json
+{
+  "name": "Wookie",
+  "classification": "mammal",
+  "language": "Shyriiwook",
+  "hair_colors": "brown",
+  "ptBR": {
+    "classification": "mamífero",
+    "designation": "senciente",
+    "language": "Shyriiwook",
+    "skin_colors": [{ "valor": "gray", "nome": "cinza" }],
+    "hair_colors": [{ "valor": "brown", "nome": "castanho" }],
+    "eye_colors": [{ "valor": "blue", "nome": "azul" }]
+  }
+}
+```
+
+`ptBR` tem classificação, designação, língua normalizada e as três paletas
+de cores. Cada amostra mantém `valor` para resolver a cor CSS e `nome` para
+exibição. Os nomes próprios não são traduzidos; grafias conhecidas como
+`Galatic Basic` são normalizadas. Valores desconhecidos são preservados,
+e valores ausentes recebem texto legível.
+
+O módulo `src/domain/traduzir.js` porta os dicionários e funções de
+`js/core/vocabulario.js` para CommonJS, incluindo clima, terreno, gênero,
+classes de naves e durações. Nesta etapa, apenas Espécies usa a tradução
+nas respostas HTTP. Os dicionários permanecem em ambos os ambientes
+enquanto as demais telas ainda traduzem no navegador.
+
+A apresentação é aplicada depois da busca/cache, sem alterar o objeto
+bruto armazenado no Redis. Ao solicitar tradução, listas ou itens com
+estrutura incompatível devolvem `502` JSON; campos opcionais ausentes
+continuam permitidos. A validação é estrutural, sem impor um schema
+completo da SWAPI.
 
 ### Contrato de erro
 
@@ -91,6 +138,11 @@ A swapi.info responde 404 com uma página **HTML**. O BFF converte isso para o 4
 const { criarRotaRecurso } = require('./_recurso');
 module.exports = criarRotaRecurso('species');
 ```
+
+A fábrica também aceita `criarRotaRecurso(recurso, apresentar)`, com a
+função síncrona `apresentar(dados, req)`. Sem essa função, mantém o
+pass-through. A rota real de Espécies usa essa extensão para acrescentar
+`ptBR` quando solicitado.
 
 ```js
 // src/app.js, na seção "rotas"

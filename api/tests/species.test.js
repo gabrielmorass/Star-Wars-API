@@ -81,4 +81,47 @@ describe('Espécies no BFF', () => {
       .expect(502);
     expect(resposta.body).toEqual({ erro: 'SWAPI respondeu HTTP 503' });
   });
+
+  test.each(['/api/species', '/api/species/1'])('TC-112 idioma pt-BR acrescenta apresentação em %s', async (caminho) => {
+    const lista = caminho === '/api/species';
+    nock(ORIGEM).get(caminho).reply(200, lista ? [humano] : humano);
+    const resposta = await request(app).get(`${caminho}?idioma=pt-BR`).expect(200);
+    const apresentado = lista ? resposta.body[0] : resposta.body;
+    const { ptBR, ...originais } = apresentado;
+    expect(originais).toEqual(humano);
+    if (lista) expect(resposta.body).toHaveLength(1);
+    expect(ptBR.classification).toBe('mamífero');
+    expect(ptBR.designation).toBe('senciente');
+    expect(ptBR.language).toBe('Galactic Basic');
+    expect(ptBR.hair_colors).toEqual([
+      { valor: 'blonde', nome: 'loiro' }, { valor: 'brown', nome: 'castanho' },
+      { valor: 'black', nome: 'preto' }, { valor: 'red', nome: 'vermelho' },
+    ]);
+  });
+
+  test('TC-112 lista vazia com idioma continua sendo []', async () => {
+    nock(ORIGEM).get('/api/species').reply(200, []);
+    const resposta = await request(app).get('/api/species?idioma=pt-BR').expect(200);
+    expect(resposta.body).toEqual([]);
+  });
+
+  test('TC-112 idioma não suportado preserva o pass-through', async () => {
+    nock(ORIGEM).get('/api/species/1').reply(200, humano);
+    const resposta = await request(app).get('/api/species/1?idioma=en').expect(200);
+    expect(resposta.body).toEqual(humano);
+  });
+
+  test.each([
+    ['/api/species', { results: [humano] }],
+    ['/api/species', [null]],
+    ['/api/species', [42]],
+    ['/api/species', [[]]],
+    ['/api/species/1', null],
+    ['/api/species/1', 'texto'],
+    ['/api/species/1', []],
+  ])('TC-113 payload com estrutura inválida em %s vira 502 ao traduzir', async (caminho, dados) => {
+    nock(ORIGEM).get(caminho).reply(200, JSON.stringify(dados), { 'Content-Type': 'application/json' });
+    const resposta = await request(app).get(`${caminho}?idioma=pt-BR`).expect(502);
+    expect(resposta.body).toEqual({ erro: 'SWAPI devolveu espécie em formato inválido' });
+  });
 });
