@@ -304,17 +304,18 @@ mesma sessão não gasta requisição.
 
 ## 🤖 Uso de IA
 
-Este projeto teve apoio de IA (Claude, via **Claude Code**) nas duas etapas, e esta seção está dividida por etapa.
+Este projeto teve apoio de IA nas duas etapas: **Claude (Anthropic), via Claude Code**, na NP1 e na NP2, e **Codex (OpenAI)** na contribuição de Daniele para a NP2. Esta seção está dividida por etapa.
 
 Na **NP1 (aplicação e testes)**: geração do código-base do front-end, reorganização do código por funcionalidade, correção de um problema de performance no Sistema Planetário, criação das três suítes de teste automatizado (Cypress/BDD para interface, Postman/Newman para API, k6 para performance) e apoio na documentação do projeto (relatório interno de progresso e Plano de Testes).
 
-Na **NP2 (DevOps)**: containerização da aplicação, pipeline do Jenkins declarado como código, scripts de integração contínua e orquestração dos containers com Docker Compose.
+Na **NP2 (DevOps)**: containerização da aplicação, pipeline do Jenkins declarado como código, scripts de integração contínua e orquestração dos containers com Docker Compose. Na contribuição de Daniele, o Codex apoiou a implementação dos testes do BFF, a verificação de cobertura mínima de 90%, a geração de relatórios para o Jenkins, as rotas de Espécies, a tradução pt-BR no servidor, a adaptação da interface e a documentação dessas entregas.
 
 O uso foi transparente e supervisionado nas duas: todo código e documento gerado foi revisado, testado e ajustado pelo grupo antes de ser integrado ao projeto. Conforme o enunciado de cada etapa (item 11 na NP1, item 12 na NP2), isso é declarado aqui e o grupo domina o funcionamento de cada arquivo.
 
-### Modelo utilizado
+### Ferramentas utilizadas — Claude e Codex
 
 - **Claude (Anthropic):** via **Claude Code**, extensão de terminal/CLI.
+- **Codex (OpenAI):** utilizado por Daniele na NP2 para apoiar a implementação, revisão e documentação do Bloco C.
 
 ### Exemplos reais de prompts utilizados — NP1 (aplicação e testes)
 
@@ -476,7 +477,7 @@ Aceita: a IA localizou as tabelas nos dois READMEs e propôs a atualização man
 
 **Como foi a validação:** todos os casos foram rodados localmente (`npm test` no Cypress e no Newman, `k6 run` no script de performance) e só commitados depois de passar.
 
-### Exemplos reais de prompts utilizados — NP2 (DevOps)
+### Exemplos de prompts — NP2 (DevOps)
 
 **Gabriel Morás**
 
@@ -508,6 +509,52 @@ Aceita: a suíte Cypress não executava na minha máquina, e a IA deu **três di
 
 
 **Como foi a validação:** nada foi dado por pronto sem evidência. A imagem foi reconstruída e conferida (Jenkins 2.541.3, Node 20.20.2, dez plugins nas versões declaradas, zero divergência); o job criado pelo JCasC foi verificado no log de boot; o pipeline foi executado até ficar verde, até ficar vermelho de propósito e até arquivar artefato e relatório; o volume sobreviveu a `down`/`up` e à reconstrução da imagem, preservando o histórico de builds; e as três suítes de teste da NP1 foram rodadas localmente antes de qualquer commit.
+
+**Daniele Letícia — Codex (OpenAI)**
+
+**Prompt 1: Dúvida sobre cobertura**
+> "Os testes passaram, mas isso já garante os 90% de cobertura? Qual a diferença entre cobertura de linhas, funções e ramificações? Confere como isso está configurado na minha parte."
+
+Relação com a entrega: testes aprovados não garantem o mínimo de cobertura.
+O arquivo `api/jest.config.js` exige 90% em cada uma das quatro métricas
+globais. O escopo medido e a exclusão do arquivo de inicialização
+`src/server.js` estão justificados em [api/TESTES.md](api/TESTES.md).
+
+**Prompt 2: Etapa de testes e relatórios para o Jenkins**
+> "Implemente scripts/ci/testes.sh seguindo o padrão do projeto. O script deve executar os testes em modo CI, propagar falhas de teste ou de cobertura e conferir a geração dos relatórios JUnit, HTML e LCOV nos caminhos esperados pelo Jenkinsfile."
+
+Correspondência na entrega: script chamado pelo estágio **Testes
+unitários**, com saída de erro quando os testes, a cobertura ou a geração
+dos relatórios não atendem ao esperado.
+
+**Prompt 3: Rotas de Espécies e testes de contrato**
+> "Adicione as rotas de lista e detalhe de Espécies ao BFF usando o padrão dos outros recursos. Teste a preservação dos dados, lista vazia, IDs inválidos, recurso inexistente e falhas da API externa."
+
+Correspondência na entrega: `api/src/routes/species.js` e testes em
+`api/tests/species.test.js`, com casos de lista, detalhe e respostas de erro.
+
+**Prompt 4: Dúvida sobre tradução**
+> "Se a tradução agora vai ficar no backend, preciso apagar os dicionários do frontend? Como faço para a tela usar o português que vier do servidor e continuar funcionando quando a resposta não tiver tradução?"
+
+Relação com a entrega: a tela de Espécies prioriza os textos `ptBR`
+recebidos e mantém os dicionários locais para respostas sem tradução.
+O módulo `api/src/domain/traduzir.js` fornece a tradução opcional no BFF,
+com testes do domínio e do contrato HTTP.
+
+**Prompt 5: Revisão dos limites dos testes**
+> "Esses testes do Cypress com dados simulados provam que a tela está se comunicando com o BFF? O que eles realmente verificam e o que ainda preciso testar quando a parte dos containers estiver integrada?"
+
+Relação com a entrega: os quatro cenários Cypress (TC-114 a TC-117) usam
+interceptações para verificar apresentação, filtros, cores e escape de
+marcação. A comunicação real entre frontend, BFF e containers precisa
+ser validada no ambiente integrado quando a origem compartilhada e o
+proxy do Bloco E estiverem disponíveis.
+
+**Limites da validação:** os comandos, o escopo e a demonstração do bloqueio
+por cobertura estão documentados em [api/TESTES.md](api/TESTES.md).
+A execução local não comprova a publicação dos relatórios no Jenkins nem
+o funcionamento do Compose; essas evidências precisam ser conferidas no
+ambiente integrado.
 
 ### O que não foi feito por IA
 
