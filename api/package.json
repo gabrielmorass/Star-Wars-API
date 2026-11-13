@@ -5,7 +5,8 @@
   "private": true,
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "test": "jest --coverage --runInBand"
   },
   "engines": {
     "node": ">=20"
@@ -14,5 +15,11 @@
   "dependencies": {
     "express": "^5.3.0",
     "redis": "^6.3.1"
+  },
+  "devDependencies": {
+    "jest": "30.5.2",
+    "jest-junit": "16.0.0",
+    "nock": "14.0.17",
+    "supertest": "7.3.2"
   }
 }

@@ -97,3 +97,13 @@ const app = require('../src/app');   // não abre porta
 test('GET /api/people/abc → 400', () =>
   request(app).get('/api/people/abc').expect(400));
 ```
+
+### Suíte automatizada e cobertura
+
+Depois de `npm ci`, execute `npm test` em `api/`. A suíte usa Jest,
+Supertest e Nock, com Redis simulado e limite global de 90% em linhas,
+instruções, funções e ramificações. Da raiz, a etapa do Jenkins pode ser
+executada com `bash scripts/ci/testes.sh`.
+
+Consulte [TESTES.md](TESTES.md) para o escopo da cobertura, os casos
+TC-091 em diante, os caminhos dos relatórios e a demonstração do bloqueio.
