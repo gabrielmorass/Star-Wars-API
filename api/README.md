@@ -28,9 +28,13 @@ api/src/
 │   ├── _recurso.js     # fábrica de rotas pass-through (lista + /:id)
 │   ├── health.js
 │   ├── people.js
-│   └── films.js
+│   ├── films.js
+│   ├── vehicles.js
+│   ├── starships.js
+│   └── species.js        # Daniele: lista e detalhe de Espécies
 └── services/
-    └── swapi.js        # buscar(caminho): único ponto que fala com a SWAPI
+    ├── swapi.js        # buscar(caminho): único ponto que fala com a SWAPI
+    └── cache.js        # cache Redis com degradação graciosa
 ```
 
 ## Contrato das rotas
@@ -52,8 +56,17 @@ Isso é proposital. As views do front indexam os dados por `url` e cruzam recurs
 | GET | `/api/people/:id` | objeto do personagem | `{ "name": "Luke Skywalker", "height": "172", "films": ["https://swapi.info/api/films/1", ...], ... }` |
 | GET | `/api/films` | array com todos os filmes (6) | `[{ "title": "A New Hope", "episode_id": 4, ... }, ...]` |
 | GET | `/api/films/:id` | objeto do filme | `{ "title": "A New Hope", "episode_id": 4, "opening_crawl": "...", ... }` |
+| GET | `/api/species` | array com todas as espécies, sem paginação ou envelope | `[{ "name": "Human", "classification": "mammal", ..., "url": "https://swapi.info/api/species/1" }, ...]` |
+| GET | `/api/species/:id` | objeto da espécie | `{ "name": "Human", "homeworld": "https://swapi.info/api/planets/9", "people": [...], "films": [...], ... }` |
 
 `:id` é o mesmo número da SWAPI. Atenção: `/api/films/1` é *A New Hope* (episódio IV), não o episódio I.
+
+As rotas de Espécies pertencem ao Bloco C (Daniele) e usam a mesma fábrica
+de rotas e camada SWAPI dos demais recursos. Preservam campos como
+`classification`, `language`, `url`, `homeworld`, `people` e `films`, que a
+interface utiliza em filtros, glifos e cruzamentos. Uma lista vazia é `[]`.
+Os erros seguem o contrato abaixo. A tradução no servidor e o consumo
+dessas rotas pela tela serão integrados nas próximas entregas do bloco.
 
 ### Contrato de erro
 

@@ -91,17 +91,24 @@ JUnit.
 | TC-100 | Cache-aside, expiração simulada, origem com erro e Redis fora | `tests/cache.test.js` |
 | TC-101 | Redis lento não prende a requisição e timers são liberados | `tests/cache.test.js` |
 | TC-102 | Ativação, cliente injetado, reconexão e conexão recusada | `tests/cache.test.js` |
+| TC-103 | Lista de Espécies preserva dados e referências, inclusive lista vazia | `tests/species.test.js` |
+| TC-104 | Detalhe de Espécies preserva o objeto e suas URLs | `tests/species.test.js` |
+| TC-105 | IDs inválidos em Espécies não consultam a SWAPI | `tests/species.test.js` |
+| TC-106 | Espécie inexistente devolve 404 JSON | `tests/species.test.js` |
+| TC-107 | Falha externa na lista e no detalhe de Espécies devolve 502 | `tests/species.test.js` |
 
 A expiração do TC-100 é simulada por um dublê do Redis: verifica que a
 aplicação volta à origem após um miss, sem pretender validar o próprio
 servidor Redis. Um JSON sintaticamente inválido é rejeitado; o backend
 atual não impõe um schema aos objetos retornados pela SWAPI.
 
-## Limites desta primeira entrega
+## Escopo atual e validação integrada
 
 Esta etapa cobre o backend disponível: health, people, films, vehicles,
-starships, SWAPI e cache. Espécies, tradução no servidor e integração da
-tela serão entregues separadamente, com novos casos de teste.
+starships, species, SWAPI e cache. As rotas de Espécies já têm testes
+próprios de lista, detalhe, preservação de dados e erros. Tradução no
+servidor e integração da tela serão entregues separadamente, com novos
+casos de teste.
 
 A execução local não comprova publicação dos relatórios em um Jenkins
 real nem funcionamento do Compose. Essas evidências precisam ser
