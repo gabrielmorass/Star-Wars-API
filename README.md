@@ -71,6 +71,11 @@ js/
     toggle.js              # switch Lado da Luz / Lado Sombrio
 src/data/planets-map.json  # região + coordenadas x/y de cada planeta (dado da equipe, não da SWAPI)
 public/favicon.svg
+api/                       # BFF Node/Express da NP2 — ver README próprio
+  src/                     # rotas, cliente SWAPI, cache e tradução pt-BR
+  tests/                   # testes do BFF (Jest + Supertest + Nock)
+  jest.config.js           # cobertura mínima de 90% e relatórios
+scripts/ci/testes.sh       # etapa de testes do BFF chamada pelo Jenkins
 cypress-project/           # testes de interface (Cypress + BDD/Gherkin) — ver README próprio
 api-testing/               # testes de API (Postman + Newman) — ver README próprio
 performance-testing/       # testes de carga, bônus (k6) — ver README próprio
@@ -81,25 +86,59 @@ docs-local/                # notas internas do grupo (não versionadas — ver .
 
 ## 🧪 Como rodar os testes
 
-Este projeto tem três suítes de teste independentes, cada uma com seu
+Este projeto tem quatro suítes de teste independentes, cada uma com seu
 próprio README:
 
-- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 61 cenários
+- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 65 cenários, incluindo quatro da NP2 com dados simulados para a apresentação de Espécies
 - **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 29 requisições
+- **[api/](api/README.md)** — testes unitários e de integração do BFF (Jest, Supertest e Nock), com SWAPI e Redis simulados e cobertura mínima de 90% em cada métrica global
 - **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
 
-Resumo rápido:
+Resumo rápido (execute cada comando a partir da raiz do repositório):
 
 ```bash
 # Testes de interface
 cd cypress-project && npm install && npm test
 
-# Testes de API
+# Testes de API externa (SWAPI)
 cd api-testing && npm install && npm test
+
+# Testes do BFF (NP2 — requer Node.js 20 ou superior)
+cd api && npm ci && npm test
 
 # Testes de performance (bônus — requer k6 instalado à parte, ver README da pasta)
 cd performance-testing && k6 run swapi-load.js
 ```
+
+### Testes do BFF no pipeline de CI — Daniele (Bloco C)
+
+A contribuição de Daniele na integração contínua é a automação dos testes
+do BFF com verificação de cobertura e geração de relatórios. O estágio
+**Testes unitários** do [Jenkinsfile](Jenkinsfile) chama
+[`scripts/ci/testes.sh`](scripts/ci/testes.sh), que executa o Jest em modo CI.
+Falhas nos testes ou cobertura abaixo de **90%** em qualquer uma das quatro
+métricas globais (instruções, ramificações, funções e linhas) retornam erro
+e reprovam a etapa. O script também exige que os relatórios sejam gerados.
+
+A medição inclui `api/src/**/*.js`, com exclusão de `src/server.js`, que
+inicializa o processo. Os testes usam a SWAPI e o Redis simulados e rodam
+sem esses serviços externos, depois da instalação das dependências.
+
+O pipeline está configurado para ler os resultados JUnit de
+`api/relatorios/junit.xml` e publicar a cobertura HTML de
+`api/coverage/lcov-report/index.html` no bloco `post.always`, inclusive
+quando uma etapa falha, se os arquivos estiverem disponíveis. A publicação
+efetiva precisa ser conferida na execução do Jenkins.
+
+Para executar a mesma etapa localmente, instale as dependências com
+`npm ci` em `api/` e, da raiz, rode no Git Bash ou Linux:
+
+```bash
+bash scripts/ci/testes.sh
+```
+
+O escopo dos testes, os relatórios e o procedimento para demonstrar o
+bloqueio por cobertura estão em [api/TESTES.md](api/TESTES.md).
 
 ---
 
