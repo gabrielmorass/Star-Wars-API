@@ -67,8 +67,10 @@ As rotas de Espécies pertencem ao Bloco C (Daniele) e usam a mesma fábrica
 de rotas e camada SWAPI dos demais recursos. Preservam campos como
 `classification`, `language`, `url`, `homeworld`, `people` e `films`, que a
 interface utiliza em filtros, glifos e cruzamentos. Uma lista vazia é `[]`.
-Os erros seguem o contrato abaixo. O consumo dessas rotas pela tela será
-integrado na próxima entrega do bloco.
+Os erros seguem o contrato abaixo. A tela já reconhece `ptBR` quando
+recebido. A troca da origem das chamadas depende da configuração
+compartilhada do frontend pelo Bloco E; até lá, continua usando a origem
+atual e a tradução local quando não recebe `ptBR`.
 
 ### Tradução de Espécies no servidor
 

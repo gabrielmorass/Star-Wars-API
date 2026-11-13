@@ -103,6 +103,21 @@ JUnit.
 | TC-112 | Tradução HTTP opcional na lista/detalhe, lista vazia e idioma não suportado | `tests/species.test.js` |
 | TC-113 | Estrutura inválida da resposta de Espécies devolve 502 ao solicitar tradução | `tests/species.test.js` |
 
+### Interface de Espécies
+
+Os casos seguintes usam Cypress/BDD, fora do cálculo de cobertura do
+backend. Estão em
+`cypress-project/cypress/bdd/features/especies/traducao-do-servidor.feature`,
+a partir da raiz. As requisições de dados são simuladas e os seletores
+permanecem no Page Object `EspeciesPage`.
+
+| Caso | Comportamento |
+| --- | --- |
+| TC-114 | Exibe textos ptBR recebidos, preservando filtro, cores e planeta natal |
+| TC-115 | Dados sem ptBR continuam usando a tradução local |
+| TC-116 | Textos com marcação são escapados e não criam elementos HTML |
+| TC-117 | Cores ausentes mostram texto sem amostras visuais |
+
 A expiração do TC-100 é simulada por um dublê do Redis: verifica que a
 aplicação volta à origem após um miss, sem pretender validar o próprio
 servidor Redis. Um JSON sintaticamente inválido é rejeitado. A apresentação
@@ -117,8 +132,14 @@ sem validação estrutural adicional.
 Esta etapa cobre o backend disponível: health, people, films, vehicles,
 starships, species, SWAPI, cache e domínio de tradução pt-BR. As rotas de
 Espécies têm testes próprios de lista, detalhe, preservação de dados,
-tradução opcional e erros. A integração da tela com o BFF e com os textos
-do servidor será entregue separadamente.
+tradução opcional e erros. A tela já dá preferência a `ptBR` quando
+recebido, com compatibilidade para a resposta antiga. O teste da interface
+com dados simulados está descrito no README de `cypress-project/`.
+
+A troca da origem em `getSpecies()` depende de `API_BASE` e do proxy web
+do Bloco E. Quando esse contrato estiver disponível, a chamada deverá
+usar `/species?idioma=pt-BR` na base configurada e ser validada contra o
+ambiente completo. Essa ligação ainda está pendente.
 
 A execução local não comprova publicação dos relatórios em um Jenkins
 real nem funcionamento do Compose. Essas evidências precisam ser
