@@ -304,18 +304,18 @@ mesma sessão não gasta requisição.
 
 ## 🤖 Uso de IA
 
-Este projeto teve apoio de IA nas duas etapas: **Claude (Anthropic), via Claude Code**, na NP1 e na NP2, e **Codex (OpenAI)** na contribuição de Daniele para a NP2. Esta seção está dividida por etapa.
+Este projeto teve apoio de IA nas duas etapas: **Claude (Anthropic), via Claude Code**, na NP1 e na NP2, e **Codex (OpenAI)** na NP2. Esta seção está dividida por etapa.
 
 Na **NP1 (aplicação e testes)**: geração do código-base do front-end, reorganização do código por funcionalidade, correção de um problema de performance no Sistema Planetário, criação das três suítes de teste automatizado (Cypress/BDD para interface, Postman/Newman para API, k6 para performance) e apoio na documentação do projeto (relatório interno de progresso e Plano de Testes).
 
-Na **NP2 (DevOps)**: containerização da aplicação, pipeline do Jenkins declarado como código, scripts de integração contínua e orquestração dos containers com Docker Compose. Na contribuição de Daniele, o Codex apoiou a implementação dos testes do BFF, a verificação de cobertura mínima de 90%, a geração de relatórios para o Jenkins, as rotas de Espécies, a tradução pt-BR no servidor, a adaptação da interface e a documentação dessas entregas.
+Na **NP2 (DevOps)**: containerização da aplicação, pipeline do Jenkins declarado como código, scripts de integração contínua, orquestração dos containers com Docker Compose, testes do BFF, verificação de cobertura mínima de 90%, geração de relatórios para o Jenkins, rotas de Espécies, tradução pt-BR no servidor, adaptação da interface e documentação dessas entregas.
 
 O uso foi transparente e supervisionado nas duas: todo código e documento gerado foi revisado, testado e ajustado pelo grupo antes de ser integrado ao projeto. Conforme o enunciado de cada etapa (item 11 na NP1, item 12 na NP2), isso é declarado aqui e o grupo domina o funcionamento de cada arquivo.
 
 ### Ferramentas utilizadas — Claude e Codex
 
 - **Claude (Anthropic):** via **Claude Code**, extensão de terminal/CLI.
-- **Codex (OpenAI):** utilizado por Daniele na NP2 para apoiar a implementação, revisão e documentação do Bloco C.
+- **Codex (OpenAI):** apoio à implementação, revisão e documentação na NP2.
 
 ### Exemplos reais de prompts utilizados — NP1 (aplicação e testes)
 
@@ -510,7 +510,7 @@ Aceita: a suíte Cypress não executava na minha máquina, e a IA deu **três di
 
 **Como foi a validação:** nada foi dado por pronto sem evidência. A imagem foi reconstruída e conferida (Jenkins 2.541.3, Node 20.20.2, dez plugins nas versões declaradas, zero divergência); o job criado pelo JCasC foi verificado no log de boot; o pipeline foi executado até ficar verde, até ficar vermelho de propósito e até arquivar artefato e relatório; o volume sobreviveu a `down`/`up` e à reconstrução da imagem, preservando o histórico de builds; e as três suítes de teste da NP1 foram rodadas localmente antes de qualquer commit.
 
-**Daniele Letícia — Codex (OpenAI)**
+**Daniele Letícia**
 
 **Prompt 1: Dúvida sobre cobertura**
 > "Os testes passaram, mas isso já garante os 90% de cobertura? Qual a diferença entre cobertura de linhas, funções e ramificações? Confere como isso está configurado na minha parte."
@@ -549,12 +549,6 @@ interceptações para verificar apresentação, filtros, cores e escape de
 marcação. A comunicação real entre frontend, BFF e containers precisa
 ser validada no ambiente integrado quando a origem compartilhada e o
 proxy do Bloco E estiverem disponíveis.
-
-**Limites da validação:** os comandos, o escopo e a demonstração do bloqueio
-por cobertura estão documentados em [api/TESTES.md](api/TESTES.md).
-A execução local não comprova a publicação dos relatórios no Jenkins nem
-o funcionamento do Compose; essas evidências precisam ser conferidas no
-ambiente integrado.
 
 ### O que não foi feito por IA
 
