@@ -9,12 +9,15 @@ import { renderFilmsView } from "./features/films/view.js";
 import { getStarships, getVehicles } from "./features/vehicles/api.js";
 import { renderVehiclesView } from "./features/vehicles/view.js";
 import { renderTrunfoView } from "./features/trunfo/view.js";
-import { lerSessaoSalva } from "./features/trunfo/online.js";
+import { lerSessaoSalva, limparSessao } from "./features/trunfo/online.js";
 import { getSpecies } from "./features/species/api.js";
 import { renderSpeciesView } from "./features/species/view.js";
 
 const app = document.getElementById("app");
 const navButtons = document.querySelectorAll(".topnav [data-nav]");
+let viewAtual = null;
+let limparViewAtual = null;
+let sequenciaNavegacao = 0;
 
 /* `starships` fica fora de um par "vehiclesData" porque duas telas usam a
    mesma lista: Naves e Veículos e o Super Trunfo. Assim abrir uma depois da
@@ -32,6 +35,14 @@ const TITLES = {
 };
 
 async function navigate(view) {
+  const sequencia = ++sequenciaNavegacao;
+  if (viewAtual === view && limparViewAtual) return;
+  if (viewAtual !== view) {
+    if (limparViewAtual) limparViewAtual();
+    else if (viewAtual === "trunfo") limparSessao();
+    limparViewAtual = null;
+    viewAtual = view;
+  }
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.nav === view));
   if (TITLES[view]) document.title = TITLES[view];
 
@@ -44,8 +55,10 @@ async function navigate(view) {
     renderLoading(app, "Buscando planetas na SWAPI…");
     try {
       if (!cache.planets) cache.planets = await getPlanets();
+      if (sequencia !== sequenciaNavegacao) return;
       renderPlanetsView(app, cache.planets);
     } catch (err) {
+      if (sequencia !== sequenciaNavegacao) return;
       renderError(app, `Não foi possível carregar os planetas. (${err.message})`);
     }
     return;
@@ -55,8 +68,10 @@ async function navigate(view) {
     renderLoading(app, "Buscando personagens na SWAPI…");
     try {
       if (!cache.people) cache.people = await getPeople();
+      if (sequencia !== sequenciaNavegacao) return;
       renderPeopleView(app, cache.people, renderPersonModal, navigate);
     } catch (err) {
+      if (sequencia !== sequenciaNavegacao) return;
       renderError(app, `Não foi possível carregar os personagens. (${err.message})`);
     }
     return;
@@ -66,8 +81,10 @@ async function navigate(view) {
     renderLoading(app, "Buscando filmes na SWAPI…");
     try {
       if (!cache.films) cache.films = await getFilms();
+      if (sequencia !== sequenciaNavegacao) return;
       renderFilmsView(app, cache.films, navigate);
     } catch (err) {
+      if (sequencia !== sequenciaNavegacao) return;
       renderError(app, `Não foi possível carregar os filmes. (${err.message})`);
     }
     return;
@@ -80,10 +97,12 @@ async function navigate(view) {
         cache.starships || getStarships(),
         cache.vehicles || getVehicles(),
       ]);
+      if (sequencia !== sequenciaNavegacao) return;
       cache.starships = starships;
       cache.vehicles = vehicles;
       renderVehiclesView(app, { starships, vehicles }, navigate);
     } catch (err) {
+      if (sequencia !== sequenciaNavegacao) return;
       renderError(app, `Não foi possível carregar naves e veículos. (${err.message})`);
     }
     return;
@@ -93,8 +112,10 @@ async function navigate(view) {
     renderLoading(app, "Buscando naves na SWAPI…");
     try {
       if (!cache.starships) cache.starships = await getStarships();
-      renderTrunfoView(app, cache.starships);
+      if (sequencia !== sequenciaNavegacao) return;
+      limparViewAtual = renderTrunfoView(app, cache.starships);
     } catch (err) {
+      if (sequencia !== sequenciaNavegacao) return;
       renderError(app, `Não foi possível carregar as naves. (${err.message})`);
     }
     return;
@@ -104,8 +125,10 @@ async function navigate(view) {
     renderLoading(app, "Buscando espécies na SWAPI…");
     try {
       if (!cache.species) cache.species = await getSpecies();
+      if (sequencia !== sequenciaNavegacao) return;
       renderSpeciesView(app, cache.species, navigate);
     } catch (err) {
+      if (sequencia !== sequenciaNavegacao) return;
       renderError(app, `Não foi possível carregar as espécies. (${err.message})`);
     }
   }

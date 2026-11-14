@@ -92,8 +92,8 @@ que pegou uma diferença de 3 entre o contador (43) e o que estava desenhado (40
 puras direto — é o mesmo código que roda no navegador, sem cópia e sem mock. São esses cenários que
 fixam o que a interface não consegue mostrar: que `aplicarAcao` devolve um estado novo sem alterar o
 que recebeu, que o estado sobrevive a um `JSON.stringify`/`parse` sem perder nada, e que a mesma
-semente com as mesmas ações reconstrói a partida idêntica (`reproduzir`). É essa garantia que faz o
-multiplayer online da fase seguinte ser possível sem reescrever as regras.
+semente com as mesmas ações reconstrói a partida idêntica (`reproduzir`). É essa garantia que permite
+ao modo online reconstruir a mesma partida nos dois aparelhos sem reescrever as regras.
 
 Nos cenários de interface, nada depende de sorte: `?seed=`, `?cpuDelay=0` e `?maos=` (documentados no
 README da raiz, seção "Decisões de dados") fixam a distribuição, tiram a espera do computador e forçam

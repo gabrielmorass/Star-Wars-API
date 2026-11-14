@@ -4,8 +4,8 @@
    Toda a partida é uma máquina de estados serializável — o estado é JSON
    puro e `aplicarAcao` devolve um estado NOVO, sem nunca tocar no que
    recebeu. É isso que faz o computador, o segundo jogador no mesmo
-   aparelho e (numa fase seguinte) um jogador remoto serem apenas fontes
-   diferentes das MESMAS duas ações.
+   aparelho e o jogador remoto serem apenas fontes diferentes das MESMAS
+   duas ações.
 
    A única fonte de aleatoriedade do jogo é `embaralhar(baralho, seed)`,
    com um PRNG semeado (mulberry32). Quem lê a semente é a view; aqui ela
@@ -17,7 +17,7 @@
 
 import { VAZIO, classeDeNave } from "../../core/vocabulario.js";
 
-/** Versão do formato do estado. A fase 2 (online) compara isto entre os dois lados. */
+/** Versão do formato do estado, comparada pelos dois aparelhos no modo online. */
 export const VERSAO = 1;
 
 /** Cartas na mão de cada jogador no início (36 naves / 2). */
@@ -104,23 +104,40 @@ export function montarBaralho(starships) {
 }
 
 /**
- * Texto curto e estável derivado dos ids do baralho. A fase 2 usa isto para
- * conferir que os dois lados jogam com o mesmo baralho antes de começar.
- * FNV-1a de 32 bits, em base 36.
+ * Impressão digital curta e estável do conteúdo que afeta as partidas.
+ * A fase online usa isto para conferir se os dois aparelhos podem aplicar
+ * as mesmas regras às mesmas cartas. Nomes e valores importam tanto quanto
+ * os ids: a SWAPI pode mudar sem trocar a URL de uma nave.
+ *
+ * Duas passagens FNV-1a de 32 bits formam uma impressão digital de 64 bits,
+ * serializada em base 36. Não é uma assinatura de segurança: detecta diferenças
+ * acidentais nos dados carregados pelos dois aparelhos.
+ * A ordenação e a ordem explícita dos atributos tornam o resultado
+ * independente da ordem de resposta da API ou das propriedades dos objetos.
  */
 export function hashBaralho(baralho) {
-  const texto = (baralho || [])
-    .map((c) => c.id)
-    .slice()
-    .sort((a, b) => a - b)
-    .join(",");
+  const cartas = (baralho || [])
+    .map((carta) => ({
+      id: carta.id,
+      name: carta.name,
+      starship_class: carta.starship_class,
+      valores: ATRIBUTOS.map(({ chave }) => carta.valores[chave]),
+      superTrunfo: carta.superTrunfo,
+      cacaEstelar: carta.cacaEstelar,
+    }))
+    .sort((a, b) => a.id - b.id);
+  const texto = JSON.stringify(cartas);
 
-  let h = 0x811c9dc5;
+  let h1 = 0x811c9dc5;
+  let h2 = 0x9e3779b9;
   for (let i = 0; i < texto.length; i++) {
-    h ^= texto.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
+    const codigo = texto.charCodeAt(i);
+    h1 ^= codigo;
+    h1 = Math.imul(h1, 0x01000193) >>> 0;
+    h2 ^= codigo ^ (i & 0xff);
+    h2 = Math.imul(h2, 0x01000193) >>> 0;
   }
-  return h.toString(36);
+  return `${h1.toString(36).padStart(7, "0")}${h2.toString(36).padStart(7, "0")}`;
 }
 
 /** PRNG semeado (mulberry32): mesma semente, mesma sequência, em qualquer navegador. */
@@ -185,12 +202,36 @@ export function criarPartida({ baralho, seed, modo, nomes, maos = null }) {
 
   const cartas = {};
   baralho.forEach((carta) => {
+    if (!carta || typeof carta !== "object") {
+      throw new Error("Baralho inválido: foi recebida uma carta malformada.");
+    }
+    if (!Number.isSafeInteger(carta.id) || carta.id < 0) {
+      throw new Error("Baralho inválido: toda carta precisa de um id numérico válido.");
+    }
+    if (Object.prototype.hasOwnProperty.call(cartas, carta.id)) {
+      throw new Error(`Baralho inválido: a carta ${carta.id} aparece mais de uma vez.`);
+    }
+    if (!carta.valores || typeof carta.valores !== "object") {
+      throw new Error(`Baralho inválido: ${carta.name || "uma nave"} não tem atributos.`);
+    }
+    for (const { chave } of ATRIBUTOS) {
+      const valor = carta.valores[chave];
+      if (valor !== null && (!Number.isFinite(valor) || valor < 0)) {
+        throw new Error(`Baralho inválido: ${chave} de ${carta.name || "uma nave"} não é um número válido.`);
+      }
+    }
+    if (ATRIBUTOS.every(({ chave }) => carta.valores[chave] === null)) {
+      throw new Error(`Baralho inválido: ${carta.name || "uma nave"} não tem atributos conhecidos.`);
+    }
     cartas[carta.id] = carta;
   });
 
   let maoJ1;
   let maoJ2;
   if (maos) {
+    if (!Array.isArray(maos.j1) || !Array.isArray(maos.j2)) {
+      throw new Error("Mãos forçadas: informe uma lista de cartas para cada jogador.");
+    }
     maoJ1 = (maos.j1 || []).map(Number);
     maoJ2 = (maos.j2 || []).map(Number);
     const desconhecido = [...maoJ1, ...maoJ2].find((id) => !cartas[id]);
@@ -199,6 +240,9 @@ export function criarPartida({ baralho, seed, modo, nomes, maos = null }) {
     }
     if (maoJ1.length === 0 || maoJ2.length === 0) {
       throw new Error("Mãos forçadas: cada jogador precisa de ao menos uma carta.");
+    }
+    if (new Set([...maoJ1, ...maoJ2]).size !== maoJ1.length + maoJ2.length) {
+      throw new Error("Mãos forçadas: cada carta pode aparecer apenas uma vez.");
     }
   } else {
     const embaralhado = embaralhar(baralho, seed);
@@ -505,7 +549,7 @@ function encerrarSePreciso(estado) {
 
 /**
  * Estado obtido aplicando as ações em ordem a partir da configuração.
- * A fase 2 usa isto para reconstruir a partida numa reconexão: mesma
+ * O modo online usa isto para reconstruir a partida numa reconexão: mesma
  * configuração + mesmo histórico = mesmo estado, bit a bit.
  */
 export function reproduzir(config, acoes) {

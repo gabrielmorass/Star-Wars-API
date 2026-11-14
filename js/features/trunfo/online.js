@@ -42,6 +42,21 @@ export const STATUS = {
 export const ERRO_BARALHO =
   "Os dois aparelhos carregaram baralhos diferentes. Recarreguem a página e tentem de novo.";
 export const ERRO_SALA_CHEIA = "Esta sala já está cheia.";
+export const ERRO_PROTOCOLO =
+  "A sala enviou dados incompatíveis. Recarreguem a página e tentem de novo.";
+
+function configuracaoPartidaValida(mensagem) {
+  return (
+    Number.isSafeInteger(mensagem.seed) &&
+    mensagem.seed >= 0 &&
+    mensagem.seed <= 0xffffffff &&
+    mensagem.nomes &&
+    typeof mensagem.nomes.j1 === "string" &&
+    typeof mensagem.nomes.j2 === "string" &&
+    mensagem.nomes.j1.trim() !== "" &&
+    mensagem.nomes.j2.trim() !== ""
+  );
+}
 
 /* ---------------- identificadores ---------------- */
 
@@ -83,7 +98,10 @@ export function lerSessaoSalva() {
   try {
     const salvo = JSON.parse(sessionStorage.getItem(CHAVE_SESSAO) || "null");
     if (salvo && salvo.codigoSala && salvo.clienteId && (salvo.papel === "j1" || salvo.papel === "j2")) {
-      return salvo;
+      return {
+        ...salvo,
+        nome: typeof salvo.nome === "string" ? salvo.nome.trim().slice(0, 24) : "",
+      };
     }
   } catch (_) {
     /* sessionStorage indisponível ou conteúdo estragado: sem retomada */
@@ -91,9 +109,12 @@ export function lerSessaoSalva() {
   return null;
 }
 
-export function salvarSessao({ codigoSala, clienteId, papel }) {
+export function salvarSessao({ codigoSala, clienteId, papel, nome }) {
   try {
-    sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify({ codigoSala, clienteId, papel }));
+    sessionStorage.setItem(
+      CHAVE_SESSAO,
+      JSON.stringify({ codigoSala, clienteId, papel, nome: String(nome || "").trim().slice(0, 24) })
+    );
   } catch (_) {
     /* sem sessionStorage a partida funciona; só não sobrevive a um recarregamento */
   }
@@ -274,8 +295,15 @@ export function criarSessaoOnline(cfg) {
       const seed = Number.isFinite(cfg.seed) ? cfg.seed >>> 0 : gerarSeed();
       const nomes = { j1: nome, j2: String(mensagem.nome || "").trim().slice(0, 24) || "Jogador 2" };
       configPartida = { baralho, seed, modo: "local", nomes };
+      let estado;
+      try {
+        estado = criarPartida(configPartida);
+      } catch (erro) {
+        falhar(`Não foi possível montar o baralho. (${erro.message})`);
+        return;
+      }
       enviar({ tipo: "inicio", v: PROTOCOLO, seed, hashBaralho: meuHash, nomes });
-      comecar(criarPartida(configPartida));
+      comecar(estado);
       return;
     }
     /* O convidado ainda não tem a partida: reenviar o começo, ou o histórico. */
@@ -288,20 +316,36 @@ export function criarSessaoOnline(cfg) {
 
   function aoInicio(mensagem) {
     if (papel !== "j2" || controlador) return;
-    if (mensagem.v !== PROTOCOLO || mensagem.hashBaralho !== meuHash) {
+    if (mensagem.v !== PROTOCOLO) {
+      falhar(ERRO_PROTOCOLO);
+      return;
+    }
+    if (mensagem.hashBaralho !== meuHash) {
       falhar(ERRO_BARALHO);
+      return;
+    }
+    if (!configuracaoPartidaValida(mensagem)) {
+      falhar(ERRO_PROTOCOLO);
       return;
     }
     configPartida = { baralho, seed: mensagem.seed, modo: "local", nomes: mensagem.nomes };
-    comecar(criarPartida(configPartida));
+    try {
+      comecar(criarPartida(configPartida));
+    } catch (erro) {
+      falhar(`Não foi possível montar o baralho. (${erro.message})`);
+    }
   }
 
   function aoSync(mensagem) {
-    if (mensagem.hashBaralho !== undefined && mensagem.hashBaralho !== meuHash) {
+    if (mensagem.hashBaralho !== meuHash) {
       falhar(ERRO_BARALHO);
       return;
     }
-    const acoes = Array.isArray(mensagem.acoes) ? mensagem.acoes : [];
+    if (!configuracaoPartidaValida(mensagem) || !Array.isArray(mensagem.acoes)) {
+      falhar(ERRO_PROTOCOLO);
+      return;
+    }
+    const acoes = mensagem.acoes;
     if (controlador && remoto.sincronizar(acoes)) return;
     if (controlador && acoes.length < controlador.estado().historico.length) return; /* estamos à frente */
 
@@ -324,6 +368,7 @@ export function criarSessaoOnline(cfg) {
     if (mensagem.tipo === "inicio") return aoInicio(mensagem);
     if (mensagem.v !== PROTOCOLO) {
       console.warn("[trunfo] mensagem de outra versão do protocolo ignorada:", mensagem);
+      falhar(ERRO_PROTOCOLO);
       return;
     }
     if (mensagem.tipo === "ola") return aoOla(mensagem);
@@ -364,7 +409,14 @@ export function criarSessaoOnline(cfg) {
       falhar(`Não foi possível conectar. (${erro.message})`);
       return;
     }
-    if (encerrada) return;
+    if (encerrada) {
+      try {
+        await transporte.sair();
+      } catch (erro) {
+        console.warn("[trunfo] erro ao fechar uma conexão iniciada após sair:", erro);
+      }
+      return;
+    }
     if (!oponentePresente && !controlador) status("aguardando");
     if (cfg.retomando) pedirSync();
   }

@@ -6,7 +6,7 @@
 
    O contrato é de propósito pequeno (estado / despachar / assinar) porque
    é ele que permite trocar de fonte de ação sem mexer em nada: humano,
-   computador e — na fase 2 — remoto usam exatamente estes três métodos. */
+   computador e remoto usam exatamente estes três métodos. */
 
 import { aplicarAcao } from "./regras.js";
 

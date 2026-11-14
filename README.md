@@ -32,7 +32,7 @@ Depois acesse `http://localhost:8080`.
 - **Filmes** — os 6 episódios como pôsteres 2:3 com arte procedural em SVG por episódio (desenhada no projeto, sem imagem externa), numeral romano, rodapé com contagem de personagens/planetas/naves e as duas primeiras linhas da abertura no hover. Ordenação por lançamento ou cronológica (com animação FLIP) e barra de cronologia galáctica clicável. O modal traz abas: **Abertura** (o crawl em perspectiva, com pausar/reiniciar/tela cheia), **Elenco**, **Planetas**, **Naves e Veículos** e **Espécies**, todas resolvidas sob demanda e com atalho para as outras telas
 - **Naves e Veículos** — abas Naves/Veículos, busca, filtro por classe (pills geradas do dado) e ordenação com FLIP; cada card tem a silhueta SVG da classe. O painel traz um **hangar 3D** (Three.js carregado sob demanda, modelo montado com primitivas por classe, arraste para girar; sem WebGL cai na silhueta), medidores em arco normalizados pelo teto da categoria (escala log nas métricas de cauda longa), régua de tamanho, radar de 5 eixos, pilotos e aparições. **Comparar** põe duas naves lado a lado, com painel de **escala real** (as duas silhuetas no mesmo fator de metros, lupa quando a razão passa de 500:1) e tabela de quem vence em cada métrica
 - **Espécies** — grade com o glifo da classificação (8 desenhos: mamífero, réptil, anfíbio, insectoide, gastrópode, artificial, senciente, sem classificação) e uma faixa com as cores de pele, cabelo e olhos de cada espécie; busca, filtro por classificação e ordenação por nome, altura ou longevidade. O painel traz réguas de **altura** (linear até 3 m) e **longevidade** (log, de 50 a 1.000 anos) sempre com a marca do humano como referência, as cores como amostras, o planeta natal, os membros conhecidos e as aparições — os três últimos levam à tela correspondente
-- **Super Trunfo** — as 36 naves viram um baralho de 5 atributos (comprimento, tripulação, velocidade atmosférica, custo e hiperpropulsor), com 18 cartas para cada lado e a Death Star como Super Trunfo. Dois modos: **contra o computador** e **dois jogadores no mesmo aparelho** (com tela de "passe o aparelho", que esconde as duas cartas na troca de vez). O jogo é uma máquina de estados pura e serializável — o computador, o segundo jogador local e (numa fase seguinte) um jogador remoto são apenas fontes diferentes das mesmas duas ações. Um terceiro modo, **Online (dois aparelhos)**, deixa duas pessoas em aparelhos diferentes jogarem a mesma partida por um **código de sala** de 5 caracteres: as jogadas passam pelo Realtime do Supabase, sem servidor de jogo, e cada aparelho vê só a própria carta até a revelação. O modo só aparece com o Supabase configurado (ver "Modo online (Supabase)")
+- **Super Trunfo** — as 36 naves viram um baralho de 5 atributos (comprimento, tripulação, velocidade atmosférica, custo e hiperpropulsor), com 18 cartas para cada lado e a Death Star como Super Trunfo. Três modos: **contra o computador**, **dois jogadores no mesmo aparelho** (com tela de "passe o aparelho", que esconde as duas cartas na troca de vez) e **Online (dois aparelhos)**. O jogo é uma máquina de estados pura e serializável; cada modo usa uma fonte diferente para as mesmas ações. No modo online, duas pessoas em aparelhos diferentes entram por um **código de sala** de 5 caracteres; as jogadas passam pelo Realtime do Supabase, sem servidor de jogo, e cada aparelho vê só a própria carta até a revelação. O modo online só aparece com o Supabase configurado (ver "Modo online (Supabase)")
 
 ---
 
@@ -202,7 +202,9 @@ A SWAPI (`https://swapi.info/api`) cobre apenas os Episódios I–VI e tem limit
    autoridade.** O Supabase só repassa mensagens (broadcast) e diz quem está na sala (presença):
    não há tabela, não há servidor de jogo e ninguém confere as jogadas além dos dois aparelhos. Os
    dois conhecem a semente e montam a mesma distribuição; dali em diante só as **ações** viajam, e
-   cada lado roda a mesma máquina de estados (`regras.js`). Consequência conhecida e aceita: como a
+   cada lado roda a mesma máquina de estados (`regras.js`). Antes da partida, uma impressão digital
+   confere ids, nomes, classes e valores dos atributos para evitar que dados diferentes da SWAPI
+   façam os aparelhos calcularem vencedores diferentes. Consequência conhecida e aceita: como a
    semente está nos dois aparelhos, um jogador com o DevTools aberto consegue calcular as cartas do
    oponente. Para um projeto acadêmico é uma limitação aceitável; impedir isso exigiria um servidor
    que distribuísse as cartas e só revelasse cada uma na hora.
@@ -307,6 +309,8 @@ export const SUPABASE_ANON_KEY = "";   // anon key do projeto
   simplesmente não aparece e nada tenta se conectar; o resto do site e todos os
   testes funcionam igual. O `supabase-js` (2.118.0, build UMD do jsDelivr) só
   é baixado quando alguém escolhe jogar online.
+- **Retomada e saída.** Recarregar a página retoma a sala e o nome salvos nesta
+  aba; sair pelo menu do site encerra a sessão e libera o lugar na sala.
 
 Para desenvolver ou demonstrar sem Supabase, `?transporte=aba` liga duas abas do
 mesmo navegador; `?transporte=fake` é só para os testes automatizados (ver

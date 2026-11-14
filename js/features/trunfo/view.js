@@ -49,11 +49,6 @@ import { transporteEscolhido } from "./transporte.js";
 
 const LADOS = ["j1", "j2"];
 
-/* A sessão online da view anterior. Trocar de tela não destrói a view
-   antiga, então, ao montar uma nova, a sessão que sobrou sai da sala —
-   senão o mesmo clienteId ficaria na sala duas vezes. */
-let sessaoAnterior = null;
-
 function escapar(texto) {
   return String(texto).replace(/[&<>"]/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
@@ -323,10 +318,10 @@ export function renderTrunfoView(container, starships) {
     conectarSessao({ papel: "j2", codigoSala: codigo, clienteId: gerarClienteId() });
   }
 
-  function conectarSessao({ papel, codigoSala, clienteId, retomando = false }) {
-    if (sessaoAnterior) sessaoAnterior.sair();
+  function conectarSessao({ papel, codigoSala, clienteId, retomando = false, nome = nomeOnline }) {
     encerrarPartida();
-    salvarSessao({ codigoSala, clienteId, papel });
+    nomeOnline = String(nome || "").trim().slice(0, 24);
+    salvarSessao({ codigoSala, clienteId, papel, nome: nomeOnline });
     papelOnline = papel;
     pausaOnline = null;
 
@@ -344,7 +339,6 @@ export function renderTrunfoView(container, starships) {
       },
     });
     sessao = esta;
-    sessaoAnterior = esta;
     telaSala();
     esta.conectar();
   }
@@ -753,4 +747,13 @@ export function renderTrunfoView(container, starships) {
     if (salvo) limparSessao();
     telaInicial();
   }
+
+  /* A navegação encerra recursos da view. O sessionStorage só é limpo aqui,
+     não no pagehide: assim sair pelo menu fecha a sala, enquanto recarregar a
+     página preserva a possibilidade de reconectar. */
+  return () => {
+    sairDaSala();
+    encerrarPartida();
+    raiz.innerHTML = "";
+  };
 }

@@ -3,18 +3,16 @@
    Uma "fonte de ação" é qualquer coisa que despache `escolher` e `proxima`
    no controlador. Existem três:
 
-     humano  — a view despacha a partir de clique e teclado (`ligarHumano`
-               só embrulha isso num objeto com a mesma forma das outras,
-               para a view não ter um caminho especial);
+     humano  — a view despacha a partir de clique e teclado;
      cpu     — se inscreve no controlador e, quando a vez é dele, despacha
                depois de uma espera;
      remoto  — o jogador do outro aparelho, no modo online: transforma as
                mensagens `acao` recebidas em `despachar`, e envia as ações
                locais com o número de sequência.
 
-   As três têm a mesma forma: recebem o controlador, se inscrevem,
-   despacham. É o motivo de o estado ser JSON puro e de as ações serem só
-   duas.
+   Todas produzem as mesmas duas ações no controlador. A view despacha as
+   ações humanas diretamente; computador e remoto observam o controlador e
+   reagem de acordo com seu papel.
 
    Toda a impureza do jogo (o setTimeout, a rede) está fora de regras.js. */
 
@@ -22,24 +20,6 @@ import { escolhaCpu, proximoAEscolher } from "./regras.js";
 
 /** Espera padrão do computador, em ms. `?cpuDelay=0` zera nos testes. */
 export const ATRASO_CPU = 800;
-
-/**
- * Fonte "humano": só repassa. Existe para a view tratar as duas fontes
- * pela mesma interface, em vez de chamar `controlador.despachar` direto
- * num caso e a fonte no outro.
- */
-export function ligarHumano(controlador, { jogador = "j1" } = {}) {
-  return {
-    jogador,
-    escolher(atributo) {
-      return controlador.despachar({ tipo: "escolher", jogador, atributo });
-    },
-    proxima() {
-      return controlador.despachar({ tipo: "proxima", jogador });
-    },
-    desligar() {},
-  };
-}
 
 /**
  * Fonte "computador": observa o controlador e joga quando é a vez dele.
@@ -110,8 +90,8 @@ export function ligarCpu(controlador, opcoes = {}) {
   };
 }
 
-/** Versão do protocolo online. Vai em toda mensagem como `v`. */
-export const PROTOCOLO = 1;
+/** Versão do protocolo online. Incremente quando o formato das mensagens mudar. */
+export const PROTOCOLO = 2;
 
 /**
  * Fonte "remoto": o jogador do outro aparelho.
@@ -163,6 +143,10 @@ export function ligarRemoto(controlador, { jogador, enviar, aoLacuna = () => {} 
       if (!ativo || !mensagem || mensagem.tipo !== "acao") return;
       if (mensagem.v !== PROTOCOLO) {
         console.warn("[trunfo] ação de outra versão do protocolo ignorada:", mensagem);
+        return;
+      }
+      if (!Number.isSafeInteger(mensagem.seq) || mensagem.seq < 0) {
+        console.warn("[trunfo] ação sem número de sequência válido ignorada:", mensagem);
         return;
       }
 
