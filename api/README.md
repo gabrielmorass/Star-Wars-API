@@ -4,6 +4,8 @@ Backend-for-frontend do Codex Estelar. Faz proxy da [SWAPI](https://swapi.info) 
 
 **Dono:** Eduardo (Bloco B). Rotas de outros recursos e o cache Redis são plugados pelos colegas. Veja [Como adicionar uma rota](#como-adicionar-uma-rota).
 
+**Por que está assim:** cada decisão de estrutura, imagem e scripts de CI deste bloco, com a alternativa considerada e o preço da escolha, está em [DECISOES.md](DECISOES.md). Lá também está a explicação dos três tamanhos da imagem.
+
 ## Rodar local
 
 ```bash
