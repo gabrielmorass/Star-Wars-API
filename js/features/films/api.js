@@ -1,7 +1,8 @@
-import { BASE_URL, fetchJSON } from "../../core/api.js";
+import { fetchJSON } from "../../core/api.js";
+import { API_BASE } from "../../config.js";
 
 export function getFilms() {
-  return fetchJSON(`${BASE_URL}/films`);
+  return fetchJSON(`${API_BASE}/films`);
 }
 
 /* ---------------- Mapas para as abas do modal ----------------
@@ -16,7 +17,7 @@ function mapaPorUrl(caminho) {
   let promessa = null;
   return () => {
     if (!promessa) {
-      promessa = fetchJSON(`${BASE_URL}/${caminho}`)
+      promessa = fetchJSON(`${API_BASE}/${caminho}`)
         .then((lista) => new Map(lista.map((item) => [item.url, item])))
         .catch(() => new Map());
     }
@@ -39,8 +40,8 @@ let navesPromise = null;
 export function getNavesMap() {
   if (!navesPromise) {
     navesPromise = Promise.all([
-      fetchJSON(`${BASE_URL}/starships`).catch(() => []),
-      fetchJSON(`${BASE_URL}/vehicles`).catch(() => []),
+      fetchJSON(`${API_BASE}/starships`).catch(() => []),
+      fetchJSON(`${API_BASE}/vehicles`).catch(() => []),
     ]).then(([starships, vehicles]) => {
       const map = new Map();
       starships.forEach((s) => map.set(s.url, { name: s.name, kind: "starships" }));
