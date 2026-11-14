@@ -31,7 +31,7 @@ describe('TC-091 saúde e tratamento de rotas', () => {
   });
 });
 
-describe.each(['people', 'films', 'vehicles', 'starships'])('/api/%s', (recurso) => {
+describe.each(['people', 'films', 'vehicles', 'starships', 'planets'])('/api/%s', (recurso) => {
   const item = {
     name: 'Nome original',
     url: `${ORIGEM}/api/${recurso}/1`,
