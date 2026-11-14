@@ -33,6 +33,7 @@ api/src/
 │   ├── films.js
 │   ├── vehicles.js
 │   ├── starships.js
+│   ├── planets.js
 │   └── species.js        # Daniele: lista e detalhe de Espécies
 └── services/
     ├── swapi.js        # buscar(caminho): único ponto que fala com a SWAPI
@@ -58,6 +59,8 @@ Isso é proposital. As views do front indexam os dados por `url` e cruzam recurs
 | GET | `/api/people/:id` | objeto do personagem | `{ "name": "Luke Skywalker", "height": "172", "films": ["https://swapi.info/api/films/1", ...], ... }` |
 | GET | `/api/films` | array com todos os filmes (6) | `[{ "title": "A New Hope", "episode_id": 4, ... }, ...]` |
 | GET | `/api/films/:id` | objeto do filme | `{ "title": "A New Hope", "episode_id": 4, "opening_crawl": "...", ... }` |
+| GET | `/api/planets` | array com todos os planetas (60) | `[{ "name": "Tatooine", ..., "url": "https://swapi.info/api/planets/1" }, ...]` |
+| GET | `/api/planets/:id` | objeto do planeta | `{ "name": "Tatooine", "climate": "arid", "residents": [...], ... }` |
 | GET | `/api/species` | array com todas as espécies, sem paginação ou envelope | `[{ "name": "Human", "classification": "mammal", ..., "url": "https://swapi.info/api/species/1" }, ...]` |
 | GET | `/api/species/:id` | objeto da espécie | `{ "name": "Human", "homeworld": "https://swapi.info/api/planets/9", "people": [...], "films": [...], ... }` |
 

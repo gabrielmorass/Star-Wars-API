@@ -11,6 +11,28 @@ site de terceiros.
 - [Node.js](https://nodejs.org/) 18 ou superior
 - Repositório clonado com o site (`index.html`, `css/`, `js/`) na raiz,
   um nível acima desta pasta
+- **O BFF rodando na porta 3000**, porque as telas de Personagens e Filmes buscam
+  os dados em `/api` (veja abaixo)
+
+### Por que o BFF precisa estar de pé
+
+Desde a NP2, Personagens e Filmes não chamam mais a swapi.info: buscam em
+`/api/...`, um caminho relativo à origem do site (`API_BASE` em
+`js/config.js`). No ambiente containerizado, quem atende `/api` é o nginx do
+`web/`, que encaminha para a api. Aqui o servidor de teste faz o mesmo
+papel: o `npm run servidor` sobe o `http-server` com `-P
+http://localhost:3000`. O que não for arquivo do site, como `/api/people`, é
+encaminhado ao BFF. Assim o front fica na mesma origem do BFF, sem CORS e sem
+configuração especial.
+
+```bash
+# terminal à parte, antes dos testes
+cd api && npm ci && npm start
+```
+
+Sem o BFF, os cenários de Personagens e Filmes falham porque `/api/...`
+responde 404, já que o proxy não tem para onde encaminhar. Isso é intencional: o front não tem fallback para a
+swapi.info.
 
 ## Instalação
 

@@ -1,7 +1,21 @@
-import { BASE_URL, fetchJSON } from "../../core/api.js";
+import { fetchJSON } from "../../core/api.js";
+import { API_BASE } from "../../config.js";
+
+/* url da SWAPI → o mesmo recurso pelo BFF.
+   Os dados são pass-through: campos como homeworld, films e species trazem
+   urls absolutas da swapi.info (ex.: "https://swapi.info/api/films/1"). Para
+   buscar um desses recursos sem sair do BFF, troca-se a origem e mantém-se
+   o caminho: "/api/films/1". As urls originais continuam valendo como CHAVE
+   dos mapas (que são indexados por url); só a requisição muda de endereço.
+   Valor vazio passa direto, para quem chama continuar tratando "sem dado". */
+export function viaBff(url) {
+  if (!url) return url;
+  const caminho = /\/api\/(.+)$/.exec(url);
+  return caminho ? `${API_BASE}/${caminho[1]}` : url;
+}
 
 export function getPeople() {
-  return fetchJSON(`${BASE_URL}/people`);
+  return fetchJSON(`${API_BASE}/people`);
 }
 
 /* url do personagem → o personagem inteiro.
@@ -12,7 +26,7 @@ let peopleMapPromise = null;
 
 export function getPeopleMap() {
   if (!peopleMapPromise) {
-    peopleMapPromise = fetchJSON(`${BASE_URL}/people`)
+    peopleMapPromise = fetchJSON(`${API_BASE}/people`)
       .then((lista) => new Map(lista.map((p) => [p.url, p])))
       .catch(() => new Map());
   }
@@ -39,7 +53,7 @@ export function getPortraits() {
 export async function getPersonSpecies(person) {
   if (!person.species || person.species.length === 0) return "Human (implícito)";
   const species = await Promise.all(
-    person.species.map((url) => fetchJSON(url).catch(() => null))
+    person.species.map((url) => fetchJSON(viaBff(url)).catch(() => null))
   );
   return species.filter(Boolean).map((s) => s.name).join(", ") || "Desconhecida";
 }
@@ -54,7 +68,7 @@ let speciesMapPromise = null;
 /* url da espécie → nome (ex.: ".../species/2" → "Droid") */
 export function getSpeciesMap() {
   if (!speciesMapPromise) {
-    speciesMapPromise = fetchJSON(`${BASE_URL}/species`)
+    speciesMapPromise = fetchJSON(`${API_BASE}/species`)
       .then((list) => new Map(list.map((s) => [s.url, s.name])))
       .catch(() => new Map());
   }
@@ -66,7 +80,7 @@ let filmsMapPromise = null;
 /* url do filme → { episode, title } */
 export function getFilmsMap() {
   if (!filmsMapPromise) {
-    filmsMapPromise = fetchJSON(`${BASE_URL}/films`)
+    filmsMapPromise = fetchJSON(`${API_BASE}/films`)
       .then((list) => new Map(list.map((f) => [f.url, { episode: f.episode_id, title: f.title }])))
       .catch(() => new Map());
   }
@@ -80,8 +94,8 @@ let craftMapPromise = null;
 export function getCraftMap() {
   if (!craftMapPromise) {
     craftMapPromise = Promise.all([
-      fetchJSON(`${BASE_URL}/starships`).catch(() => []),
-      fetchJSON(`${BASE_URL}/vehicles`).catch(() => []),
+      fetchJSON(`${API_BASE}/starships`).catch(() => []),
+      fetchJSON(`${API_BASE}/vehicles`).catch(() => []),
     ]).then(([starships, vehicles]) => {
       const map = new Map();
       starships.forEach((s) => map.set(s.url, { name: s.name, kind: "starships" }));
