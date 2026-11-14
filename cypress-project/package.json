@@ -9,7 +9,7 @@
     "test": "start-server-and-test servidor http://localhost:8080 test:bdd",
     "test:bdd": "cypress run --config-file cypress.bdd.config.js",
     "abrir:bdd": "cypress open --config-file cypress.bdd.config.js",
-    "servidor": "http-server .. -p 8080 -s"
+    "servidor": "http-server .. -p 8080 -s -P http://localhost:3000"
   },
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^28.0.0",
