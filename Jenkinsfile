@@ -187,14 +187,11 @@ pipeline {
           )]) {
             // O destinatário NUNCA é passado como literal: vem do ambiente,
             // injetado pelo JCasC a partir do .env (critério 5).
-            sh """
-              node scripts/ci/notificar.js \
-                --status "${currentBuild.currentResult}" \
-                --build  "${env.BUILD_NUMBER}" \
-                --job    "${env.JOB_NAME}" \
-                --commit "${env.GIT_SHA_CURTO ?: '-'}" \
-                --url    "${env.BUILD_URL}"
-            """
+            // O script lê somente o ambiente; o Jenkins fornece as demais
+            // variáveis do build e este bloco fornece o resultado final.
+            withEnv(["BUILD_STATUS=${currentBuild.currentResult}"]) {
+              sh 'node scripts/ci/notificar.js'
+            }
           }
         } else {
           echo '''
