@@ -550,10 +550,39 @@ marcação. A comunicação real entre frontend, BFF e containers precisa
 ser validada no ambiente integrado quando a origem compartilhada e o
 proxy do Bloco E estiverem disponíveis.
 
+**Eduardo Bertozzi**
+
+*Os quatro prompts abaixo são trechos literais das conversas no Claude Code, com a grafia original. Fui responsável pelo Bloco B (imagem da aplicação): a estrutura base do BFF, o `api/Dockerfile`, o `empacotar.sh`, o `imagem.sh` e a ligação de Personagens e Filmes ao BFF. As decisões estão em [api/DECISOES.md](api/DECISOES.md).*
+
+**Prompt 1: Formato do BFF definido pelo que as views já esperam**
+> "O formato de resposta deve ser o que as views js/ de Personagens e Filmes já esperam hoje, pra não quebrar os cenários Cypress. [...] Comece lendo o estado atual do repo [...] e me mostre um plano curto antes de escrever código."
+
+Aceita: antes de escrever código, a IA leu as views e mostrou que elas indexam os dados pelo campo `url` e cruzam recursos por ele. Daí veio a proposta de **pass-through fiel**: o BFF devolve o JSON da SWAPI sem reescrever as URLs. Ela também propôs o contrato de erro (400 para id inválido, 404 para inexistente, 502 para SWAPI fora ou timeout, tudo em JSON). Aprovei os dois e eles entraram no PR #48. A comparação do JSON do BFF com o da swapi.info deu idêntico nas quatro rotas, e os cenários Cypress da NP1 passaram sem alteração.
+
+**Prompt 2: Recusa do fallback para a swapi.info no front**
+> "Sobre o API_BASE: não faz fallback pra swapi.info no front; a constante vai em js/config.js com /api como padrão, que é do Lima."
+
+Recusada e refeita: o plano da IA previa que o front tentasse o BFF e, se falhasse, chamasse a swapi.info direto, para os testes continuarem passando fora do ambiente containerizado. Recusei porque o fallback esconderia justamente a falha que o smoke test e a aba Network precisam mostrar, e porque o critério de pronto do grupo é nenhuma chamada direta à swapi.info. Ficou `API_BASE = "/api"`, relativo e sem fallback. Para o Cypress funcionar fora do compose, o servidor de teste ganhou um proxy para o BFF (PR #59). Conferido no navegador: 93 requisições, nenhuma para a swapi.info.
+
+**Prompt 3: Rodar os scripts antes do commit expôs uma imagem não reprodutível**
+> "Os dois seguindo o padrão do _comum.sh do Gabriel. Roda os dois localmente antes de commitar."
+
+Aceita com ajustes: a primeira versão do `imagem.sh` funcionava, mas, ao rodá-la duas vezes, o mesmo commit gerou imagens com **IDs diferentes** nas builds 42 e 43. A IA testou as causas uma a uma: tirou os labels de data e de número de build (não bastou), fixou `SOURCE_DATE_EPOCH` na data do commit (ainda não bastou) e por fim desligou a atestação de proveniência do buildx (`--provenance=false`). Só com tudo junto o ID ficou igual, e é isso que sustenta o critério 2 (imagem reproduzível). O defeito não aparecia em uma execução isolada; só apareceu porque a ordem foi rodar e comparar.
+
+**Prompt 4: Explicação linha a linha para a defesa**
+> "Antes do item 8: me explica o api/Dockerfile linha por linha, e depois o imagem.sh, como se eu fosse te apresentar na defesa oral. Pra cada linha: o que faz, por que está nessa posição, e o que quebraria se eu tirasse."
+
+Aceita com ajustes: ao explicar o próprio código, a IA apontou três pontos fracos que não tinha mencionado ao entregá-lo. (1) O `COPY src` do estágio build não tinha uso na época. (2) O `npm prune --omit=dev` não removia nada porque ainda não havia devDependencies; hoje, com os testes da Daniele, ele reduz o `node_modules` de 76 MB para 19,6 MB. (3) A conferência de usuário não-root do `imagem.sh` não pega `root:root`. A explicação mostrou também que `ENV PORT=3000` não é redundante: sem ele, o HEALTHCHECK do Dockerfile aponta para `localhost:/api/health` e o container nunca fica saudável fora do compose.
+
+**Como foi a validação:** cada PR foi testado antes do commit. O BFF foi testado com `npm start` e curl em todas as rotas, nos casos 400, 404 e 502 e com a SWAPI fora e travada. A imagem foi construída e conferida com `docker build` (healthy em ~6 s, `whoami` = `node`, código sem permissão de escrita, `docker stop` em 1 s). O `empacotar.sh` e o `imagem.sh` rodaram com as variáveis do Jenkins simuladas, e foi conferido que eles recusam `latest` e tag inválida. Por fim, rodei a suíte Cypress BDD completa via `npm test` (65/65) e a do Jest do BFF (100% de cobertura).
+
 ### O que não foi feito por IA
 
 - Definição do escopo e das views do site (Hub, Planetas, Personagens, Filmes, Naves e Veículos, Espécies).
 - Decisões de dados e inferências da equipe (regiões/coordenadas do mapa da galáxia, anos da cronologia da saga, vocabulário de tradução pt-BR) — documentadas na seção "Decisões de dados" deste README.
 - Distribuição das tarefas entre os integrantes e organização dos Pull Requests.
+- Entrega do Bloco B em três PRs pequenos (#48 BFF, #49 imagem, #50 scripts de CI), na ordem de quem destravava mais colegas, em vez de um PR completo no fim.
+- Requisitos do BFF definidos pelo Eduardo antes de qualquer código: preservar o formato que as views já consumiam, separar `app.js` de `server.js` para os testes do Bloco C e expor uma função única `buscar()` para o cache do Bloco D.
+- A recusa do fallback para a swapi.info no front, e o critério de que nenhuma chamada saia direto para ela.
 - Definição dos casos de teste específicos de cada funcionalidade nova (critério de quais cenários válidos/inválidos importavam para cada tela) e revisão final de todo teste antes do merge.
 - Decisão da ferramenta de performance (k6) e da carga usada nos testes, por se tratar de API pública de terceiros.
