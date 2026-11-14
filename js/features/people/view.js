@@ -6,6 +6,7 @@ import {
   getFilmsMap,
   getCraftMap,
   speciesNameOf,
+  viaBff,
 } from "./api.js";
 import { getPlanetName } from "../../core/api.js";
 import { setIntent, takeIntent } from "../../core/nav-intent.js";
@@ -872,7 +873,7 @@ function crawlDe(url) {
   if (!cacheCrawl.has(url)) {
     cacheCrawl.set(
       url,
-      fetch(url)
+      fetch(viaBff(url))
         .then((r) => r.json())
         .then((f) =>
           String(f.opening_crawl || "")
@@ -1190,7 +1191,7 @@ export async function renderPersonModal(person, ctx = {}) {
 
     const [especie, planeta, portraits, filmsMap, craftMap, speciesMap] = await Promise.all([
       getPersonSpecies(p),
-      getPlanetName(p.homeworld),
+      getPlanetName(viaBff(p.homeworld)),
       getPortraits(),
       getFilmsMap(),
       getCraftMap(),
@@ -1303,7 +1304,7 @@ export async function renderPersonModal(person, ctx = {}) {
     homePill.append(canvas, rotulo);
     if (planeta !== "Desconhecido") {
       try {
-        const bruto = await fetch(p.homeworld).then((r) => r.json());
+        const bruto = await fetch(viaBff(p.homeworld)).then((r) => r.json());
         if (meu !== pedido) return;
         miniPlaneta = createPlanetView(canvas, bruto, { size: 24, slices: 24 });
       } catch (_) { /* sem o planeta cru, fica só o nome */ }
