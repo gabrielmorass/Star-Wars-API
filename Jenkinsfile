@@ -41,8 +41,8 @@ pipeline {
     // Eduardo (Bloco B) e Lima (Bloco E) — ver docs-local/plano-np2-devops.docx.
     // DOCKERHUB_NS é o dono da imagem no Hub. Sem hífen de propósito: o
     // Docker Hub não aceita hífen em nome de usuário/organização.
-    DOCKERHUB_NS = "${env.DOCKERHUB_USER ?: 'codexestelar'}"
-    IMAGE_REPO = "${env.DOCKERHUB_USER ?: 'codexestelar'}/codex-estelar-api"
+    DOCKERHUB_NS = "${env.DOCKERHUB_USER ?: 'p4rzivalrace'}"
+    IMAGE_REPO = "${env.DOCKERHUB_USER ?: 'p4rzivalrace'}/codex-estelar-api"
     IMAGE_TAG  = "${env.BUILD_NUMBER}"
 
     // Artefatos (critério 4).
