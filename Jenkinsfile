@@ -190,7 +190,13 @@ pipeline {
             // O script lê somente o ambiente; o Jenkins fornece as demais
             // variáveis do build e este bloco fornece o resultado final.
             withEnv(["BUILD_STATUS=${currentBuild.currentResult}"]) {
-              sh 'node scripts/ci/notificar.js'
+              // Falha de notificação nunca muda o resultado da build.
+              try {
+                sh 'npm ci --prefix scripts/ci --no-audit --no-fund'
+                sh 'node scripts/ci/notificar.js'
+              } catch (e) {
+                echo "[notificação] falhou: ${e.message}"
+              }
             }
           }
         } else {
