@@ -4,16 +4,43 @@ const request = require('supertest');
 const nock = require('nock');
 const app = require('../src/app');
 const swapi = require('../src/services/swapi');
+const health = require('../src/routes/health');
 const { version } = require('../package.json');
 
 const ORIGEM = 'https://swapi.info';
 
 describe('TC-091 saúde e tratamento de rotas', () => {
+  // A sonda do cache é estado de módulo: quem registra é o server.js, que
+  // não roda nos testes. Zerar depois de cada caso evita que um teste
+  // vaze estado para o seguinte.
+  afterEach(() => health.definirSondaDeCache(null));
+
   test('health responde sem consultar SWAPI ou Redis e não anuncia Express', async () => {
     const resposta = await request(app).get('/api/health').expect(200);
-    expect(resposta.body).toEqual({ status: 'ok', versao: version });
+    expect(resposta.body).toEqual({ status: 'ok', versao: version, cache: 'desligado' });
     expect(resposta.headers['content-type']).toMatch(/application\/json/);
     expect(resposta.headers['x-powered-by']).toBeUndefined();
+  });
+
+  test('health informa o cache conectado quando a sonda diz que está pronto', async () => {
+    health.definirSondaDeCache(() => 'conectado');
+    const resposta = await request(app).get('/api/health').expect(200);
+    expect(resposta.body).toEqual({ status: 'ok', versao: version, cache: 'conectado' });
+  });
+
+  test('health devolve 200 com o cache indisponível, nunca 503', async () => {
+    // O contrato da rota: Redis fora NÃO deixa a api unhealthy, senão uma
+    // queda do cache derrubaria o web pelo depends_on do compose.
+    health.definirSondaDeCache(() => 'indisponivel');
+    const resposta = await request(app).get('/api/health').expect(200);
+    expect(resposta.body.cache).toBe('indisponivel');
+    expect(resposta.body.status).toBe('ok');
+  });
+
+  test('sonda inválida cai no padrão em vez de quebrar a rota', async () => {
+    health.definirSondaDeCache('nao sou funcao');
+    const resposta = await request(app).get('/api/health').expect(200);
+    expect(resposta.body.cache).toBe('desligado');
   });
 
   test('rota inexistente devolve erro JSON', async () => {

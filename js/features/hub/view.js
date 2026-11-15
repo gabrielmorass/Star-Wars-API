@@ -1,8 +1,11 @@
+import { montarStatus } from "./status.js";
+
 export function renderHub(container, navigate) {
   container.innerHTML = `
     <section class="hub-hero">
       <h1>Codex Estelar</h1>
       <p>Uma enciclopédia navegável da saga: um mapa da galáxia, os personagens numa linha do tempo, a abertura de cada filme como no cinema, um hangar 3D e as espécies que povoam tudo isso.</p>
+      <p class="hub-status status-off" data-status-bff role="status">verificando o BFF…</p>
     </section>
     <div class="hub-cards">
       <button class="hub-card" data-nav="planets" type="button">
@@ -83,4 +86,8 @@ export function renderHub(container, navigate) {
   container.querySelectorAll("[data-nav]").forEach((el) => {
     el.addEventListener("click", () => navigate(el.dataset.nav));
   });
+
+  // Indicador de status do BFF. Não é esperado de propósito: o Hub termina
+  // de renderizar agora e o indicador se atualiza quando a resposta chegar.
+  montarStatus(container.querySelector("[data-status-bff]"));
 }
