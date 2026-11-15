@@ -2,7 +2,9 @@
 
 > **"Que a Força esteja com o seu código."**
 
-Front-end estático (HTML + CSS + JavaScript puro, sem build) conectado à [SWAPI](https://swapi.info) — base do projeto de Qualidade de Software do **Inatel**.
+Front-end em HTML, CSS e JavaScript puro (sem build) servido por **nginx**, com um **BFF em Node/Express** na frente da [SWAPI](https://swapi.info) e **Redis** como cache. Todo o ambiente sobe com Docker Compose, e a entrega contínua roda num **Jenkins containerizado**, configurado por código.
+
+Projeto das disciplinas de Qualidade de Software (NP1) e Gerência de Configuração e Evolução de Software (NP2) do **Inatel**.
 
 **Acesse o site:**
 [Codex Estelar](https://codexestelar.netlify.app/)
@@ -11,17 +13,29 @@ Front-end estático (HTML + CSS + JavaScript puro, sem build) conectado à [SWAP
 
 ## 🛠️ Como rodar o site
 
-Como `js/main.js` usa ES Modules (`import`/`export`), abrir `index.html` direto com duplo-clique (`file://`) pode ser bloqueado pelo navegador. Sirva a pasta com um servidor estático simples:
+Há duas formas. **A primeira é a recomendada** — e a única que sobe o projeto inteiro.
+
+### Opção 1 — Ambiente completo com Docker
+
+Quatro containers: site, BFF, cache e servidor de integração contínua.
 
 ```bash
-# Opção 1 — Python (já vem instalado na maioria dos sistemas)
-python3 -m http.server 8080
+cp .env.example .env     # copie e preencha; o .env nunca é versionado
+docker compose up -d --build
+```
 
-# Opção 2 — Node
+Pronto. O site fica em **http://localhost:8080**. Os detalhes estão em [🐳 Ambiente com Docker](#-ambiente-com-docker), logo abaixo.
+
+### Opção 2 — Só o front, com servidor estático
+
+Serve para mexer em CSS e layout sem subir nada. Como `js/main.js` usa ES Modules (`import`/`export`), abrir `index.html` com duplo-clique (`file://`) é bloqueado pelo navegador — é preciso um servidor:
+
+```bash
+python3 -m http.server 8080      # ou
 npx http-server . -p 8080
 ```
 
-Depois acesse `http://localhost:8080`.
+> **Atenção:** nesta opção as telas de **Personagens** e **Filmes** não carregam. As duas passaram a buscar dados pelo BFF (`/api`), que só existe atrás do nginx do container `web`. Planetas, Espécies e Naves e Veículos continuam chamando a SWAPI direto e funcionam normalmente.
 
 ---
 
@@ -84,6 +98,89 @@ docs-local/                # notas internas do grupo (não versionadas — ver .
 
 ---
 
+## 🐳 Ambiente com Docker
+
+Quatro containers numa rede só (`codex-net`). A topologia completa, com todas as variáveis e os problemas conhecidos, está em **[INFRA.md](INFRA.md)**.
+
+| Serviço | O que é | Porta no host |
+|---|---|---|
+| `web` | nginx servindo o front e encaminhando `/api` para a api | **8080** |
+| `api` | BFF em Node/Express sobre a SWAPI | 3000 |
+| `redis` | cache das respostas da SWAPI | interno |
+| `jenkins` | servidor de integração contínua | **8081** |
+
+### Antes de subir
+
+Você precisa de **Docker** e do plugin **Docker Compose v2** (`docker compose version`).
+
+```bash
+cp .env.example .env
+```
+
+O `.env.example` documenta cada variável e **não contém segredo nenhum** — ele é o contrato de configuração do projeto, e é versionado de propósito. O `.env`, com os valores reais, nunca é commitado.
+
+Para só abrir o site, os padrões bastam. Duas variáveis merecem atenção:
+
+- **`DOCKER_GID`** — o GID do grupo dono de `/var/run/docker.sock` **na sua máquina**. É o que permite ao Jenkins construir imagens. No Docker Desktop (Windows e macOS) costuma ser `0`; no Linux, descubra com `stat -c '%g' /var/run/docker.sock`. **Não copie esse valor de outra pessoa.**
+- **`EMAIL_DESTINATARIO` e `SMTP_*`** — só para a notificação do pipeline. Sem elas, todo o resto funciona.
+
+### Subir, conferir e derrubar
+
+```bash
+docker compose up -d --build        # sobe os quatro
+docker compose ps                   # os quatro devem ficar "healthy"
+docker compose logs -f api          # acompanha um serviço
+docker compose down                 # derruba, PRESERVANDO os volumes
+```
+
+O Jenkins é o mais lento: leva cerca de 90 segundos para ficar `healthy`.
+
+Confira que o caminho completo funciona — a chamada abaixo sai do host, passa pelo nginx e chega na api:
+
+```bash
+curl http://localhost:8080/api/health
+# {"status":"ok","versao":"1.0.0","cache":"conectado"}
+```
+
+O campo `cache` diz se o Redis está acessível. Com ele fora, a resposta vira `"indisponivel"` e **a api continua respondendo 200**: o cache tem degradação graciosa, e as rotas seguem buscando na SWAPI. O Hub mostra esse mesmo estado numa pastilha colorida.
+
+### Jenkins
+
+Abra **http://localhost:8081** e entre com o `JENKINS_ADMIN_ID` e a `JENKINS_ADMIN_PASSWORD` do seu `.env`.
+
+O job **codex-estelar-np2** já está criado. Ninguém o configurou pela interface: ele nasce do `jenkins/casc.yaml` no boot do container, junto com o usuário, as credenciais e as variáveis globais. Apague o container e o volume, suba de novo, e ele volta igual.
+
+### Volumes
+
+```bash
+docker compose config --volumes   # nomes declarados
+docker volume ls                   # nomes reais na máquina
+```
+
+Dois volumes preservam estado entre reinícios: **`codex_jenkins_home`** (jobs, histórico de builds e artefatos) e **`redis_data`** (o cache). O primeiro tem nome fixo no `docker-compose.yml`, de propósito, para que trocar o nome do projeto não crie um volume novo e apague o histórico; o segundo recebe o prefixo do projeto e aparece como `star-wars-api_redis_data`. O `docker compose down` mantém os dois; **`docker compose down -v` apaga tudo**, inclusive o histórico do Jenkins.
+
+### Imagem publicada
+
+A imagem da api é publicada pelo pipeline em **[p4rzivalrace/codex-estelar-api](https://hub.docker.com/r/p4rzivalrace/codex-estelar-api)**, repositório público:
+
+```bash
+docker pull p4rzivalrace/codex-estelar-api:latest
+```
+
+Cada build publica três tags: o número do build, o SHA curto do commit e `latest`. As duas primeiras são imutáveis e dizem exatamente qual código está dentro; `latest` é só um ponteiro de conveniência.
+
+### Problemas conhecidos
+
+| Sintoma | Causa e solução |
+|---|---|
+| `additional privileges requested: pass "--allow=fs.read=..."` durante o build | Acontece no **Git Bash** no Windows. Rode o `docker compose` pelo **PowerShell** ou pelo CMD. |
+| O Jenkins não consegue rodar `docker` | `DOCKER_GID` errado no `.env`. Corrija e recrie: `docker compose up -d --build jenkins`. |
+| Porta 8080 ou 8081 ocupada | Ajuste `WEB_PORT` no `.env`, ou a porta do Jenkins no `docker-compose.yml`. |
+| `bad interpreter` ao rodar um `.sh` | Arquivo com quebra de linha do Windows. O `.gitattributes` força LF; rode `git add --renormalize .` |
+
+Mais casos, incluindo os do pipeline, em [INFRA.md](INFRA.md) e [jenkins/README.md](jenkins/README.md).
+
+---
 ## 🧪 Como rodar os testes
 
 Este projeto tem quatro suítes de teste independentes, cada uma com seu
