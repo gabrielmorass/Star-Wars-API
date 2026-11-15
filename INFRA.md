@@ -28,7 +28,7 @@ Por que quatro e não dois: cada um atende uma responsabilidade distinta. O web 
 ### Quem fala com quem
 
 - navegador → web: HTTP na porta publicada do web.
-- web → api: HTTP pela rede `codex-net`, usando o nome do serviço (`api`) como endereço, via `proxy_pass` do nginx (`web/nginx.conf`). <!-- confirmar com o Lima quando o web/ entrar na main -->
+- web → api: HTTP pela rede `codex-net`, usando o nome do serviço (`api`) como endereço, via `proxy_pass` do nginx (`web/nginx.conf`).
 - api → redis: TCP na porta 6379, endereço `redis://redis:6379`.
 - api → SWAPI: HTTPS pela internet, só quando a resposta não está no cache.
 - jenkins → Docker: pelo socket `/var/run/docker.sock` montado do host. É assim que ele constrói e publica imagens.
@@ -157,3 +157,13 @@ Verificado com `docker compose stop redis`: a rota continuou respondendo `200`, 
 - O Jenkins não consegue rodar `docker`: ajuste `DOCKER_GID` (ver `jenkins/README.md`) e reconstrua com `docker compose up -d --build jenkins`.
 - `bash scripts/ci/smoke.sh` falha com `\r: command not found`: o arquivo está com quebra de linha do Windows. Converta para LF.
 - No Windows, rode os scripts `.sh` no Git Bash, não no WSL (o WSL não enxerga o Docker do Windows por padrão).
+
+## Validação do ambiente
+
+Resultados de testes feitos com o compose completo:
+
+- `docker compose up -d --build` (com a api construída localmente pelo override): redis, api, web e jenkins ficaram `healthy`. `http://localhost:8080/` e `http://localhost:8080/api/health` responderam `200`; o segundo passa pelo nginx até a api, o que valida o `proxy_pass` para `api:3000`.
+- `SMOKE_DEV=1 bash scripts/ci/smoke.sh`: as quatro verificações passaram (web alcança a api na rede, proxy do nginx, rota `/api/vehicles` com `name` no corpo, `PONG` do Redis) e o ambiente foi derrubado no final.
+- Modo Docker Hub (`docker compose -f docker-compose.yml up -d`): só funciona depois que o estágio Publicar do pipeline enviar a imagem para o Hub (o `publicar.sh` publica o sha do commit, o número do build e `latest`). Antes disso, o `pull` falha com `pull access denied`. Para rodar o smoke sem depender do Hub, use `SMOKE_DEV=1`.
+
+Dentro do container web, o smoke usa `127.0.0.1` e não `localhost`: na imagem Alpine o `localhost` resolve primeiro para IPv6 (`::1`), e o nginx escuta só em IPv4.
