@@ -138,8 +138,28 @@ pipeline {
       }
     }
 
+    // O publicar.sh exige DOCKERHUB_USER e DOCKERHUB_TOKEN no ambiente. O
+    // casc.yaml exporta o USER como variável global de todo build, mas o
+    // TOKEN existe só dentro da credencial 'dockerhub' — e sem este
+    // withCredentials ele nunca chegava ao estágio. O resultado era que o
+    // Publicar não podia funcionar em máquina nenhuma: falhava sempre no
+    // exigir_env do token. Mesmo padrão que a notificação já usa com 'smtp'.
+    //
+    // O nome de DESTINO da imagem sai de IMAGE_REPO, definido no bloco
+    // environment acima, e não do usuário do login — então quem publica e
+    // onde publica ficam independentes.
     stage('Publicar no Docker Hub') {
-      steps { script { etapa('Publicar no Docker Hub', 'Lima', 'scripts/ci/publicar.sh') } }
+      steps {
+        script {
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub',
+            usernameVariable: 'DOCKERHUB_USER',
+            passwordVariable: 'DOCKERHUB_TOKEN'
+          )]) {
+            etapa('Publicar no Docker Hub', 'Lima', 'scripts/ci/publicar.sh')
+          }
+        }
+      }
     }
   }
 
