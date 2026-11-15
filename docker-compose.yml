@@ -40,7 +40,9 @@ services:
     restart: unless-stopped
 
   web:
-    build: ./web
+    build:
+      context: .
+      dockerfile: web/Dockerfile
     depends_on:
       api:
         condition: service_healthy
@@ -49,7 +51,7 @@ services:
     ports:
       - "${WEB_PORT:-8080}:80"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/ || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 5
