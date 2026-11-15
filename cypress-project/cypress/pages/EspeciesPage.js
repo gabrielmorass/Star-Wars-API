@@ -54,6 +54,21 @@ class EspeciesPage {
       .and('contain.text', 'idioma do servidor')
   }
 
+  verificarApresentacaoDoBff(especie) {
+    const { ptBR } = especie
+    this.cards.should('have.length', 1).and('contain.text', especie.name)
+    cy.get('#species-grid .meta').should('contain.text', ptBR.classification)
+      .and('contain.text', ptBR.language)
+    this.detalhe.find('.sp-head-pills').should('contain.text', ptBR.classification)
+      .and('contain.text', ptBR.designation).and('contain.text', ptBR.language)
+    const camposDeCor = ['skin_colors', 'hair_colors', 'eye_colors']
+    camposDeCor.forEach((campo, indice) => {
+      ptBR[campo].forEach(({ nome }) => {
+        this.detalhe.find('.sp-cor-linha').eq(indice).should('contain.text', nome)
+      })
+    })
+  }
+
   verificarAmostrasDoServidor() {
     const nomes = ['pele do servidor', 'cabelo do servidor', 'olhos do servidor']
     const cores = ['rgb(123, 74, 45)', 'rgb(31, 31, 31)', 'rgb(59, 130, 246)']

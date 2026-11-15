@@ -9,7 +9,7 @@ import {
   normalizarLingua,
   traduzir,
 } from "../../core/vocabulario.js";
-import { getPeopleMap, getPortraits } from "../people/api.js";
+import { getPeopleMap, getPortraits, viaBff } from "../people/api.js";
 import { miniAvatar } from "../people/avatar.js";
 import { NOME_GLIFO, corHex, glifoDe, svgGlifo } from "./glifos.js";
 
@@ -76,8 +76,7 @@ const fracaoVida = (anos) =>
    texto, sem amostra. */
 function cores(valor, traduzidas) {
   // O BFF fornece o rótulo; o valor original continua resolvendo a amostra.
-  // Enquanto a origem compartilhada não migra, dados sem ptBR usam a
-  // tradução local existente.
+  // Respostas sem ptBR continuam usando a tradução local existente.
   if (Array.isArray(traduzidas)) {
     return traduzidas.map(({ valor: original, nome }) => ({
       nome,
@@ -435,7 +434,7 @@ export function renderSpeciesView(container, species, navigate) {
     }
 
     if (!nomeDoPlaneta.has(sp.homeworld)) {
-      nomeDoPlaneta.set(sp.homeworld, getPlanetName(sp.homeworld));
+      nomeDoPlaneta.set(sp.homeworld, getPlanetName(viaBff(sp.homeworld)));
     }
     const nome = await nomeDoPlaneta.get(sp.homeworld);
     if (selecionado !== sp) return;

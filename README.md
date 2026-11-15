@@ -35,7 +35,7 @@ python3 -m http.server 8080      # ou
 npx http-server . -p 8080
 ```
 
-> **Atenção:** nesta opção as telas de **Personagens** e **Filmes** não carregam. As duas passaram a buscar dados pelo BFF (`/api`), que só existe atrás do nginx do container `web`. Planetas, Espécies e Naves e Veículos continuam chamando a SWAPI direto e funcionam normalmente.
+> **Atenção:** nesta opção as telas de **Personagens**, **Filmes** e **Espécies** não carregam. Elas buscam dados pelo BFF (`/api`) e precisam do nginx do container `web` ou de um proxy equivalente, como o servidor de testes. Planetas e Naves e Veículos continuam chamando a SWAPI diretamente.
 
 ---
 
@@ -186,7 +186,7 @@ Mais casos, incluindo os do pipeline, em [INFRA.md](INFRA.md) e [jenkins/README.
 Este projeto tem quatro suítes de teste independentes, cada uma com seu
 próprio README:
 
-- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 13, BDD/Gherkin, Page Object Model) — 65 cenários, incluindo quatro da NP2 com dados simulados para a apresentação de Espécies
+- **[cypress-project/](cypress-project/README.md)** — testes de interface (Cypress 16, BDD/Gherkin, Page Object Model) — 67 cenários, incluindo quatro com dados simulados para a apresentação de Espécies, um com o BFF real e um de falha HTTP sem acesso direto à SWAPI
 - **[api-testing/](api-testing/README.md)** — testes de API (Postman/Newman) contra a SWAPI — 29 requisições
 - **[api/](api/README.md)** — testes unitários e de integração do BFF (Jest, Supertest e Nock), com SWAPI e Redis simulados e cobertura mínima de 90% em cada métrica global
 - **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
@@ -194,7 +194,7 @@ próprio README:
 Resumo rápido (execute cada comando a partir da raiz do repositório):
 
 ```bash
-# Testes de interface
+# Testes de interface (Node.js compatível com Cypress 16; BFF já rodando na porta 3000)
 cd cypress-project && npm install && npm test
 
 # Testes de API externa (SWAPI)
@@ -313,7 +313,7 @@ API devolve (e é isso que os testes afirmam). Já `arid`, `male`, `gastropod` e
 possíveis, e aparecem colados a rótulos em português ("Clima", "Classificação").
 Esses passam por `traduzir()`.
 
-Os dicionários ficam em `js/core/vocabulario.js`, um só para todas as views:
+Os dicionários locais ficam em `js/core/vocabulario.js`, compartilhados pelas views:
 
 | Campo | Dicionário | Onde aparece |
 |---|---|---|
@@ -322,6 +322,12 @@ Os dicionários ficam em `js/core/vocabulario.js`, um só para todas as views:
 | `terrain` | `TERRENO` | card do planeta |
 | `classification`, `designation` | `CLASSIFICACAO`, `DESIGNACAO` | grade e detalhe de Espécies |
 | `language` | `normalizarLingua()` | grade e detalhe de Espécies |
+
+Na tela de **Espécies**, a chamada `/api/species?idioma=pt-BR` solicita a
+tradução ao BFF, implementada em `api/src/domain/traduzir.js`. A interface
+prioriza os textos `ptBR` recebidos e usa os dicionários locais quando esse
+campo não existe. O planeta natal também é consultado pelo BFF, preservando
+as URLs originais dos dados para filtros e cruzamentos.
 
 Três detalhes que valem registro:
 
@@ -643,9 +649,10 @@ com testes do domínio e do contrato HTTP.
 
 Relação com a entrega: os quatro cenários Cypress (TC-114 a TC-117) usam
 interceptações para verificar apresentação, filtros, cores e escape de
-marcação. A comunicação real entre frontend, BFF e containers precisa
-ser validada no ambiente integrado quando a origem compartilhada e o
-proxy do Bloco E estiverem disponíveis.
+marcação. O TC-118 verifica a lista traduzida e o planeta natal pelo BFF
+real, sem simular as respostas, e o TC-119 verifica falha HTTP sem acesso
+direto à SWAPI. O ambiente containerizado tem uma verificação própria com
+o mesmo cenário e o Compose em execução.
 
 **Eduardo Bertozzi**
 

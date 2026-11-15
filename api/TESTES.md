@@ -80,7 +80,7 @@ JUnit.
 | Caso | Comportamento | Arquivo |
 | --- | --- | --- |
 | TC-091 | Saúde independente da SWAPI, 404 JSON e erro interno sem expor detalhes | `tests/routes.test.js` |
-| TC-092 | Listas dos quatro recursos atuais preservam arrays e referências | `tests/routes.test.js` |
+| TC-092 | Listas dos recursos parametrizados preservam arrays e referências | `tests/routes.test.js` |
 | TC-093 | Detalhes preservam o objeto original | `tests/routes.test.js` |
 | TC-094 | IDs inválidos são rejeitados sem chamar a origem | `tests/routes.test.js` |
 | TC-095 | Recurso inexistente na origem devolve 404 JSON | `tests/routes.test.js` |
@@ -106,10 +106,12 @@ JUnit.
 ### Interface de Espécies
 
 Os casos seguintes usam Cypress/BDD, fora do cálculo de cobertura do
-backend. Estão em
-`cypress-project/cypress/bdd/features/especies/traducao-do-servidor.feature`,
-a partir da raiz. As requisições de dados são simuladas e os seletores
-permanecem no Page Object `EspeciesPage`.
+backend. Estão em `cypress-project/cypress/bdd/features/especies/`, a partir
+da raiz. TC-114 a TC-117 ficam em `traducao-do-servidor.feature` e usam dados
+simulados. TC-118 e TC-119 ficam em `integracao-bff.feature`: o primeiro
+observa as respostas do BFF real, sem substituí-las, e o segundo simula
+uma falha HTTP para verificar o tratamento do erro. Os seletores permanecem
+no Page Object `EspeciesPage`.
 
 | Caso | Comportamento |
 | --- | --- |
@@ -117,6 +119,8 @@ permanecem no Page Object `EspeciesPage`.
 | TC-115 | Dados sem ptBR continuam usando a tradução local |
 | TC-116 | Textos com marcação são escapados e não criam elementos HTML |
 | TC-117 | Cores ausentes mostram texto sem amostras visuais |
+| TC-118 | Lista traduzida e planeta natal vêm do BFF real, sem consultas diretas do navegador à SWAPI |
+| TC-119 | Falha HTTP do BFF exibe erro sem recorrer diretamente à SWAPI |
 
 A expiração do TC-100 é simulada por um dublê do Redis: verifica que a
 aplicação volta à origem após um miss, sem pretender validar o próprio
@@ -136,15 +140,16 @@ tradução opcional e erros. A tela já dá preferência a `ptBR` quando
 recebido, com compatibilidade para a resposta antiga. O teste da interface
 com dados simulados está descrito no README de `cypress-project/`.
 
-A troca da origem em `getSpecies()` depende de `API_BASE` e do proxy web
-do Bloco E. Quando esse contrato estiver disponível, a chamada deverá
-usar `/species?idioma=pt-BR` na base configurada e ser validada contra o
-ambiente completo. Essa ligação ainda está pendente.
+A ligação da tela ao BFF usa `API_BASE` e solicita
+`/species?idioma=pt-BR`. A busca do planeta natal também passa pelo BFF;
+as URLs originais da SWAPI permanecem intactas nos dados. O TC-118 verifica
+a requisição à mesma origem do site, os textos retornados pelo backend e
+o planeta natal, sem simular essas respostas. Requer BFF e proxy em
+execução, além de acesso à SWAPI pelo servidor.
 
 A execução local não comprova publicação dos relatórios em um Jenkins
 real nem funcionamento do Compose. Essas evidências precisam ser
-conferidas no ambiente integrado quando as entregas do grupo estiverem
-disponíveis.
+conferidas em uma execução do pipeline e do ambiente containerizado.
 
 ## Referências das ferramentas
 

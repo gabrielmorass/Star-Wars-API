@@ -13,11 +13,12 @@ Given('que acesso Espécies com dados simulados {string}', (modo) => {
       especies[0].ptBR.skin_colors[0].nome = '<em>pele do servidor</em>'
     }
 
-    // Aceita a origem atual e a futura origem /api, sem configurar a
-    // migração compartilhada que pertence ao Bloco E.
-    cy.intercept('GET', '**/api/species*', { body: especies }).as('especiesSimuladas')
-    cy.intercept('GET', '**/api/people', { body: [] })
-    cy.intercept('GET', '**/api/planets/9', { body: { name: 'Coruscant' } })
+    // A fixture só atende o contrato usado pela tela: BFF da mesma origem
+    // com a apresentação pt-BR solicitada explicitamente.
+    const origem = new URL(Cypress.config('baseUrl')).origin
+    cy.intercept('GET', `${origem}/api/species?idioma=pt-BR`, { body: especies }).as('especiesSimuladas')
+    cy.intercept('GET', `${origem}/api/people`, { body: [] })
+    cy.intercept('GET', `${origem}/api/planets/9`, { body: { name: 'Coruscant' } })
     cy.intercept('GET', 'https://raw.githubusercontent.com/akabab/starwars-api/master/api/all.json', { body: [] })
     EspeciesPage.acessar()
     cy.wait('@especiesSimuladas')
