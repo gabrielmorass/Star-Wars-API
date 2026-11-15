@@ -7,8 +7,21 @@ const app = require('./app');
 
 const swapi = require('./services/swapi');
 const { ativarCache } = require('./services/cache');
+const health = require('./routes/health');
 
-ativarCache(swapi);
+const cacheLigado = ativarCache(swapi);
+
+// Liga o estado do cache ao /api/health (Bloco A). O registro é feito aqui,
+// e não no app.js, porque o app precisa continuar sem conhecer Redis para o
+// supertest rodar sem subir cache.
+//
+// isReady é do node-redis v4: só é true quando o cliente está conectado E
+// pronto para receber comandos. Durante uma queda do Redis ele fica false
+// sozinho, sem precisarmos escutar evento nenhum aqui.
+health.definirSondaDeCache(() => {
+  if (!cacheLigado) return 'desligado';
+  return cacheLigado.cliente?.isReady ? 'conectado' : 'indisponivel';
+});
 
 // Porta vem do ambiente (.env.example / docker-compose.yml), nunca fixa no
 // código. 3000 é só o padrão para rodar local sem configurar nada.

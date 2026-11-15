@@ -425,6 +425,42 @@ h1, h2, h3, .brand {
   line-height: 1.6;
 }
 
+/* Indicador de status do BFF (js/features/hub/status.js).
+   Pastilha discreta: informa sem competir com o título. As cores são
+   declaradas aqui, e não como variáveis de tema, porque significam
+   estado de sistema — devem ser as mesmas no Lado da Luz e no Sombrio.
+   Cada estado também tem texto próprio: quem não distingue as cores lê
+   a legenda e o title. */
+.hub-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 1.1rem auto 0;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  cursor: help;
+}
+
+/* A bolinha. Usa currentColor para acompanhar o estado sem repetir cor. */
+.hub-status::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.hub-status.status-ok    { color: #5fd49a; }
+.hub-status.status-aviso { color: #ffc861; }
+.hub-status.status-erro  { color: #ff8d8d; }
+.hub-status.status-off   { color: var(--text-dim); }
+
 /* Desktop: o título nunca quebra */
 @media (min-width: 720px) {
   .hub-hero h1 { white-space: nowrap; }
