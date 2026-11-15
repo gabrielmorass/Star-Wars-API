@@ -613,9 +613,9 @@ Aceita: a suíte Cypress não executava na minha máquina, e a IA deu **três di
 
 **Como foi a validação:** nada foi dado por pronto sem evidência. A imagem foi reconstruída e conferida (Jenkins 2.541.3, Node 20.20.2, dez plugins nas versões declaradas, zero divergência); o job criado pelo JCasC foi verificado no log de boot; o pipeline foi executado até ficar verde, até ficar vermelho de propósito e até arquivar artefato e relatório; o volume sobreviveu a `down`/`up` e à reconstrução da imagem, preservando o histórico de builds; e as três suítes de teste da NP1 foram rodadas localmente antes de qualquer commit.
 
-**Daniele Letícia**
+****Daniele Letícia**
 
-**Prompt 1: Dúvida sobre cobertura**
+**Prompt 1: Dúvida sobre cobertura
 > "Os testes passaram, mas isso já garante os 90% de cobertura? Qual a diferença entre cobertura de linhas, funções e ramificações? Confere como isso está configurado na minha parte."
 
 Relação com a entrega: testes aprovados não garantem o mínimo de cobertura.
@@ -679,6 +679,37 @@ Aceita com ajustes: a primeira versão do `imagem.sh` funcionava, mas, ao rodá-
 Aceita com ajustes: ao explicar o próprio código, a IA apontou três pontos fracos que não tinha mencionado ao entregá-lo. (1) O `COPY src` do estágio build não tinha uso na época. (2) O `npm prune --omit=dev` não removia nada porque ainda não havia devDependencies; hoje, com os testes da Daniele, ele reduz o `node_modules` de 76 MB para 19,6 MB. (3) A conferência de usuário não-root do `imagem.sh` não pega `root:root`. A explicação mostrou também que `ENV PORT=3000` não é redundante: sem ele, o HEALTHCHECK do Dockerfile aponta para `localhost:/api/health` e o container nunca fica saudável fora do compose.
 
 **Como foi a validação:** cada PR foi testado antes do commit. O BFF foi testado com `npm start` e curl em todas as rotas, nos casos 400, 404 e 502 e com a SWAPI fora e travada. A imagem foi construída e conferida com `docker build` (healthy em ~6 s, `whoami` = `node`, código sem permissão de escrita, `docker stop` em 1 s). O `empacotar.sh` e o `imagem.sh` rodaram com as variáveis do Jenkins simuladas, e foi conferido que eles recusam `latest` e tag inválida. Por fim, rodei a suíte Cypress BDD completa via `npm test` (65/65) e a do Jest do BFF (100% de cobertura).
+
+***Samile Barbosa**
+Bloco D (orquestração): Docker Compose, cache Redis, smoke test e INFRA.md. Usei o Claude pelo chat (claude.ai), e não pelo Claude Code. Abaixo, commit por commit: o que pedi, o que a IA propôs, o que eu decidi ou conferi
+
+
+**Prompt 1: Estrutura inicial do Docker Compose e divisão dos commits**
+
+> "Contexto: sou a Samile, Bloco D do projeto S07 NP2, Uso Windows com PowerShell e Docker Desktop. O repositório é gabrielmorass/Star-Wars-API e ainda não tem docker-compose.yml na main.
+me passa o arquivo completo, os comandos de validação (config, up, ps, down) com o resultado esperado de cada um , e o comando de commit."
+
+Resultado: Compose, rede, volumes e redis (infra(compose): adiciona rede codex-net, volumes e serviço redis com healthcheck) Arquivo: docker-compose.yml (raiz). Pedi ajuda com o passo a passo de cada commit do compose e o arquivo do primeiro. A IA propôs dividir o compose em quatro commits (redis, api e web, jenkins, override) e escreveu o primeiro: rede codex-net (bridge), volumes jenkins_home e redis_data, e o serviço redis (redis:7-alpine, appendonly yes, healthcheck com redis-cli ping a cada 10 s, reinício unless-stopped). Eu rodei a validação depois do commit: docker compose config, up -d redis e ps, que mostrou Up 12 seconds (healthy). Um commit vazio ficou no histórico antes desse, e a decisão foi não reescrever o histórico e usar Squash and merge no PR.
+
+**Prompt 2: Smoke test para validar uma segunda cópia do ambiente dentro do Jenkins**
+
+> "vou escrever um smoke test que sobe uma segunda copia do ambiente dentro do Jenkns o site já roda na 8080 e a api na 3000 no mesmo host, me manda o comandoe o resultado esperado do git diff e do docker compose config"
+
+Resultados: Arquivo: scripts/ci/smoke.sh. A IA releu o plano, leu o \_comum.sh e o testes-api.sh do Gabriel e escreveu o script no mesmo padrão (etapa, log, ok, falhar, exigir_comando). Decisões da IA, aceitas por mim: subir só redis, api e web (o Jenkins é quem executa o script); usar um projeto próprio (smoke-codex) e portas próprias (18080 e 13000); fazer as quatro verificações por dentro da rede com docker compose exec (web alcança a api, proxy do nginx, rota real com 200 e name no corpo, PONG do Redis), porque no pipeline um localhost de dentro do Jenkins não chega nos containers do host; e derrubar tudo com trap EXIT, passando ou falhando. Rodei bash -n e o script no Git Bash. No WSL deu erro de Docker não encontrado; no Git Bash o script falhou por falta do web/, e docker compose -p smoke-codex ps -a voltou vazio, o que prova a limpeza.
+
+**Prompt 3: Código da IA descartado quando o código real apareceu**
+>"tive updates do eduardo , podemos continuar direito agora"
+
+Resultados: Cache Redis (feat(api): adiciona camada de cache Redis com degradação graciosa) Arquivos: api/src/services/cache.js, api/package.json, api/package-lock.json. Pedi para escrever o cache. A primeira versão foi feita sem ver o BFF do Eduardo. Depois que colei o app.js, o \_recurso.js, o swapi.js e o README dele, a IA reescreveu para o padrão combinado: criarCache (cliente injetado, TTL padrão de 300 s, limite de 200 ms por operação, prefixo codex:) com obter, guardar e lembrar; comCache, que envolve o swapi.buscar; e ativarCache, que liga o cache só quando existe REDIS_URL, com disableOfflineQueue e um tratador de error, sem o qual o Node cairia junto com o Redis. A IA testou o módulo em ambiente simulado, e erros da SWAPI nunca vão para o cache. Eu validei com o Redis de verdade: duas chamadas a /api/vehicles deixaram a chave codex:vehicles; com docker compose stop redis, /api/starships continuou respondendo 200, e o log mostrou Redis indisponível e The client is offline. O ttl veio 128 e não 300, porque a chave do teste anterior sobreviveu no volume redis_data
+
+**Prompt 4: Criação da documentação de infraestrutura (INFRA.md)**
+
+> "o plano exige um INFRA.md na raiz. Colo abaixo as exigências do plano para esse arquivo, o .env.example, o docker-compose.yml e o smoke.sh atuais"
+
+4.5: Commit enviado com o arquivo vazio
+>"calma qu esqueci de salvar e o infra nao foi com o conteudo"
+
+Resultados:A IA releu o plano para saber o que o arquivo precisa conter e pediu o .env.example e o compose da main para montar a tabela de variáveis. O arquivo tem topologia, quem fala com quem, portas, variáveis, comandos, volumes, cache, smoke e problemas comuns. Ele foi comitado e enviado vazio, porque eu não tinha salvo, e a IA recomendou um commit novo em vez de reescrever o histórico. Os testes de persistência alimentaram a seção sobre volumes: com o Jenkins, depois de down e up, o ps -a veio vazio, o volume codex_jenkins_home continuou na lista, e o job com o build #1 e a duração de 59 s reapareceram iguais.
 
 ### O que não foi feito por IA
 
