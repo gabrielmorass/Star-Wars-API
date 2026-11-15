@@ -98,10 +98,10 @@ etapa "Verificações"
 checar_http "web alcança a api na rede codex-net" "http://api:3000/api/health"
 
 # 2. web -> api passando pelo proxy do nginx (web/nginx.conf).
-checar_http "proxy do nginx chega na api" "http://localhost/api/health"
+checar_http "proxy do nginx chega na api" "http://127.0.0.1/api/health"
 
 # 3. rota real do BFF, pelo caminho que o navegador usa.
-checar_http "rota real do BFF (${ROTA})" "http://localhost${ROTA}" "$ESPERADO"
+checar_http "rota real do BFF (${ROTA})" "http://127.0.0.1${ROTA}" "$ESPERADO"
 
 # 4. redis respondendo (critério 8, segundo par: api -> redis na 6379).
 log "redis responde ao PING"
