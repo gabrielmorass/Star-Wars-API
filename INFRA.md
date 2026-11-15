@@ -53,7 +53,7 @@ Copie `.env.example` para `.env` e preencha. O `.env` nunca vai para o Git.
 
 | Variável | Padrão | Quem usa | Descrição |
 |---|---|---|---|
-| `DOCKERHUB_USER` | `codexestelar` | compose, pipeline | dono da imagem da api no Docker Hub (sem hífen) |
+| `DOCKERHUB_USER` | `p4rzivalrace` | compose, pipeline | dono da imagem da api no Docker Hub (sem hífen) |
 | `DOCKERHUB_TOKEN` | vazio | jenkins | token do Docker Hub, nunca a senha da conta |
 | `API_TAG` | `latest` | compose | tag da imagem da api que o compose sobe |
 | `WEB_PORT` | `8080` | compose | porta do web no host |
