@@ -4,8 +4,8 @@
 #
 # Constrói a imagem do BFF a partir de api/Dockerfile com DUAS tags:
 #
-#     <IMAGE_REPO>:<BUILD_NUMBER>    ex.: codexestelar/codex-estelar-api:42
-#     <IMAGE_REPO>:<sha curto>       ex.: codexestelar/codex-estelar-api:9c96001
+#     <IMAGE_REPO>:<BUILD_NUMBER>    ex.: p4rzivalrace/codex-estelar-api:42
+#     <IMAGE_REPO>:<sha curto>       ex.: p4rzivalrace/codex-estelar-api:9c96001
 #
 # NUNCA "latest". latest é uma tag móvel: não diz qual código está dentro, e
 # duas máquinas com "latest" podem estar rodando versões diferentes. Com as
@@ -39,7 +39,7 @@ CONTEXTO="api"
 # No Jenkins: IMAGE_REPO e GIT_SHA_CURTO vêm do Jenkinsfile, BUILD_NUMBER do
 # próprio Jenkins. Fora dele, o mesmo padrão de nome do Jenkinsfile, para a
 # imagem local ter o mesmo nome da que o pipeline gera.
-REPO="${IMAGE_REPO:-${DOCKERHUB_USER:-codexestelar}/codex-estelar-api}"
+REPO="${IMAGE_REPO:-${DOCKERHUB_USER:-p4rzivalrace}/codex-estelar-api}"
 TAG_BUILD="${BUILD_NUMBER:-local}"
 TAG_SHA="${GIT_SHA_CURTO:-$(git rev-parse --short HEAD)}"
 
