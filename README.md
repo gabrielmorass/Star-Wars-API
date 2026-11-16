@@ -704,6 +704,32 @@ Resultados: Cache Redis (feat(api): adiciona camada de cache Redis com degradaç
 
 Resultados: A IA releu o plano para saber o que o arquivo precisa conter e pediu o .env.example e o compose da main para montar a tabela de variáveis. O arquivo tem topologia, quem fala com quem, portas, variáveis, comandos, volumes, cache, smoke e problemas comuns. Ele foi comitado e enviado vazio, porque eu não tinha salvo, e a IA recomendou um commit novo em vez de reescrever o histórico. Os testes de persistência alimentaram a seção sobre volumes: com o Jenkins, depois de down e up, o ps -a veio vazio, o volume codex_jenkins_home continuou na lista, e o job com o build #1 e a duração de 59 s reapareceram iguais.
 
+**Lima**
+
+**Prompt 1: Dividir o Bloco E a partir do plano**
+
+> "Given the project, separate and build a blueprint development plan with the assingments attributed to Lima"
+
+Aceita com ajustes: anexei o `plano-np2-devops.docx`. O Claude leu o Bloco E, listou as cinco entregas, ordenou por prioridade, pré-requisito e escreveu rascunhos de referência dos quatro arquivos. Ele testou só o que dava para testar fora do repositório (a sintaxe do script e o envio do `notificar.js` com um transporte simulado).
+
+**Prompt 2: Container web com nginx**
+
+> "Inspect the repo root and list every file the static frontend needs at runtime [...] resolve the upstream at request time via Docker DNS (resolver 127.0.0.11 + variable in proxy_pass) so nginx starts even if api isn't up [...] and verify the code developed in the last commit."
+
+Aceita com ajustes: o Claude inspecionou o repositório e acertou o que os rascunhos não sabiam: copiou também `public/favicon.svg` e `src/data/planets-map.json`, além de `index.html`, `css/` e `js/`, e fixou o nginx em `1.27.5-alpine` por digest. O `docker compose build web` passou. A validação mostrou duas falhas fora do que foi desenvolvido: o `docker-compose.yml` apontava o build para `./web` e o healthcheck do compose usava `localhost`, que dentro do Alpine provavelmente resolve para IPv6 enquanto o nginx escuta só em IPv4. Corrigi no compose (contexto na raiz, `web/Dockerfile` e `127.0.0.1`), em vez de mexer no `nginx.conf`. Depois disso, `api`, `redis` e `web` ficaram `healthy`.
+
+**Prompt 3: Publicação no Docker Hub e ligação no Jenkinsfile**
+
+> "Read scripts/ci/_comum.sh and scripts/ci/imagem.sh first, follow their conventions, and tell me the exact image name and tag scheme imagem.sh produces before writing anything. [...] docker login with DOCKERHUB_USER and DOCKERHUB_TOKEN from the environment using --password-stdin (never as an argument) [...] always docker logout via trap, even on failure, verify publicar.sh"
+
+Aceita com ajustes: a validção retornou que `publicar.sh` seguiu o padrão dos scripts do Gabriel e do Eduardo (mensagens `[ci]` e `[erro]`, login por `--password-stdin`). Na primeira conferência, porém, o arquivo não existia no repositório. Ao revisar o bloco de notificação do Jenkinsfile, vi que faltavam o `npm ci` em `scripts/ci` (sem ele o Jenkins falharia com `Cannot find module 'nodemailer'` no fim de toda build) e o `try/catch` que impede uma falha de e-mail de mudar o resultado da build. Corrigi num PR próprio. Rodando `imagem.sh` e `publicar.sh` localmente.
+
+**Prompt 4: README da NP2**
+
+> "Rewrite README.md for NP2, keeping existing text that is still true. [...] . Validate the workflow and list your assumptions."
+
+**Como foi a validação:** o `web` foi construído com `docker compose build web` e o ambiente subido com `docker compose up -d`: `api`, `redis` e `web` saudáveis, `http://localhost:8080/` respondendo 200, `/api/health` respondendo `ok` e `/api/people` respondendo 200 pelo proxy do nginx. Os scripts passaram por `bash -n` e `node --check`, e sem as variáveis de ambiente ambos falham com mensagem clara. A imagem foi publicada no Docker Hub; depois de `docker logout`, o `docker pull` funcionou e as tags apareceram em janela anônima, o que confirma que o repositório é público.
+
 ### O que não foi feito por IA
 
 - Definição do escopo e das views do site (Hub, Planetas, Personagens, Filmes, Naves e Veículos, Espécies).
