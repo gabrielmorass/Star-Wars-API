@@ -191,6 +191,13 @@ próprio README:
 - **[api/](api/README.md)** — testes unitários e de integração do BFF (Jest, Supertest e Nock), com SWAPI e Redis simulados e cobertura mínima de 90% em cada métrica global
 - **[performance-testing/](performance-testing/README.md)** — testes de carga (k6), bônus — 2 cenários
 
+No pipeline, o estágio **Testes unitários** executa
+[`scripts/ci/testes.sh`](scripts/ci/testes.sh). A etapa falha quando há
+testes reprovados, cobertura abaixo de 90% ou ausência dos relatórios
+esperados. O [Jenkinsfile](Jenkinsfile) está configurado para publicar os
+resultados JUnit e a cobertura HTML. O escopo medido, os caminhos dos
+relatórios e a execução local estão em [api/TESTES.md](api/TESTES.md).
+
 Resumo rápido (execute cada comando a partir da raiz do repositório):
 
 ```bash
@@ -206,36 +213,6 @@ cd api && npm ci && npm test
 # Testes de performance (bônus — requer k6 instalado à parte, ver README da pasta)
 cd performance-testing && k6 run swapi-load.js
 ```
-
-### Testes do BFF no pipeline de CI — Daniele (Bloco C)
-
-A contribuição de Daniele na integração contínua é a automação dos testes
-do BFF com verificação de cobertura e geração de relatórios. O estágio
-**Testes unitários** do [Jenkinsfile](Jenkinsfile) chama
-[`scripts/ci/testes.sh`](scripts/ci/testes.sh), que executa o Jest em modo CI.
-Falhas nos testes ou cobertura abaixo de **90%** em qualquer uma das quatro
-métricas globais (instruções, ramificações, funções e linhas) retornam erro
-e reprovam a etapa. O script também exige que os relatórios sejam gerados.
-
-A medição inclui `api/src/**/*.js`, com exclusão de `src/server.js`, que
-inicializa o processo. Os testes usam a SWAPI e o Redis simulados e rodam
-sem esses serviços externos, depois da instalação das dependências.
-
-O pipeline está configurado para ler os resultados JUnit de
-`api/relatorios/junit.xml` e publicar a cobertura HTML de
-`api/coverage/lcov-report/index.html` no bloco `post.always`, inclusive
-quando uma etapa falha, se os arquivos estiverem disponíveis. A publicação
-efetiva precisa ser conferida na execução do Jenkins.
-
-Para executar a mesma etapa localmente, instale as dependências com
-`npm ci` em `api/` e, da raiz, rode no Git Bash ou Linux:
-
-```bash
-bash scripts/ci/testes.sh
-```
-
-O escopo dos testes, os relatórios e o procedimento para demonstrar o
-bloqueio por cobertura estão em [api/TESTES.md](api/TESTES.md).
 
 ---
 
@@ -407,7 +384,7 @@ mesma sessão não gasta requisição.
 
 ## 🤖 Uso de IA
 
-Este projeto teve apoio de IA nas duas etapas: **Claude (Anthropic), via Claude Code**, na NP1 e na NP2, e **Codex (OpenAI)** na NP2. Esta seção está dividida por etapa.
+Este projeto teve apoio de IA nas duas etapas: **Claude (Anthropic), via Claude Code e chat**, na NP1 e na NP2, e **Codex (OpenAI)** na NP2. Esta seção está dividida por etapa.
 
 Na **NP1 (aplicação e testes)**: geração do código-base do front-end, reorganização do código por funcionalidade, correção de um problema de performance no Sistema Planetário, criação das três suítes de teste automatizado (Cypress/BDD para interface, Postman/Newman para API, k6 para performance) e apoio na documentação do projeto (relatório interno de progresso e Plano de Testes).
 
@@ -415,10 +392,19 @@ Na **NP2 (DevOps)**: containerização da aplicação, pipeline do Jenkins decla
 
 O uso foi transparente e supervisionado nas duas: todo código e documento gerado foi revisado, testado e ajustado pelo grupo antes de ser integrado ao projeto. Conforme o enunciado de cada etapa (item 11 na NP1, item 12 na NP2), isso é declarado aqui e o grupo domina o funcionamento de cada arquivo.
 
-### Ferramentas utilizadas — Claude e Codex
+### Modelos e ferramentas utilizados
 
-- **Claude (Anthropic):** via **Claude Code**, extensão de terminal/CLI.
+- **Claude (Anthropic):** via **Claude Code** e pelo chat em **claude.ai**, conforme os relatos dos integrantes.
 - **Codex (OpenAI):** apoio à implementação, revisão e documentação na NP2.
+
+### Dinâmica de uso
+
+O apoio foi solicitado individualmente, em conversas por chat e em
+assistentes de programação, para implementar código, revisar configurações,
+executar e analisar testes e atualizar a documentação. As alterações foram
+integradas por commits e Pull Requests. Os relatos abaixo descrevem os
+pedidos e os resultados aceitos, ajustados ou recusados; o uso de IA não
+substitui o entendimento do código e das decisões pelo grupo.
 
 ### Exemplos reais de prompts utilizados — NP1 (aplicação e testes)
 
@@ -618,7 +604,7 @@ Aceita: a suíte Cypress não executava na minha máquina, e a IA deu **três di
 **Prompt 1: Dúvida sobre cobertura**
 > "Os testes passaram, mas isso já garante os 90% de cobertura? Qual a diferença entre cobertura de linhas, funções e ramificações? Confere como isso está configurado na minha parte."
 
-Relação com a entrega: testes aprovados não garantem o mínimo de cobertura.
+Resultado: testes aprovados não garantem o mínimo de cobertura.
 O arquivo `api/jest.config.js` exige 90% em cada uma das quatro métricas
 globais. O escopo medido e a exclusão do arquivo de inicialização
 `src/server.js` estão justificados em [api/TESTES.md](api/TESTES.md).
@@ -626,20 +612,20 @@ globais. O escopo medido e a exclusão do arquivo de inicialização
 **Prompt 2: Etapa de testes e relatórios para o Jenkins**
 > "Implemente scripts/ci/testes.sh seguindo o padrão do projeto. O script deve executar os testes em modo CI, propagar falhas de teste ou de cobertura e conferir a geração dos relatórios JUnit, HTML e LCOV nos caminhos esperados pelo Jenkinsfile."
 
-Correspondência na entrega: script chamado pelo estágio **Testes
+Resultado: script chamado pelo estágio **Testes
 unitários**, com saída de erro quando os testes, a cobertura ou a geração
 dos relatórios não atendem ao esperado.
 
 **Prompt 3: Rotas de Espécies e testes de contrato**
 > "Adicione as rotas de lista e detalhe de Espécies ao BFF usando o padrão dos outros recursos. Teste a preservação dos dados, lista vazia, IDs inválidos, recurso inexistente e falhas da API externa."
 
-Correspondência na entrega: `api/src/routes/species.js` e testes em
+Resultado: `api/src/routes/species.js` e testes em
 `api/tests/species.test.js`, com casos de lista, detalhe e respostas de erro.
 
 **Prompt 4: Dúvida sobre tradução**
 > "Se a tradução agora vai ficar no backend, preciso apagar os dicionários do frontend? Como faço para a tela usar o português que vier do servidor e continuar funcionando quando a resposta não tiver tradução?"
 
-Relação com a entrega: a tela de Espécies prioriza os textos `ptBR`
+Resultado: a tela de Espécies prioriza os textos `ptBR`
 recebidos e mantém os dicionários locais para respostas sem tradução.
 O módulo `api/src/domain/traduzir.js` fornece a tradução opcional no BFF,
 com testes do domínio e do contrato HTTP.
@@ -647,12 +633,17 @@ com testes do domínio e do contrato HTTP.
 **Prompt 5: Revisão dos limites dos testes**
 > "Esses testes do Cypress com dados simulados provam que a tela está se comunicando com o BFF? O que eles realmente verificam e o que ainda preciso testar quando a parte dos containers estiver integrada?"
 
-Relação com a entrega: os quatro cenários Cypress (TC-114 a TC-117) usam
+Resultado: os quatro cenários Cypress (TC-114 a TC-117) usam
 interceptações para verificar apresentação, filtros, cores e escape de
 marcação. O TC-118 verifica a lista traduzida e o planeta natal pelo BFF
 real, sem simular as respostas, e o TC-119 verifica falha HTTP sem acesso
 direto à SWAPI. O ambiente containerizado tem uma verificação própria com
 o mesmo cenário e o Compose em execução.
+
+**Como foi a validação:** a execução automatizada local aprovou os 187 testes do BFF,
+com 100% de cobertura no escopo medido, e os oito cenários Cypress de
+Espécies. O TC-118 conferiu a tradução e o planeta natal pelo BFF real,
+sem substituir as respostas; o TC-119 verificou o tratamento de falha HTTP.
 
 **Eduardo Bertozzi**
 
@@ -681,13 +672,13 @@ Aceita com ajustes: ao explicar o próprio código, a IA apontou três pontos fr
 **Como foi a validação:** cada PR foi testado antes do commit. O BFF foi testado com `npm start` e curl em todas as rotas, nos casos 400, 404 e 502 e com a SWAPI fora e travada. A imagem foi construída e conferida com `docker build` (healthy em ~6 s, `whoami` = `node`, código sem permissão de escrita, `docker stop` em 1 s). O `empacotar.sh` e o `imagem.sh` rodaram com as variáveis do Jenkins simuladas, e foi conferido que eles recusam `latest` e tag inválida. Por fim, rodei a suíte Cypress BDD completa via `npm test` (65/65) e a do Jest do BFF (100% de cobertura).
 
 **Samile Barbosa**
-Bloco D (orquestração): Docker Compose, cache Redis, smoke test e INFRA.md. Usei o Claude pelo chat (claude.ai), e não pelo Claude Code. Abaixo, commit por commit: o que pedi, o que a IA propôs, o que eu decidi ou conferi
 
+Bloco D (orquestração): Docker Compose, cache Redis, smoke test e INFRA.md. Usei o Claude pelo chat (claude.ai), e não pelo Claude Code. Abaixo, commit por commit: o que pedi, o que a IA propôs, o que eu decidi ou conferi.
 
 **Prompt 1: Estrutura inicial do Docker Compose e divisão dos commits**
 
 > "Contexto: sou a Samile, Bloco D do projeto S07 NP2, Uso Windows com PowerShell e Docker Desktop. O repositório é gabrielmorass/Star-Wars-API e ainda não tem docker-compose.yml na main.
-me passa o arquivo completo, os comandos de validação (config, up, ps, down) com o resultado esperado de cada um , e o comando de commit."
+> me passa o arquivo completo, os comandos de validação (config, up, ps, down) com o resultado esperado de cada um , e o comando de commit."
 
 Resultado: Compose, rede, volumes e redis (infra(compose): adiciona rede codex-net, volumes e serviço redis com healthcheck) Arquivo: docker-compose.yml (raiz). Pedi ajuda com o passo a passo de cada commit do compose e o arquivo do primeiro. A IA propôs dividir o compose em quatro commits (redis, api e web, jenkins, override) e escreveu o primeiro: rede codex-net (bridge), volumes jenkins_home e redis_data, e o serviço redis (redis:7-alpine, appendonly yes, healthcheck com redis-cli ping a cada 10 s, reinício unless-stopped). Eu rodei a validação depois do commit: docker compose config, up -d redis e ps, que mostrou Up 12 seconds (healthy). Um commit vazio ficou no histórico antes desse, e a decisão foi não reescrever o histórico e usar Squash and merge no PR.
 
@@ -698,7 +689,8 @@ Resultado: Compose, rede, volumes e redis (infra(compose): adiciona rede codex-n
 Resultados: Arquivo: scripts/ci/smoke.sh. A IA releu o plano, leu o \_comum.sh e o testes-api.sh do Gabriel e escreveu o script no mesmo padrão (etapa, log, ok, falhar, exigir_comando). Decisões da IA, aceitas por mim: subir só redis, api e web (o Jenkins é quem executa o script); usar um projeto próprio (smoke-codex) e portas próprias (18080 e 13000); fazer as quatro verificações por dentro da rede com docker compose exec (web alcança a api, proxy do nginx, rota real com 200 e name no corpo, PONG do Redis), porque no pipeline um localhost de dentro do Jenkins não chega nos containers do host; e derrubar tudo com trap EXIT, passando ou falhando. Rodei bash -n e o script no Git Bash. No WSL deu erro de Docker não encontrado; no Git Bash o script falhou por falta do web/, e docker compose -p smoke-codex ps -a voltou vazio, o que prova a limpeza.
 
 **Prompt 3: Código da IA descartado quando o código real apareceu**
->"tive updates do eduardo , podemos continuar direito agora"
+
+> "tive updates do eduardo , podemos continuar direito agora"
 
 Resultados: Cache Redis (feat(api): adiciona camada de cache Redis com degradação graciosa) Arquivos: api/src/services/cache.js, api/package.json, api/package-lock.json. Pedi para escrever o cache. A primeira versão foi feita sem ver o BFF do Eduardo. Depois que colei o app.js, o \_recurso.js, o swapi.js e o README dele, a IA reescreveu para o padrão combinado: criarCache (cliente injetado, TTL padrão de 300 s, limite de 200 ms por operação, prefixo codex:) com obter, guardar e lembrar; comCache, que envolve o swapi.buscar; e ativarCache, que liga o cache só quando existe REDIS_URL, com disableOfflineQueue e um tratador de error, sem o qual o Node cairia junto com o Redis. A IA testou o módulo em ambiente simulado, e erros da SWAPI nunca vão para o cache. Eu validei com o Redis de verdade: duas chamadas a /api/vehicles deixaram a chave codex:vehicles; com docker compose stop redis, /api/starships continuou respondendo 200, e o log mostrou Redis indisponível e The client is offline. O ttl veio 128 e não 300, porque a chave do teste anterior sobreviveu no volume redis_data
 
@@ -706,18 +698,19 @@ Resultados: Cache Redis (feat(api): adiciona camada de cache Redis com degradaç
 
 > "o plano exige um INFRA.md na raiz. Colo abaixo as exigências do plano para esse arquivo, o .env.example, o docker-compose.yml e o smoke.sh atuais"
 
-4.5: Commit enviado com o arquivo vazio
->"calma qu esqueci de salvar e o infra nao foi com o conteudo"
+**4.5: Commit enviado com o arquivo vazio**
 
-Resultados:A IA releu o plano para saber o que o arquivo precisa conter e pediu o .env.example e o compose da main para montar a tabela de variáveis. O arquivo tem topologia, quem fala com quem, portas, variáveis, comandos, volumes, cache, smoke e problemas comuns. Ele foi comitado e enviado vazio, porque eu não tinha salvo, e a IA recomendou um commit novo em vez de reescrever o histórico. Os testes de persistência alimentaram a seção sobre volumes: com o Jenkins, depois de down e up, o ps -a veio vazio, o volume codex_jenkins_home continuou na lista, e o job com o build #1 e a duração de 59 s reapareceram iguais.
+> "calma qu esqueci de salvar e o infra nao foi com o conteudo"
+
+Resultados: A IA releu o plano para saber o que o arquivo precisa conter e pediu o .env.example e o compose da main para montar a tabela de variáveis. O arquivo tem topologia, quem fala com quem, portas, variáveis, comandos, volumes, cache, smoke e problemas comuns. Ele foi comitado e enviado vazio, porque eu não tinha salvo, e a IA recomendou um commit novo em vez de reescrever o histórico. Os testes de persistência alimentaram a seção sobre volumes: com o Jenkins, depois de down e up, o ps -a veio vazio, o volume codex_jenkins_home continuou na lista, e o job com o build #1 e a duração de 59 s reapareceram iguais.
 
 ### O que não foi feito por IA
 
 - Definição do escopo e das views do site (Hub, Planetas, Personagens, Filmes, Naves e Veículos, Espécies).
 - Decisões de dados e inferências da equipe (regiões/coordenadas do mapa da galáxia, anos da cronologia da saga, vocabulário de tradução pt-BR) — documentadas na seção "Decisões de dados" deste README.
-- Distribuição das tarefas entre os integrantes e organização dos Pull Requests.
+- Decisão final sobre a distribuição das tarefas entre os integrantes e a organização dos Pull Requests.
 - Entrega do Bloco B em três PRs pequenos (#48 BFF, #49 imagem, #50 scripts de CI), na ordem de quem destravava mais colegas, em vez de um PR completo no fim.
 - Requisitos do BFF definidos pelo Eduardo antes de qualquer código: preservar o formato que as views já consumiam, separar `app.js` de `server.js` para os testes do Bloco C e expor uma função única `buscar()` para o cache do Bloco D.
 - A recusa do fallback para a swapi.info no front, e o critério de que nenhuma chamada saia direto para ela.
-- Definição dos casos de teste específicos de cada funcionalidade nova (critério de quais cenários válidos/inválidos importavam para cada tela) e revisão final de todo teste antes do merge.
+- Aprovação do escopo das alterações e dos testes pelo grupo. A elaboração dos casos e a implementação das suítes também tiveram apoio de IA, conforme os relatos acima.
 - Decisão da ferramenta de performance (k6) e da carga usada nos testes, por se tratar de API pública de terceiros.
