@@ -613,9 +613,9 @@ Aceita: a suíte Cypress não executava na minha máquina, e a IA deu **três di
 
 **Como foi a validação:** nada foi dado por pronto sem evidência. A imagem foi reconstruída e conferida (Jenkins 2.541.3, Node 20.20.2, dez plugins nas versões declaradas, zero divergência); o job criado pelo JCasC foi verificado no log de boot; o pipeline foi executado até ficar verde, até ficar vermelho de propósito e até arquivar artefato e relatório; o volume sobreviveu a `down`/`up` e à reconstrução da imagem, preservando o histórico de builds; e as três suítes de teste da NP1 foram rodadas localmente antes de qualquer commit.
 
-****Daniele Letícia**
+**Daniele Letícia**
 
-**Prompt 1: Dúvida sobre cobertura
+**Prompt 1: Dúvida sobre cobertura**
 > "Os testes passaram, mas isso já garante os 90% de cobertura? Qual a diferença entre cobertura de linhas, funções e ramificações? Confere como isso está configurado na minha parte."
 
 Relação com a entrega: testes aprovados não garantem o mínimo de cobertura.
@@ -680,7 +680,7 @@ Aceita com ajustes: ao explicar o próprio código, a IA apontou três pontos fr
 
 **Como foi a validação:** cada PR foi testado antes do commit. O BFF foi testado com `npm start` e curl em todas as rotas, nos casos 400, 404 e 502 e com a SWAPI fora e travada. A imagem foi construída e conferida com `docker build` (healthy em ~6 s, `whoami` = `node`, código sem permissão de escrita, `docker stop` em 1 s). O `empacotar.sh` e o `imagem.sh` rodaram com as variáveis do Jenkins simuladas, e foi conferido que eles recusam `latest` e tag inválida. Por fim, rodei a suíte Cypress BDD completa via `npm test` (65/65) e a do Jest do BFF (100% de cobertura).
 
-***Samile Barbosa**
+**Samile Barbosa**
 Bloco D (orquestração): Docker Compose, cache Redis, smoke test e INFRA.md. Usei o Claude pelo chat (claude.ai), e não pelo Claude Code. Abaixo, commit por commit: o que pedi, o que a IA propôs, o que eu decidi ou conferi
 
 
