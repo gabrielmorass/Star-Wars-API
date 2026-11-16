@@ -65,7 +65,7 @@ Copie `.env.example` para `.env` e preencha. O `.env` nunca vai para o Git.
 | `REPO_BRANCH` | `main` | jenkins | branch do job |
 | `DOCKER_GID` | `999` | jenkins (build) | GID do grupo dono do socket do Docker no host (ver `jenkins/README.md`) |
 | `EMAIL_DESTINATARIO` | vazio | jenkins | quem recebe o aviso do pipeline |
-| `EMAIL_REMETENTE` | vazio | jenkins | remetente do aviso |
+| `EMAIL_REMETENTE` | vazio | jenkins | endereço administrativo do Jenkins |
 | `SMTP_HOST` | `smtp.gmail.com` | jenkins | servidor SMTP |
 | `SMTP_PORT` | `587` | jenkins | porta SMTP |
 | `SMTP_USER` | vazio | jenkins | usuário SMTP |
